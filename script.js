@@ -1,3 +1,5 @@
+import { createPortfolioSound } from "./assets/js/site-audio.js";
+
 const root = document.documentElement;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -11,7 +13,21 @@ const sanitizeClone = (node) => {
   node.querySelectorAll("a, button, input, textarea, select").forEach((element) => {
     element.setAttribute("tabindex", "-1");
     element.setAttribute("aria-hidden", "true");
+    element.style.pointerEvents = "none";
   });
+};
+
+const bindPortfolioSoundTargets = (sound) => {
+  if (!sound) {
+    return;
+  }
+
+  const interactiveTargets = document.querySelectorAll(
+    ".chrome-links a, .slab-link, .gateway-link, .contact-link"
+  );
+
+  sound.bindHover(interactiveTargets);
+  sound.bindActivate(interactiveTargets);
 };
 
 const createDynamicFavicon = () => {
@@ -128,7 +144,7 @@ const createDynamicFavicon = () => {
   frameId = requestAnimationFrame(render);
 };
 
-const setupInfiniteLoops = () => {
+const setupInfiniteLoops = (sound) => {
   const loopShells = document.querySelectorAll("[data-loop-shell]");
 
   if (!loopShells.length) {
@@ -149,6 +165,7 @@ const setupInfiniteLoops = () => {
 
     const beforeClone = source.cloneNode(true);
     const afterClone = source.cloneNode(true);
+    const sourceSceneCount = source.querySelectorAll("[data-scene]").length;
 
     sanitizeClone(beforeClone);
     sanitizeClone(afterClone);
@@ -167,6 +184,7 @@ const setupInfiniteLoops = () => {
     let lastScrollTop = 0;
     let lastTimestamp = performance.now();
     let velocity = 0;
+    let currentSceneLogicalIndex = null;
 
     const updateSlabMotion = () => {
       const skew = reducedMotion ? 0 : clamp(velocity * -0.045, -8, 8);
@@ -186,8 +204,9 @@ const setupInfiniteLoops = () => {
     const setCurrentScene = () => {
       const shellRect = shell.getBoundingClientRect();
       const shellCenter = shellRect.top + shell.clientHeight / 2;
+      let nextSceneLogicalIndex = null;
 
-      scenes.forEach((scene) => {
+      scenes.forEach((scene, index) => {
         if (!scene) {
           return;
         }
@@ -196,7 +215,21 @@ const setupInfiniteLoops = () => {
         const sceneCenter = rect.top + rect.height / 2;
         const isCurrent = Math.abs(sceneCenter - shellCenter) < rect.height * 0.3;
         scene.classList.toggle("is-current", isCurrent);
+
+        if (isCurrent) {
+          nextSceneLogicalIndex = index % sourceSceneCount;
+        }
       });
+
+      if (nextSceneLogicalIndex === null) {
+        return;
+      }
+
+      if (currentSceneLogicalIndex !== null && currentSceneLogicalIndex !== nextSceneLogicalIndex) {
+        sound?.play("sectionShift", { cooldownMs: 1200 });
+      }
+
+      currentSceneLogicalIndex = nextSceneLogicalIndex;
     };
 
     const measure = () => {
@@ -266,4 +299,11 @@ const setupInfiniteLoops = () => {
 };
 
 createDynamicFavicon();
-setupInfiniteLoops();
+
+const sound = createPortfolioSound({
+  menuRoot: document.querySelector("[data-sound-menu]"),
+  autoLoopCues: ["mainAmbient"],
+});
+
+bindPortfolioSoundTargets(sound);
+setupInfiniteLoops(sound);

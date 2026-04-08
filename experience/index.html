@@ -33,7 +33,37 @@
 
     <header class="experience-header">
       <a class="experience-back" href="../">Back to Portfolio</a>
-      <p class="experience-status">Adaptive render / zero heavy assets / mobile tuned</p>
+      <div class="experience-header-tools">
+        <p class="experience-status">Adaptive render / zero heavy assets / mobile tuned</p>
+        <details class="sound-menu experience-sound-menu" data-sound-menu>
+          <summary class="experience-sound-toggle" data-sound-summary>
+            <span>Sound</span>
+            <span class="experience-sound-status" data-sound-status>FX + Theme</span>
+          </summary>
+          <div class="sound-panel experience-sound-panel">
+            <div class="sound-row experience-sound-row">
+              <div class="sound-setting-copy">
+                <span class="sound-setting-label">Effects</span>
+                <span class="sound-setting-note">Clicks, pings, transitions</span>
+              </div>
+              <div class="sound-choice-group" role="group" aria-label="Effects sound">
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="true">On</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="false">Off</button>
+              </div>
+            </div>
+            <div class="sound-row experience-sound-row">
+              <div class="sound-setting-copy">
+                <span class="sound-setting-label">Theme</span>
+                <span class="sound-setting-note">Ambient background loop</span>
+              </div>
+              <div class="sound-choice-group" role="group" aria-label="Theme sound">
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="true">On</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="false">Off</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
     </header>
 
     <main class="experience-overlay">

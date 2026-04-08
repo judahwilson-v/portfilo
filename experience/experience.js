@@ -1,3 +1,4 @@
+import { createPortfolioSound } from "../assets/js/site-audio.js";
 import { PROJECTS } from "./projects.js";
 
 window.__experienceModuleReached = true;
@@ -7,6 +8,7 @@ const state = {
   previewIndex: null,
   selectedIndex: 0,
   scene: null,
+  sound: null,
 };
 
 let elements;
@@ -142,6 +144,7 @@ const renderProjectList = () => {
     const index = Number(link.dataset.index);
 
     link.addEventListener("mouseenter", () => {
+      state.sound?.play("nodePing", { cooldownMs: 140 });
       previewProject(index);
     });
 
@@ -150,6 +153,7 @@ const renderProjectList = () => {
     });
 
     link.addEventListener("focus", () => {
+      state.sound?.play("nodePing", { cooldownMs: 140 });
       previewProject(index);
     });
 
@@ -162,6 +166,7 @@ const renderProjectList = () => {
     });
 
     link.addEventListener("click", () => {
+      state.sound?.play("uiConfirm", { cooldownMs: 180 });
       selectProject(index);
     });
   });
@@ -173,6 +178,10 @@ const renderFallbackLinks = () => {
       <a href="${project.url}" target="_blank" rel="noreferrer">${project.title}</a>
     `
   ).join("");
+
+  const fallbackLinks = elements.fallbackLinks.querySelectorAll("a");
+  state.sound?.bindHover(fallbackLinks);
+  state.sound?.bindActivate(fallbackLinks);
 };
 
 const showFallback = (error) => {
@@ -214,6 +223,9 @@ const bootScene = async () => {
       projects: PROJECTS,
       selectedIndex: state.selectedIndex,
       onProjectPreview: (index) => {
+        if (state.previewIndex !== index) {
+          state.sound?.play("nodePing", { cooldownMs: 140 });
+        }
         previewProject(index, "scene");
       },
       onProjectLeave: () => {
@@ -223,6 +235,7 @@ const bootScene = async () => {
         selectProject(index, "scene");
       },
       onProjectOpen: (index) => {
+        state.sound?.play("uiConfirm", { cooldownMs: 180 });
         openProject(index);
       },
       onReady: (qualityLabel) => {
@@ -241,6 +254,10 @@ const bootScene = async () => {
 
 const initExperience = () => {
   elements = getElements();
+  state.sound = createPortfolioSound({
+    menuRoot: document.querySelector("[data-sound-menu]"),
+    autoLoopCues: ["sceneAmbient"],
+  });
 
   if (!elements.openButton || !elements.projectList || !elements.canvas) {
     showFallback(new Error("Experience route failed to find the required DOM mount points."));
@@ -254,7 +271,11 @@ const initExperience = () => {
   updateReadout(state.selectedIndex);
   syncProjectLinkStates();
 
+  state.sound.bindHover(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
+  state.sound.bindActivate(document.querySelectorAll(".experience-back, .experience-link"));
+
   elements.openButton.addEventListener("click", () => {
+    state.sound?.play("uiConfirm", { cooldownMs: 180 });
     openProject();
   });
 
@@ -285,4 +306,5 @@ if (document.readyState === "loading") {
 
 window.addEventListener("pagehide", () => {
   state.scene?.destroy();
+  state.sound?.destroy();
 });

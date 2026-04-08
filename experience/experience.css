@@ -34,7 +34,8 @@ body {
     radial-gradient(circle at top left, rgba(140, 246, 255, 0.12), transparent 30%),
     radial-gradient(circle at bottom right, rgba(255, 159, 142, 0.08), transparent 26%),
     linear-gradient(180deg, #02060b 0%, #06111a 56%, #02060b 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 a {
@@ -146,6 +147,21 @@ p {
   padding: 1.25rem 1.5rem 0;
 }
 
+.experience-header-tools {
+  display: grid;
+  justify-items: end;
+  gap: 0.65rem;
+}
+
+.sound-menu {
+  position: relative;
+  pointer-events: auto;
+}
+
+.sound-menu[open] {
+  z-index: 8;
+}
+
 .experience-back,
 .experience-link,
 .experience-button,
@@ -183,6 +199,135 @@ p {
   font-size: 0.72rem;
   color: var(--xp-soft);
   text-align: right;
+}
+
+.experience-sound-toggle,
+.experience-sound-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid var(--xp-line);
+  color: var(--xp-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.experience-sound-toggle {
+  list-style: none;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.experience-sound-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.experience-sound-status {
+  color: var(--xp-soft);
+  font-size: 0.64rem;
+}
+
+.experience-sound-toggle:hover,
+.experience-sound-toggle:focus-visible,
+.sound-menu[data-sound-state="fx-theme"] .experience-sound-toggle,
+.sound-menu[open] .experience-sound-toggle,
+.sound-menu[data-sound-state="fx-only"] .experience-sound-toggle,
+.sound-menu[data-sound-state="theme-only"] .experience-sound-toggle {
+  border-color: rgba(140, 246, 255, 0.42);
+  background: rgba(140, 246, 255, 0.1);
+  color: var(--xp-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px rgba(6, 15, 24, 0.34);
+}
+
+.sound-menu[data-sound-state="muted"] .experience-sound-toggle {
+  border-color: var(--xp-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--xp-text);
+  box-shadow: none;
+}
+
+.experience-sound-panel {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: 0;
+  display: grid;
+  gap: 0.8rem;
+  min-width: 19rem;
+  padding: 0.95rem;
+  border: 1px solid var(--xp-line);
+  border-radius: var(--xp-radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(5, 11, 18, 0.96);
+  box-shadow: var(--xp-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.experience-sound-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--xp-radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sound-setting-copy {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.sound-choice-group {
+  display: inline-flex;
+  gap: 0.4rem;
+  padding: 0.22rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.experience-sound-choice {
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: 0.52rem 0.75rem;
+  border-radius: 999px;
+  background: transparent;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease,
+    color 220ms ease;
+}
+
+.experience-sound-choice:hover,
+.experience-sound-choice:focus-visible,
+.experience-sound-choice[data-active="true"] {
+  border-color: rgba(140, 246, 255, 0.42);
+  background: rgba(140, 246, 255, 0.1);
+  color: var(--xp-accent);
+  transform: translateY(-1px);
+}
+
+.sound-setting-label {
+  font-size: 0.66rem;
+}
+
+.sound-setting-note {
+  color: var(--xp-soft);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: none;
 }
 
 .experience-overlay {
@@ -812,6 +957,15 @@ body.scene-failed .experience-fallback {
     padding-top: 1rem;
   }
 
+  .experience-header-tools {
+    justify-items: start;
+  }
+
+  .experience-sound-panel {
+    right: auto;
+    left: 0;
+  }
+
   .experience-overlay {
     padding-bottom: 7rem;
   }
@@ -828,10 +982,6 @@ body.scene-failed .experience-fallback {
 }
 
 @media (max-width: 640px) {
-  body {
-    overflow-y: auto;
-  }
-
   #loader-ui {
     padding: 1rem;
   }
@@ -876,6 +1026,14 @@ body.scene-failed .experience-fallback {
 
   .experience-loading {
     padding: 1.35rem 1.2rem 1.3rem;
+  }
+
+  .experience-sound-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sound-choice-group {
+    justify-self: start;
   }
 
   .loader-meta {
