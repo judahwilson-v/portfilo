@@ -138,6 +138,8 @@ export const createExperienceScene = async ({
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const isCompactViewport = window.matchMedia("(max-width: 820px)").matches;
+  const allowDragField = supportsFinePointer;
+  const systemScale = isCompactViewport ? 0.62 : 0.78;
   const projectLayout = isCompactViewport ? PROJECT_LAYOUTS.compact : PROJECT_LAYOUTS.regular;
 
   const trackedGeometries = new Set();
@@ -170,19 +172,21 @@ export const createExperienceScene = async ({
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = isCompactViewport ? 1.05 : 1.12;
+  renderer.toneMappingExposure = isCompactViewport ? 1 : 1.08;
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x040811, isCompactViewport ? 0.085 : 0.07);
 
   const camera = new THREE.PerspectiveCamera(isCompactViewport ? 47 : 42, 1, 0.1, 60);
-  camera.position.set(0, 0.55, isCompactViewport ? 9.6 : 8.65);
+  camera.position.set(0, 0.48, isCompactViewport ? 10.8 : 9.35);
 
   const cameraRig = new THREE.Group();
   cameraRig.add(camera);
   scene.add(cameraRig);
 
   const world = new THREE.Group();
+  world.scale.setScalar(systemScale);
+  world.position.set(isCompactViewport ? 0.22 : 0.14, isCompactViewport ? -0.2 : -0.08, 0);
   scene.add(world);
 
   const ambient = new THREE.AmbientLight(0x8aa2bf, 0.55);
@@ -308,15 +312,15 @@ export const createExperienceScene = async ({
   floorHalo.scale.set(10.5, 10.5, 1);
   world.add(floorHalo);
 
-  const particleCount = reducedMotion ? 76 : isCompactViewport ? 104 : 182;
+  const particleCount = reducedMotion ? 68 : isCompactViewport ? 88 : 146;
   const particlePositions = new Float32Array(particleCount * 3);
   const particleSizes = new Float32Array(particleCount);
 
   for (let index = 0; index < particleCount; index += 1) {
     const stride = index * 3;
-    const radius = 4.5 + Math.random() * 6.2;
+    const radius = 3.9 + Math.random() * 4.9;
     const theta = Math.random() * Math.PI * 2;
-    const spread = (Math.random() - 0.5) * 5.5;
+    const spread = (Math.random() - 0.5) * 4.8;
 
     particlePositions[stride] = Math.cos(theta) * radius;
     particlePositions[stride + 1] = spread;
@@ -331,7 +335,7 @@ export const createExperienceScene = async ({
   const particleMaterial = trackMaterial(
     new THREE.PointsMaterial({
       color: 0xe8f8ff,
-      size: isCompactViewport ? 0.038 : 0.032,
+      size: isCompactViewport ? 0.032 : 0.028,
       transparent: true,
       opacity: 0.66,
       depthWrite: false,
@@ -680,11 +684,17 @@ export const createExperienceScene = async ({
   };
 
   const handlePointerDown = (event) => {
-    motion.dragging = true;
     motion.dragPointerId = event.pointerId;
     motion.dragDistance = 0;
     motion.lastX = event.clientX;
     motion.lastY = event.clientY;
+
+    if (!allowDragField && event.pointerType !== "mouse") {
+      motion.dragging = false;
+      return;
+    }
+
+    motion.dragging = true;
     canvas.setPointerCapture(event.pointerId);
   };
 
@@ -693,14 +703,19 @@ export const createExperienceScene = async ({
       return;
     }
 
+    const wasDragging = motion.dragging;
     motion.dragging = false;
     motion.dragPointerId = null;
 
-    if (canvas.hasPointerCapture(event.pointerId)) {
+    if (wasDragging && canvas.hasPointerCapture(event.pointerId)) {
       canvas.releasePointerCapture(event.pointerId);
     }
 
-    if (motion.dragDistance > 8) {
+    if (event.type === "pointercancel") {
+      return;
+    }
+
+    if (motion.dragDistance > (allowDragField ? 8 : 14)) {
       return;
     }
 

@@ -11,10 +11,8 @@ const sanitizeClone = (node) => {
     element.removeAttribute("id");
   });
 
-  node.querySelectorAll("a, button, input, textarea, select").forEach((element) => {
+  node.querySelectorAll("a, button, input, textarea, select, summary").forEach((element) => {
     element.setAttribute("tabindex", "-1");
-    element.setAttribute("aria-hidden", "true");
-    element.style.pointerEvents = "none";
   });
 };
 
@@ -24,7 +22,7 @@ const bindPortfolioSoundTargets = (sound) => {
   }
 
   const interactiveTargets = document.querySelectorAll(
-    ".chrome-links a, .slab-link, .gateway-link, .contact-link"
+    ".chrome-links a, .slab-link, .gateway-link, .contact-link, .sound-toggle, .sound-choice, [data-sound-master-toggle], .cursor-toggle, .cursor-choice"
   );
 
   sound.bindHover(interactiveTargets);
@@ -32,11 +30,11 @@ const bindPortfolioSoundTargets = (sound) => {
 };
 
 const bindPortfolioCursorTargets = (cursor) => {
-  if (!cursor?.enabled) {
+  if (!cursor) {
     return;
   }
 
-  cursor.bindTargets(document.querySelectorAll("[data-cursor-label]"));
+  cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .cursor-toggle, .cursor-choice"));
 };
 
 const setupIndexLoader = () => {
@@ -264,6 +262,8 @@ const setupInfiniteLoops = (sound) => {
     sanitizeClone(beforeClone);
     sanitizeClone(afterClone);
 
+    beforeClone.dataset.loopClone = "before";
+    afterClone.dataset.loopClone = "after";
     beforeClone.setAttribute("aria-hidden", "true");
     afterClone.setAttribute("aria-hidden", "true");
 
@@ -405,10 +405,11 @@ const cursor = createSignalCursor({
   defaultAside: "the lake is calm. your tabs are not.",
 });
 
+setupInfiniteLoops(sound);
 bindPortfolioSoundTargets(sound);
 bindPortfolioCursorTargets(cursor);
-setupInfiniteLoops(sound);
 
 window.addEventListener("pagehide", () => {
+  sound?.destroy();
   cursor?.destroy();
 });
