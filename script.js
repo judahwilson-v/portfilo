@@ -1,201 +1,269 @@
 const root = document.documentElement;
-const progressBar = document.querySelector(".scroll-progress");
-const revealItems = document.querySelectorAll("[data-reveal]");
-const navLinks = Array.from(document.querySelectorAll(".site-nav a[href^='#']"));
-const trackedSections = navLinks
-  .map((link) => document.querySelector(link.getAttribute("href")))
-  .filter(Boolean);
-const trajectoryList = document.querySelector(".trajectory-list");
-const heroVisual = document.querySelector(".hero-visual");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const updateScrollProgress = () => {
-  if (!progressBar) {
+const sanitizeClone = (node) => {
+  node.querySelectorAll("[id]").forEach((element) => {
+    element.removeAttribute("id");
+  });
+
+  node.querySelectorAll("a, button, input, textarea, select").forEach((element) => {
+    element.setAttribute("tabindex", "-1");
+    element.setAttribute("aria-hidden", "true");
+  });
+};
+
+const createDynamicFavicon = () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 32;
+  canvas.height = 32;
+  canvas.hidden = true;
+  canvas.setAttribute("aria-hidden", "true");
+  document.body.append(canvas);
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
     return;
   }
 
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-  const progress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
-  progressBar.style.transform = `scaleX(${progress})`;
-};
+  let icon = document.querySelector("link[rel~='icon']");
 
-const updateTrajectoryProgress = () => {
-  if (!trajectoryList) {
-    return;
+  if (!icon) {
+    icon = document.createElement("link");
+    icon.rel = "icon";
+    document.head.append(icon);
   }
 
-  const rect = trajectoryList.getBoundingClientRect();
-  const progress = clamp((window.innerHeight * 0.72 - rect.top) / rect.height, 0, 1);
-  root.style.setProperty("--trajectory-progress", progress.toFixed(3));
-};
-
-const revealObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-      }
-    });
-  },
-  {
-    threshold: 0.16,
-    rootMargin: "0px 0px -8% 0px",
-  }
-);
-
-revealItems.forEach((item) => revealObserver.observe(item));
-
-if (trackedSections.length > 0) {
-  const sectionRatios = new Map();
-
-  const syncActiveNav = () => {
-    const nextActive = Array.from(sectionRatios.entries())
-      .sort((left, right) => right[1] - left[1])
-      .find(([, ratio]) => ratio > 0.15);
-
-    navLinks.forEach((link) => {
-      const targetId = link.getAttribute("href");
-      link.classList.toggle("is-active", targetId === `#${nextActive?.[0] || ""}`);
-    });
+  const square = {
+    x: 8,
+    y: 7,
+    velocityX: 11,
+    velocityY: 8.5,
+    size: 10,
+    angle: 0,
   };
 
-  const sectionObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        sectionRatios.set(entry.target.id, entry.intersectionRatio);
-      });
+  let frameId = 0;
+  let lastTime = 0;
+  let running = !document.hidden;
 
-      syncActiveNav();
-    },
-    {
-      threshold: [0.15, 0.3, 0.45, 0.6, 0.75],
+  const render = (time) => {
+    if (!running) {
+      return;
     }
-  );
 
-  trackedSections.forEach((section) => sectionObserver.observe(section));
-}
+    if (time - lastTime < (reducedMotion ? 1000 / 10 : 1000 / 18)) {
+      frameId = requestAnimationFrame(render);
+      return;
+    }
 
-updateScrollProgress();
-updateTrajectoryProgress();
+    const delta = lastTime ? (time - lastTime) / 1000 : 0.016;
+    lastTime = time;
 
-window.addEventListener(
-  "scroll",
-  () => {
-    updateScrollProgress();
-    updateTrajectoryProgress();
-  },
-  { passive: true }
-);
+    square.x += square.velocityX * delta;
+    square.y += square.velocityY * delta;
 
-window.addEventListener("resize", updateTrajectoryProgress);
+    if (square.x <= 3 || square.x + square.size >= 29) {
+      square.velocityX *= -1;
+    }
 
-const supportsFinePointer =
-  window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (square.y <= 3 || square.y + square.size >= 22) {
+      square.velocityY *= -1;
+    }
 
-if (supportsFinePointer) {
-  const ring = document.querySelector(".cursor-ring");
-  const dot = document.querySelector(".cursor-dot");
-  const label = document.querySelector(".cursor-label");
-  const hoverTargets = document.querySelectorAll("a, button, [data-cursor]");
-  const magneticTargets = document.querySelectorAll("[data-magnetic]");
+    square.angle += delta * 2.4;
 
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let ringX = mouseX;
-  let ringY = mouseY;
+    context.clearRect(0, 0, 32, 32);
+    context.fillStyle = "#05070b";
+    context.fillRect(0, 0, 32, 32);
 
-  const animateCursor = () => {
-    ringX += (mouseX - ringX) * 0.15;
-    ringY += (mouseY - ringY) * 0.15;
+    context.strokeStyle = "rgba(133, 221, 255, 0.35)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(0, 16);
+    context.lineTo(32, 16);
+    context.moveTo(16, 0);
+    context.lineTo(16, 32);
+    context.stroke();
 
-    ring.style.transform = `translate(${ringX}px, ${ringY}px)`;
-    dot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+    context.save();
+    context.translate(square.x + square.size / 2, square.y + square.size / 2);
+    context.rotate(square.angle);
+    context.fillStyle = "#c8ff62";
+    context.fillRect(-square.size / 2, -square.size / 2, square.size, square.size);
+    context.strokeStyle = "#f6f0e7";
+    context.strokeRect(-square.size / 2, -square.size / 2, square.size, square.size);
+    context.restore();
 
-    root.style.setProperty("--pointer-x", `${mouseX}px`);
-    root.style.setProperty("--pointer-y", `${mouseY}px`);
+    context.fillStyle = "#f6f0e7";
+    context.font = "700 7px Space Grotesk, sans-serif";
+    context.fillText("JVW", 4, 29);
 
-    requestAnimationFrame(animateCursor);
+    icon.href = canvas.toDataURL("image/png");
+    frameId = requestAnimationFrame(render);
   };
 
-  const activateCursor = () => {
-    ring.classList.add("is-active");
-    dot.classList.add("is-active");
+  const setRunning = (nextState) => {
+    if (nextState === running) {
+      return;
+    }
+
+    running = nextState;
+
+    if (running) {
+      lastTime = 0;
+      frameId = requestAnimationFrame(render);
+      return;
+    }
+
+    cancelAnimationFrame(frameId);
   };
 
-  const resetCursorText = () => {
-    label.textContent = "Move";
-    ring.classList.remove("cursor-hover");
-  };
-
-  window.addEventListener(
-    "pointermove",
-    (event) => {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-      activateCursor();
-    },
-    { passive: true }
-  );
-
-  window.addEventListener("pointerdown", () => {
-    ring.classList.add("cursor-hover");
+  document.addEventListener("visibilitychange", () => {
+    setRunning(!document.hidden);
   });
 
-  window.addEventListener("pointerup", () => {
-    ring.classList.remove("cursor-hover");
-  });
+  frameId = requestAnimationFrame(render);
+};
 
-  document.addEventListener("mouseleave", () => {
-    ring.classList.remove("is-active", "cursor-hover");
-    dot.classList.remove("is-active");
-  });
+const setupInfiniteLoops = () => {
+  const loopShells = document.querySelectorAll("[data-loop-shell]");
 
-  hoverTargets.forEach((target) => {
-    target.addEventListener("pointerenter", () => {
-      label.textContent = target.dataset.cursor || "Open";
-      ring.classList.add("cursor-hover");
-    });
-
-    target.addEventListener("pointerleave", () => {
-      resetCursorText();
-    });
-  });
-
-  magneticTargets.forEach((target) => {
-    target.addEventListener("pointermove", (event) => {
-      const bounds = target.getBoundingClientRect();
-      const x = event.clientX - bounds.left - bounds.width / 2;
-      const y = event.clientY - bounds.top - bounds.height / 2;
-
-      target.style.transform = `translate(${x * 0.08}px, ${y * 0.08}px)`;
-    });
-
-    target.addEventListener("pointerleave", () => {
-      target.style.transform = "";
-    });
-  });
-
-  if (heroVisual) {
-    heroVisual.addEventListener("pointermove", (event) => {
-      const bounds = heroVisual.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-      const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-
-      root.style.setProperty("--tilt-x", `${x * 8}deg`);
-      root.style.setProperty("--tilt-y", `${y * -8}deg`);
-      root.style.setProperty("--image-shift-x", `${x * -14}px`);
-      root.style.setProperty("--image-shift-y", `${y * -14}px`);
-    });
-
-    heroVisual.addEventListener("pointerleave", () => {
-      root.style.setProperty("--tilt-x", "0deg");
-      root.style.setProperty("--tilt-y", "0deg");
-      root.style.setProperty("--image-shift-x", "0px");
-      root.style.setProperty("--image-shift-y", "0px");
-    });
+  if (!loopShells.length) {
+    return;
   }
 
-  animateCursor();
-}
+  loopShells.forEach((shell) => {
+    if (!shell) {
+      return;
+    }
+
+    const track = shell.querySelector("[data-loop-track]");
+    const source = shell.querySelector("[data-loop-source]");
+
+    if (!track || !source) {
+      return;
+    }
+
+    const beforeClone = source.cloneNode(true);
+    const afterClone = source.cloneNode(true);
+
+    sanitizeClone(beforeClone);
+    sanitizeClone(afterClone);
+
+    beforeClone.setAttribute("aria-hidden", "true");
+    afterClone.setAttribute("aria-hidden", "true");
+
+    track.prepend(beforeClone);
+    track.append(afterClone);
+
+    const scenes = Array.from(track.querySelectorAll("[data-scene]")).filter(Boolean);
+    const scrollSlabs = Array.from(track.querySelectorAll("[data-scroll-slab]")).filter(Boolean);
+
+    let segmentHeight = 0;
+    let isResetting = false;
+    let lastScrollTop = 0;
+    let lastTimestamp = performance.now();
+    let velocity = 0;
+
+    const updateSlabMotion = () => {
+      const skew = reducedMotion ? 0 : clamp(velocity * -0.045, -8, 8);
+      const shift = reducedMotion ? 0 : clamp(Math.abs(velocity) * 2.4, 0, 24);
+
+      root.style.setProperty("--scroll-skew", `${skew.toFixed(2)}deg`);
+      root.style.setProperty("--velocity-shift", `${shift.toFixed(2)}px`);
+
+      scrollSlabs.forEach((element) => {
+        if (element) {
+          element.style.setProperty("--dynamic-skew", `${skew.toFixed(2)}deg`);
+          element.style.setProperty("--dynamic-shift", `${shift.toFixed(2)}px`);
+        }
+      });
+    };
+
+    const setCurrentScene = () => {
+      const shellRect = shell.getBoundingClientRect();
+      const shellCenter = shellRect.top + shell.clientHeight / 2;
+
+      scenes.forEach((scene) => {
+        if (!scene) {
+          return;
+        }
+
+        const rect = scene.getBoundingClientRect();
+        const sceneCenter = rect.top + rect.height / 2;
+        const isCurrent = Math.abs(sceneCenter - shellCenter) < rect.height * 0.3;
+        scene.classList.toggle("is-current", isCurrent);
+      });
+    };
+
+    const measure = () => {
+      segmentHeight = source.offsetHeight;
+
+      if (!segmentHeight) {
+        return;
+      }
+
+      if (shell.scrollTop === 0) {
+        shell.scrollTop = segmentHeight;
+      }
+
+      lastScrollTop = shell.scrollTop;
+      setCurrentScene();
+      updateSlabMotion();
+    };
+
+    const tick = () => {
+      velocity *= 0.88;
+      updateSlabMotion();
+      requestAnimationFrame(tick);
+    };
+
+    shell.addEventListener(
+      "scroll",
+      () => {
+        if (!segmentHeight || isResetting) {
+          return;
+        }
+
+        const now = performance.now();
+        const currentScrollTop = shell.scrollTop;
+        const delta = currentScrollTop - lastScrollTop;
+        const elapsed = Math.max(now - lastTimestamp, 16);
+
+        velocity = delta / elapsed;
+        lastScrollTop = currentScrollTop;
+        lastTimestamp = now;
+
+        if (currentScrollTop <= segmentHeight * 0.12) {
+          isResetting = true;
+          shell.scrollTop = currentScrollTop + segmentHeight;
+          lastScrollTop = shell.scrollTop;
+          requestAnimationFrame(() => {
+            isResetting = false;
+          });
+        } else if (currentScrollTop >= segmentHeight * 1.88) {
+          isResetting = true;
+          shell.scrollTop = currentScrollTop - segmentHeight;
+          lastScrollTop = shell.scrollTop;
+          requestAnimationFrame(() => {
+            isResetting = false;
+          });
+        }
+
+        setCurrentScene();
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("resize", measure);
+
+    measure();
+    tick();
+  });
+};
+
+createDynamicFavicon();
+setupInfiniteLoops();

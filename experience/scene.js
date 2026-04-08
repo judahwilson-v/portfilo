@@ -423,6 +423,8 @@ export const createExperienceScene = async ({
       spinSpeed: 0.12 + index * 0.02,
     };
 
+    node.scale.setScalar(0);
+
     world.add(node);
     projectNodes.push(node);
     raycastTargets.push(mesh);
@@ -448,6 +450,25 @@ export const createExperienceScene = async ({
   const raycaster = new THREE.Raycaster();
   const targetScale = new THREE.Vector3();
   const clock = new THREE.Clock();
+  const loaderElements = {
+    container: document.getElementById("loader-ui"),
+    phase: document.getElementById("loader-phase"),
+    percentage: document.getElementById("loader-percentage"),
+    track: document.getElementById("loader-track"),
+    fill: document.getElementById("loader-track-fill"),
+  };
+  const loaderPhases = [
+    { threshold: 18, label: "Aligning signal lattice" },
+    { threshold: 42, label: "Translating project vectors" },
+    { threshold: 72, label: "Bending interface horizon" },
+    { threshold: 96, label: "Opening dimensional seam" },
+    { threshold: 100, label: "Field stabilized" },
+  ];
+  const entrance = {
+    active: false,
+  };
+  let readyDispatched = false;
+  let loaderFrameId = null;
 
   const qualityLabel = reducedMotion
     ? "Reduced motion / minimal drift"
@@ -456,6 +477,76 @@ export const createExperienceScene = async ({
       : "Adaptive render / cinematic depth";
 
   onQualityChange?.(qualityLabel);
+
+  const signalReady = () => {
+    if (readyDispatched) {
+      return;
+    }
+
+    readyDispatched = true;
+    onReady?.(qualityLabel);
+  };
+
+  const updateLoaderProgress = (value) => {
+    const progress = clamp(Math.round(value), 0, 100);
+    const phaseLabel =
+      loaderPhases.find((phase) => progress <= phase.threshold)?.label ??
+      loaderPhases[loaderPhases.length - 1].label;
+
+    if (loaderElements.phase) {
+      loaderElements.phase.textContent = phaseLabel;
+    }
+
+    if (loaderElements.percentage) {
+      loaderElements.percentage.textContent = `${progress}%`;
+    }
+
+    if (loaderElements.track) {
+      loaderElements.track.setAttribute("aria-valuenow", String(progress));
+    }
+
+    if (loaderElements.fill) {
+      loaderElements.fill.style.transform = `scaleX(${progress / 100})`;
+    }
+  };
+
+  const runLoaderSequence = () => {
+    if (
+      !loaderElements.container ||
+      !loaderElements.phase ||
+      !loaderElements.percentage ||
+      !loaderElements.track ||
+      !loaderElements.fill
+    ) {
+      entrance.active = true;
+      signalReady();
+      return;
+    }
+
+    const durationMs = reducedMotion ? 1500 : 1850;
+    const startTime = performance.now();
+
+    const step = (timestamp) => {
+      const elapsedMs = timestamp - startTime;
+      const rawProgress = clamp(elapsedMs / durationMs, 0, 1);
+      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+      updateLoaderProgress(easedProgress * 100);
+
+      if (rawProgress < 1) {
+        loaderFrameId = window.requestAnimationFrame(step);
+        return;
+      }
+
+      updateLoaderProgress(100);
+      loaderElements.container.classList.add("fade-out");
+      entrance.active = true;
+      signalReady();
+    };
+
+    updateLoaderProgress(0);
+    loaderFrameId = window.requestAnimationFrame(step);
+  };
 
   const getHighlightedIndex = () => motion.hoverIndex ?? motion.previewIndex ?? motion.selectedIndex;
 
@@ -654,7 +745,13 @@ export const createExperienceScene = async ({
       orbit.material.opacity = THREE.MathUtils.lerp(orbit.material.opacity, emphasis ? 0.5 : 0.14, 0.08);
       orbit.rotation.z += delta * (emphasis ? 1 : 0.45);
 
-      node.scale.lerp(targetScale.setScalar(emphasis ? 1.16 : 1), emphasis ? 0.14 : 0.08);
+      const revealScale = entrance.active ? 1 : 0;
+      const emphasisScale = revealScale === 1 && node.scale.x > 0.98 && emphasis ? 1.16 : 1;
+
+      node.scale.lerp(
+        targetScale.setScalar(revealScale * emphasisScale),
+        entrance.active ? (emphasis ? 0.14 : 0.1) : 0.18
+      );
     });
 
     renderer.render(scene, camera);
@@ -673,7 +770,7 @@ export const createExperienceScene = async ({
   document.addEventListener("visibilitychange", handleVisibility);
 
   renderer.setAnimationLoop(animate);
-  onReady?.(qualityLabel);
+  runLoaderSequence();
 
   return {
     selectProject(index) {
@@ -689,6 +786,10 @@ export const createExperienceScene = async ({
     destroy() {
       renderer.setAnimationLoop(null);
       resizeObserver.disconnect();
+
+      if (loaderFrameId !== null) {
+        window.cancelAnimationFrame(loaderFrameId);
+      }
 
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
