@@ -88,6 +88,20 @@ const getStatusLabel = (settings) => {
   return "Muted";
 };
 
+const hasAnySoundEnabled = (settings) => settings.effects || settings.ambience;
+
+const getMasterLabel = (settings) => {
+  if (settings.effects && settings.ambience) {
+    return "On";
+  }
+
+  if (!settings.effects && !settings.ambience) {
+    return "Off";
+  }
+
+  return "Custom";
+};
+
 class PortfolioSoundController {
   constructor({ menuRoot, autoLoopCues = [] } = {}) {
     this.menuRoot = menuRoot ?? null;
@@ -100,6 +114,8 @@ class PortfolioSoundController {
     this.summary = this.menuRoot?.querySelector("[data-sound-summary]") ?? null;
     this.statusNode = this.menuRoot?.querySelector("[data-sound-status]") ?? null;
     this.settingChoices = new Map();
+    this.masterToggleButtons = Array.from(document.querySelectorAll("[data-sound-master-toggle]"));
+    this.masterStatusNodes = Array.from(document.querySelectorAll("[data-sound-master-status]"));
 
     this.handleFirstGesture = this.handleFirstGesture.bind(this);
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
@@ -112,7 +128,16 @@ class PortfolioSoundController {
   }
 
   bindMenu() {
+    this.masterToggleButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.unlock();
+        this.toggleAll();
+      });
+    });
+
     if (!this.menuRoot) {
+      this.syncMenu();
       return;
     }
 
@@ -206,6 +231,20 @@ class PortfolioSoundController {
     this.syncLoops();
   }
 
+  toggleAll() {
+    this.setAllEnabled(!hasAnySoundEnabled(this.settings));
+  }
+
+  setAllEnabled(nextState) {
+    const enabled = Boolean(nextState);
+
+    this.settings.effects = enabled;
+    this.settings.ambience = enabled;
+    writeStoredState(this.settings);
+    this.syncMenu();
+    this.syncLoops();
+  }
+
   setGroupEnabled(group, nextState) {
     if (!(group in DEFAULT_SETTINGS)) {
       return;
@@ -218,28 +257,38 @@ class PortfolioSoundController {
   }
 
   syncMenu() {
-    if (!this.menuRoot) {
-      return;
-    }
-
     const statusLabel = getStatusLabel(this.settings);
-    this.menuRoot.dataset.soundState = statusLabel.toLowerCase().replace(/\s+\+\s+|\s+/g, "-");
+    const masterLabel = getMasterLabel(this.settings);
+    const anySoundEnabled = hasAnySoundEnabled(this.settings);
 
-    if (this.statusNode) {
-      this.statusNode.textContent = statusLabel;
-    }
-
-    this.settingChoices.forEach((buttons, group) => {
-      const enabled = Boolean(this.settings[group]);
-
-      buttons.forEach((button) => {
-        const buttonValue = button.getAttribute("data-sound-value") === "true";
-        const isActive = buttonValue === enabled;
-
-        button.setAttribute("aria-pressed", String(isActive));
-        button.dataset.active = isActive ? "true" : "false";
-      });
+    this.masterStatusNodes.forEach((node) => {
+      node.textContent = masterLabel;
     });
+
+    this.masterToggleButtons.forEach((button) => {
+      button.setAttribute("aria-pressed", String(anySoundEnabled));
+      button.dataset.soundMasterState = masterLabel.toLowerCase();
+    });
+
+    if (this.menuRoot) {
+      this.menuRoot.dataset.soundState = statusLabel.toLowerCase().replace(/\s+\+\s+|\s+/g, "-");
+
+      if (this.statusNode) {
+        this.statusNode.textContent = statusLabel;
+      }
+
+      this.settingChoices.forEach((buttons, group) => {
+        const enabled = Boolean(this.settings[group]);
+
+        buttons.forEach((button) => {
+          const buttonValue = button.getAttribute("data-sound-value") === "true";
+          const isActive = buttonValue === enabled;
+
+          button.setAttribute("aria-pressed", String(isActive));
+          button.dataset.active = isActive ? "true" : "false";
+        });
+      });
+    }
   }
 
   ensureLoopElement(name) {

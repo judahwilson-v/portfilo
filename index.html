@@ -53,21 +53,31 @@
       >
         Experience
       </a>
+      <button
+        class="sound-toggle sound-quick-toggle"
+        type="button"
+        data-sound-master-toggle
+        data-cursor-label="Sound Switch"
+        data-cursor-aside="one click. silence if needed."
+      >
+        <span>Sound</span>
+        <span class="sound-toggle-status" data-sound-master-status>Off</span>
+      </button>
       <details class="sound-menu" data-sound-menu>
         <summary
           class="sound-toggle"
           data-sound-summary
-          data-cursor-label="Sound Desk"
-          data-cursor-aside="you are now the accidental audio engineer"
+          data-cursor-label="Sound Mix"
+          data-cursor-aside="for when the ambience needs adult supervision"
         >
-          <span>Sound</span>
+          <span>Mix</span>
           <span class="sound-toggle-status" data-sound-status>Muted</span>
         </summary>
         <div class="sound-panel">
           <div class="sound-row">
             <div class="sound-setting-copy">
               <span class="sound-setting-label">Effects</span>
-              <span class="sound-setting-note">Clicks, hovers, transitions</span>
+              <span class="sound-setting-note">Clicks, hovers, and tiny dramatic flourishes</span>
             </div>
             <div class="sound-choice-group" role="group" aria-label="Effects sound">
               <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
@@ -77,13 +87,61 @@
           <div class="sound-row">
             <div class="sound-setting-copy">
               <span class="sound-setting-label">Theme</span>
-              <span class="sound-setting-note">Background ambience loop</span>
+              <span class="sound-setting-note">Background ambience for tasteful overthinkers</span>
             </div>
             <div class="sound-choice-group" role="group" aria-label="Theme sound">
               <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
               <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
             </div>
           </div>
+        </div>
+      </details>
+      <details class="cursor-menu" data-cursor-menu hidden>
+        <summary
+          class="cursor-toggle"
+          data-cursor-summary
+          data-cursor-label="Cursor Cabinet"
+          data-cursor-aside="same pointer. different personality disorders."
+        >
+          <span>Cursor</span>
+          <span class="cursor-toggle-status" data-cursor-status>Signal</span>
+        </summary>
+        <div class="cursor-panel">
+          <button class="cursor-choice" type="button" data-cursor-mode="signal" aria-pressed="true">
+            <span class="cursor-choice-copy">
+              <span class="cursor-choice-label">Signal</span>
+              <span class="cursor-choice-note">Current default. Still the smug favorite.</span>
+            </span>
+            <span class="cursor-choice-swatch" aria-hidden="true"></span>
+          </button>
+          <button class="cursor-choice" type="button" data-cursor-mode="radar" aria-pressed="false">
+            <span class="cursor-choice-copy">
+              <span class="cursor-choice-label">Radar</span>
+              <span class="cursor-choice-note">Sharper sweep. Feels mildly classified.</span>
+            </span>
+            <span class="cursor-choice-swatch" aria-hidden="true"></span>
+          </button>
+          <button class="cursor-choice" type="button" data-cursor-mode="dot" aria-pressed="false">
+            <span class="cursor-choice-copy">
+              <span class="cursor-choice-label">Dot</span>
+              <span class="cursor-choice-note">Minimal, fast, and less emotionally needy.</span>
+            </span>
+            <span class="cursor-choice-swatch" aria-hidden="true"></span>
+          </button>
+          <button class="cursor-choice" type="button" data-cursor-mode="halo" aria-pressed="false">
+            <span class="cursor-choice-copy">
+              <span class="cursor-choice-label">Halo</span>
+              <span class="cursor-choice-note">Soft glow. Slightly suspicious angel energy.</span>
+            </span>
+            <span class="cursor-choice-swatch" aria-hidden="true"></span>
+          </button>
+          <button class="cursor-choice" type="button" data-cursor-mode="native" aria-pressed="false">
+            <span class="cursor-choice-copy">
+              <span class="cursor-choice-label">Native</span>
+              <span class="cursor-choice-note">System cursor. Old school, still employed.</span>
+            </span>
+            <span class="cursor-choice-swatch" aria-hidden="true"></span>
+          </button>
         </div>
       </details>
     </nav>

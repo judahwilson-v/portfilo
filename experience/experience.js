@@ -18,7 +18,9 @@ let elements;
 const getElements = () => ({
   openButton: document.querySelector("#open-active-project"),
   projectList: document.querySelector("#project-list"),
+  projectReadout: document.querySelector("#project-readout"),
   projectCategory: document.querySelector("#project-category"),
+  projectSignalNote: document.querySelector("#project-signal-note"),
   projectTitle: document.querySelector("#project-title"),
   projectBlurb: document.querySelector("#project-blurb"),
   projectIndex: document.querySelector("#project-index"),
@@ -48,10 +50,20 @@ const updateReadout = (index) => {
   elements.projectTitle.textContent = project.title;
   elements.projectBlurb.textContent = project.blurb;
   elements.projectIndex.textContent = project.index;
+  elements.projectReadout?.style.setProperty("--project-accent", project.accent);
+  elements.projectReadout?.classList.toggle("is-previewing", state.previewIndex !== null);
+
+  if (elements.projectSignalNote) {
+    elements.projectSignalNote.textContent =
+      state.previewIndex === null
+        ? "Stable orbit. Mild ego."
+        : "Preview live. The shiny object is winning.";
+  }
+
   elements.projectHint.textContent =
     state.previewIndex === null
-      ? "Click the node or use the button to open the live project."
-      : "Previewing signal. Click the node to launch the project.";
+      ? "Tap the node or use the button. Nobody gets extra credit for guessing."
+      : "Previewing signal. One more tap and the next tab appears.";
 };
 
 const syncProjectLinkStates = () => {
@@ -294,9 +306,17 @@ const initExperience = () => {
   updateReadout(state.selectedIndex);
   syncProjectLinkStates();
 
-  state.sound.bindHover(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
-  state.sound.bindActivate(document.querySelectorAll(".experience-back, .experience-link"));
-  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link"));
+  state.sound.bindHover(
+    document.querySelectorAll(
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, .cursor-toggle, .cursor-choice"
+    )
+  );
+  state.sound.bindActivate(
+    document.querySelectorAll(
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], .cursor-toggle, .cursor-choice"
+    )
+  );
+  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link, .cursor-toggle, .cursor-choice"));
 
   elements.openButton.addEventListener("click", () => {
     state.sound?.play("uiConfirm", { cooldownMs: 180 });
@@ -305,7 +325,7 @@ const initExperience = () => {
 
   elements.interactionHint.textContent = supportsFinePointer()
     ? "Move to steer. Drag to drift. Click a node to open."
-    : "Drag to drift. Tap a node to open.";
+    : "Tap a node to open. Scroll like a normal human.";
 
   if (prefersReducedMotion()) {
     elements.renderStatus.textContent = "Reduced motion enabled";
