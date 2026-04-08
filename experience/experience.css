@@ -445,6 +445,11 @@ p {
   text-align: center;
 }
 
+.experience-diagnostics[hidden],
+.experience-fallback[hidden] {
+  display: none !important;
+}
+
 .experience-loading {
   overflow: hidden;
   gap: 0.85rem;
