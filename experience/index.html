@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="An immersive 3D portfolio layer for Judah Vijai Wilson featuring interactive project nodes and cinematic motion." />
+  <meta name="theme-color" content="#03070d" />
+  <title>Enter Experience | Judah Vijai Wilson</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@400;500;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./experience.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.165.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+
+<body class="experience-page">
+  <div class="experience-shell">
+    <div class="experience-stage" aria-hidden="true">
+      <canvas class="experience-canvas"></canvas>
+      <div class="experience-stage-glow"></div>
+      <div class="experience-stage-grid"></div>
+    </div>
+
+    <header class="experience-header">
+      <a class="experience-back" href="../">Back to Portfolio</a>
+      <p class="experience-status">Adaptive render / zero heavy assets / mobile tuned</p>
+    </header>
+
+    <main class="experience-overlay">
+      <section class="experience-copy">
+        <p class="experience-kicker">Immersive Portfolio Layer</p>
+        <h1>Step into a quieter, sharper dimension of the work.</h1>
+        <p class="experience-lead">
+          Three live projects sit inside a responsive 3D field. Drag to drift through the scene, hover to inspect a
+          node, and click to launch the live build.
+        </p>
+
+        <div class="experience-actions">
+          <button class="experience-button" id="open-active-project" type="button">
+            Open Active Project
+          </button>
+          <a class="experience-link" href="../#projects">Return to Main Site</a>
+        </div>
+      </section>
+
+      <aside class="experience-rail">
+        <div class="project-readout">
+          <p class="experience-kicker">Active Signal</p>
+          <p class="project-category" id="project-category"></p>
+          <h2 id="project-title"></h2>
+          <p class="project-blurb" id="project-blurb"></p>
+          <div class="project-meta">
+            <span id="project-index"></span>
+            <span id="project-hint">Select a node or use the rail to open it.</span>
+          </div>
+        </div>
+
+        <nav class="project-list" aria-label="Project nodes" id="project-list"></nav>
+      </aside>
+    </main>
+
+    <div class="experience-hud">
+      <span id="interaction-hint">Move to steer. Drag to drift. Tap a node to open.</span>
+      <span id="render-status">Preparing adaptive render</span>
+    </div>
+
+    <div class="experience-loading" id="experience-loading" role="status" aria-live="polite">
+      <div class="loading-orbit" aria-hidden="true">
+        <span class="loading-orbit-core"></span>
+        <span class="loading-ring loading-ring-primary"></span>
+        <span class="loading-ring loading-ring-secondary"></span>
+      </div>
+      <p>Booting experience</p>
+      <span>Tracing module delivery, import map registration, and WebGL readiness.</span>
+      <div class="loading-signals" aria-label="Boot checks">
+        <span class="loading-signal" id="diagnostic-html-signal">HTML parsed</span>
+        <span class="loading-signal" id="diagnostic-modules-signal">ES modules: checking</span>
+        <span class="loading-signal" id="diagnostic-importmap-signal">Import maps: checking</span>
+        <span class="loading-signal" id="diagnostic-webgl-signal">WebGL API: checking</span>
+        <span class="loading-signal" id="diagnostic-module-entry-signal">Main module: waiting</span>
+      </div>
+    </div>
+
+    <section class="experience-diagnostics" id="experience-diagnostics" hidden aria-live="assertive">
+      <div class="experience-diagnostics-head">
+        <p class="experience-kicker">Boot Diagnostics</p>
+        <span id="experience-diagnostics-summary">Watching module delivery.</span>
+      </div>
+      <div class="experience-diagnostic-output" id="experience-diagnostic-output" data-empty="true"></div>
+    </section>
+
+    <section class="experience-fallback" id="experience-fallback" hidden>
+      <p class="experience-kicker">Fallback Access</p>
+      <h2>WebGL is unavailable. The projects are still reachable below.</h2>
+      <div class="fallback-links" id="fallback-links"></div>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const diagnosticsPanel = document.getElementById("experience-diagnostics");
+      const diagnosticsOutput = document.getElementById("experience-diagnostic-output");
+      const diagnosticsSummary = document.getElementById("experience-diagnostics-summary");
+      const signalNodes = {
+        html: document.getElementById("diagnostic-html-signal"),
+        modules: document.getElementById("diagnostic-modules-signal"),
+        importmap: document.getElementById("diagnostic-importmap-signal"),
+        webgl: document.getElementById("diagnostic-webgl-signal"),
+        moduleEntry: document.getElementById("diagnostic-module-entry-signal"),
+      };
+
+      const setSummary = (message) => {
+        if (diagnosticsSummary) {
+          diagnosticsSummary.textContent = message;
+        }
+      };
+
+      const showDiagnostics = () => {
+        if (diagnosticsPanel) {
+          diagnosticsPanel.hidden = false;
+        }
+      };
+
+      const setSignal = (key, message, state = "info") => {
+        const node = signalNodes[key];
+
+        if (!node) {
+          return;
+        }
+
+        node.textContent = message;
+        node.dataset.state = state;
+      };
+
+      const appendDiagnostic = (message, level = "info") => {
+        if (!diagnosticsOutput) {
+          return;
+        }
+
+        if (diagnosticsOutput.dataset.empty === "true") {
+          diagnosticsOutput.textContent = "";
+          diagnosticsOutput.dataset.empty = "false";
+        }
+
+        const line = document.createElement("div");
+        line.className = `diagnostic-line diagnostic-line-${level}`;
+        line.textContent = message;
+        diagnosticsOutput.append(line);
+
+        if (level === "error" || level === "warn") {
+          showDiagnostics();
+        }
+      };
+
+      const formatErrorDetail = (value) => {
+        if (value instanceof Error) {
+          return value.stack || value.message;
+        }
+
+        if (typeof value === "string") {
+          return value;
+        }
+
+        try {
+          return JSON.stringify(value);
+        } catch {
+          return String(value);
+        }
+      };
+
+      console.log("1. HTML Parsed successfully.");
+      setSummary("Watching module delivery and runtime failures.");
+      setSignal("html", "HTML parsed", "ok");
+      appendDiagnostic("1. HTML Parsed successfully.", "ok");
+
+      const modulesSupported = "noModule" in document.createElement("script");
+      setSignal(
+        "modules",
+        modulesSupported ? "ES modules supported" : "ES modules unsupported",
+        modulesSupported ? "ok" : "error"
+      );
+      appendDiagnostic(`ES module support detected: ${modulesSupported}.`, modulesSupported ? "info" : "error");
+
+      const importMapSupported = Boolean(
+        window.HTMLScriptElement &&
+          typeof window.HTMLScriptElement.supports === "function" &&
+          window.HTMLScriptElement.supports("importmap")
+      );
+      let importMapState = importMapSupported ? "ok" : "error";
+      let importMapMessage = importMapSupported ? "Import maps supported" : "Import maps unsupported";
+
+      const importMapScript = document.querySelector('script[type="importmap"]');
+
+      if (!importMapScript) {
+        importMapState = "error";
+        importMapMessage = "Import map missing";
+        appendDiagnostic("No import map tag was found in the document.", "error");
+      } else {
+        try {
+          const parsedImportMap = JSON.parse(importMapScript.textContent);
+          const mappedThree = parsedImportMap && parsedImportMap.imports && parsedImportMap.imports.three;
+
+          if (!mappedThree) {
+            importMapState = "error";
+            importMapMessage = 'Import map missing "three"';
+            appendDiagnostic('The import map does not define a "three" specifier.', "error");
+          } else {
+            appendDiagnostic(`Import map entry for "three": ${mappedThree}`, "info");
+          }
+        } catch (error) {
+          importMapState = "error";
+          importMapMessage = "Import map JSON invalid";
+          appendDiagnostic(`Import map JSON parse failed: ${formatErrorDetail(error)}`, "error");
+        }
+      }
+
+      setSignal("importmap", importMapMessage, importMapState);
+
+      const webglApiPresent = Boolean(window.WebGLRenderingContext);
+      setSignal(
+        "webgl",
+        webglApiPresent ? "WebGL API present" : "WebGL API missing",
+        webglApiPresent ? "ok" : "error"
+      );
+      appendDiagnostic(
+        `window.WebGLRenderingContext present: ${webglApiPresent}.`,
+        webglApiPresent ? "info" : "error"
+      );
+
+      window.__experienceDiagnostics = {
+        push(message, level = "info") {
+          appendDiagnostic(message, level);
+        },
+      };
+
+      window.addEventListener("experience:module-entered", () => {
+        window.__experienceModuleReached = true;
+        setSignal("moduleEntry", "Main module entered", "ok");
+        appendDiagnostic("experience.js executed and reached module entry.", "ok");
+      });
+
+      window.addEventListener(
+        "error",
+        (event) => {
+          if (event.target && event.target !== window) {
+            const target = event.target;
+            const resourceUrl = target.currentSrc || target.src || target.href || "(inline resource)";
+            const tagName = target.tagName ? target.tagName.toLowerCase() : "resource";
+
+            appendDiagnostic(`Resource load error on <${tagName}>: ${resourceUrl}`, "error");
+
+            if (target.id === "experience-module-entry") {
+              setSignal("moduleEntry", "Main module failed to load", "error");
+            }
+          }
+        },
+        true
+      );
+
+      window.onerror = (message, source, lineno, colno, error) => {
+        const detail = error ? formatErrorDetail(error) : String(message);
+        const location = source ? ` @ ${source}:${lineno || 0}:${colno || 0}` : "";
+
+        setSignal("moduleEntry", "Runtime error surfaced", "error");
+        appendDiagnostic(`window.onerror: ${detail}${location}`, "error");
+        return false;
+      };
+
+      window.onunhandledrejection = (event) => {
+        setSignal("moduleEntry", "Unhandled rejection surfaced", "error");
+        appendDiagnostic(`window.onunhandledrejection: ${formatErrorDetail(event.reason)}`, "error");
+      };
+
+      window.addEventListener("load", () => {
+        window.setTimeout(() => {
+          if (!window.__experienceModuleReached) {
+            setSignal("moduleEntry", "Main module never entered", "error");
+            appendDiagnostic(
+              "Main module never reported execution. This usually means the module graph was blocked before evaluation by a fetch, MIME, syntax, or import-map resolution failure.",
+              "error"
+            );
+            return;
+          }
+
+          setSummary("Main module delivery succeeded. Diagnostics remain armed.");
+        }, 250);
+      });
+    })();
+  </script>
+  <script id="experience-module-entry" type="module" src="./experience.js"></script>
+</body>
+
+</html>
