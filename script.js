@@ -1,4 +1,5 @@
 import { createPortfolioSound } from "./assets/js/site-audio.js";
+import { createSignalCursor } from "./assets/js/site-cursor.js";
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -28,6 +29,99 @@ const bindPortfolioSoundTargets = (sound) => {
 
   sound.bindHover(interactiveTargets);
   sound.bindActivate(interactiveTargets);
+};
+
+const bindPortfolioCursorTargets = (cursor) => {
+  if (!cursor?.enabled) {
+    return;
+  }
+
+  cursor.bindTargets(document.querySelectorAll("[data-cursor-label]"));
+};
+
+const setupIndexLoader = () => {
+  const loader = document.querySelector("#site-loader");
+  const phaseNode = document.querySelector("#site-loader-phase");
+  const copyNode = document.querySelector("#site-loader-copy");
+  const heroImage = document.querySelector(".poster-frame img");
+
+  if (!loader || !phaseNode || !copyNode) {
+    return;
+  }
+
+  const phases = [
+    {
+      threshold: 0.22,
+      label: "Skimming the lake surface",
+      copy: "Filtering out the generic portfolio energy.",
+    },
+    {
+      threshold: 0.52,
+      label: "Amplifying the nameplate",
+      copy: "Letting the first impression arrive before the links do.",
+    },
+    {
+      threshold: 0.82,
+      label: "Calibrating motion pressure",
+      copy: "Making sure the scroll feels intentional instead of decorative.",
+    },
+    {
+      threshold: 1,
+      label: "Surface stable",
+      copy: "You may now proceed with unreasonable curiosity.",
+    },
+  ];
+
+  const waitForImage = heroImage
+    ? heroImage.complete
+      ? Promise.resolve()
+      : typeof heroImage.decode === "function"
+        ? heroImage.decode().catch(() => undefined)
+        : new Promise((resolve) => {
+            heroImage.addEventListener("load", resolve, { once: true });
+            heroImage.addEventListener("error", resolve, { once: true });
+          })
+    : Promise.resolve();
+
+  const waitForFonts =
+    document.fonts && "ready" in document.fonts ? document.fonts.ready.catch(() => undefined) : Promise.resolve();
+
+  const minimumDuration = reducedMotion ? 900 : 1900;
+  const waitForMinimum = new Promise((resolve) => {
+    window.setTimeout(resolve, minimumDuration);
+  });
+
+  const startTime = performance.now();
+  let frameId = null;
+
+  const step = (timestamp) => {
+    const progress = clamp((timestamp - startTime) / minimumDuration, 0, 1);
+    const phase =
+      phases.find((entry) => progress <= entry.threshold) ?? phases[phases.length - 1];
+
+    phaseNode.textContent = phase.label;
+    copyNode.textContent = phase.copy;
+
+    if (progress < 1) {
+      frameId = window.requestAnimationFrame(step);
+    }
+  };
+
+  frameId = window.requestAnimationFrame(step);
+
+  Promise.all([waitForImage, waitForFonts, waitForMinimum]).then(() => {
+    if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
+    }
+
+    const finalPhase = phases[phases.length - 1];
+    phaseNode.textContent = finalPhase.label;
+    copyNode.textContent = finalPhase.copy;
+    loader.classList.add("is-fading");
+    window.setTimeout(() => {
+      loader.setAttribute("hidden", "hidden");
+    }, reducedMotion ? 180 : 760);
+  });
 };
 
 const createDynamicFavicon = () => {
@@ -299,11 +393,22 @@ const setupInfiniteLoops = (sound) => {
 };
 
 createDynamicFavicon();
+setupIndexLoader();
 
 const sound = createPortfolioSound({
   menuRoot: document.querySelector("[data-sound-menu]"),
   autoLoopCues: ["mainAmbient"],
 });
 
+const cursor = createSignalCursor({
+  defaultLabel: "Drift Gently",
+  defaultAside: "the lake is calm. your tabs are not.",
+});
+
 bindPortfolioSoundTargets(sound);
+bindPortfolioCursorTargets(cursor);
 setupInfiniteLoops(sound);
+
+window.addEventListener("pagehide", () => {
+  cursor?.destroy();
+});

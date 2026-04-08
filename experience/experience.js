@@ -1,4 +1,5 @@
 import { createPortfolioSound } from "../assets/js/site-audio.js";
+import { createSignalCursor } from "../assets/js/site-cursor.js";
 import { PROJECTS } from "./projects.js";
 
 window.__experienceModuleReached = true;
@@ -9,6 +10,7 @@ const state = {
   selectedIndex: 0,
   scene: null,
   sound: null,
+  cursor: null,
 };
 
 let elements;
@@ -125,6 +127,9 @@ const renderProjectList = () => {
         target="_blank"
         rel="noreferrer"
         style="--accent-color: ${project.accent};"
+        data-cursor-label="Project Signal"
+        data-cursor-aside="${project.title} wants to be clicked. deeply."
+        data-cursor-tone="project"
       >
         <div class="project-link-head">
           <span class="project-card-index">${project.index}</span>
@@ -175,13 +180,21 @@ const renderProjectList = () => {
 const renderFallbackLinks = () => {
   elements.fallbackLinks.innerHTML = PROJECTS.map(
     (project) => `
-      <a href="${project.url}" target="_blank" rel="noreferrer">${project.title}</a>
+      <a
+        href="${project.url}"
+        target="_blank"
+        rel="noreferrer"
+        data-cursor-label="Fallback Link"
+        data-cursor-aside="${project.title}, minus the nebula theatrics."
+        data-cursor-tone="project"
+      >${project.title}</a>
     `
   ).join("");
 
   const fallbackLinks = elements.fallbackLinks.querySelectorAll("a");
   state.sound?.bindHover(fallbackLinks);
   state.sound?.bindActivate(fallbackLinks);
+  state.cursor?.bindTargets(fallbackLinks);
 };
 
 const showFallback = (error) => {
@@ -226,9 +239,15 @@ const bootScene = async () => {
         if (state.previewIndex !== index) {
           state.sound?.play("nodePing", { cooldownMs: 140 });
         }
+        state.cursor?.setOverrideMessage({
+          label: PROJECTS[index]?.title ?? "Project Signal",
+          aside: "yes, click the shiny one. that is the entire point.",
+          tone: "project",
+        });
         previewProject(index, "scene");
       },
       onProjectLeave: () => {
+        state.cursor?.clearOverrideMessage();
         clearPreview("scene");
       },
       onProjectSelect: (index) => {
@@ -258,6 +277,10 @@ const initExperience = () => {
     menuRoot: document.querySelector("[data-sound-menu]"),
     autoLoopCues: ["sceneAmbient"],
   });
+  state.cursor = createSignalCursor({
+    defaultLabel: "Drag Field",
+    defaultAside: "careful, the nebula has opinions.",
+  });
 
   if (!elements.openButton || !elements.projectList || !elements.canvas) {
     showFallback(new Error("Experience route failed to find the required DOM mount points."));
@@ -273,6 +296,7 @@ const initExperience = () => {
 
   state.sound.bindHover(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
   state.sound.bindActivate(document.querySelectorAll(".experience-back, .experience-link"));
+  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link"));
 
   elements.openButton.addEventListener("click", () => {
     state.sound?.play("uiConfirm", { cooldownMs: 180 });
@@ -307,4 +331,5 @@ if (document.readyState === "loading") {
 window.addEventListener("pagehide", () => {
   state.scene?.destroy();
   state.sound?.destroy();
+  state.cursor?.destroy();
 });

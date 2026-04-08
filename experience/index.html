@@ -13,6 +13,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@400;500;700;800&display=swap"
     rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/shared-effects.css" />
   <link rel="stylesheet" href="./experience.css" />
   <script type="importmap">
     {
@@ -26,19 +27,35 @@
 <body class="experience-page">
   <div class="experience-shell">
     <div class="experience-stage" aria-hidden="true">
-      <canvas class="experience-canvas"></canvas>
+      <canvas
+        class="experience-canvas"
+        data-cursor-label="Drag Field"
+        data-cursor-aside="careful, the shiny objects bite back"
+      ></canvas>
       <div class="experience-stage-glow"></div>
       <div class="experience-stage-grid"></div>
     </div>
 
     <header class="experience-header">
-      <a class="experience-back" href="../">Back to Portfolio</a>
+      <a
+        class="experience-back"
+        href="../#hero"
+        data-cursor-label="Return"
+        data-cursor-aside="back to the oversized nameplate"
+      >
+        Back to Portfolio
+      </a>
       <div class="experience-header-tools">
         <p class="experience-status">Adaptive render / zero heavy assets / mobile tuned</p>
         <details class="sound-menu experience-sound-menu" data-sound-menu>
-          <summary class="experience-sound-toggle" data-sound-summary>
+          <summary
+            class="experience-sound-toggle"
+            data-sound-summary
+            data-cursor-label="Sound Desk"
+            data-cursor-aside="same controls. slightly more cosmic consequences."
+          >
             <span>Sound</span>
-            <span class="experience-sound-status" data-sound-status>FX + Theme</span>
+            <span class="experience-sound-status" data-sound-status>Muted</span>
           </summary>
           <div class="sound-panel experience-sound-panel">
             <div class="sound-row experience-sound-row">
@@ -47,8 +64,8 @@
                 <span class="sound-setting-note">Clicks, pings, transitions</span>
               </div>
               <div class="sound-choice-group" role="group" aria-label="Effects sound">
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="true">On</button>
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="false">Off</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
               </div>
             </div>
             <div class="sound-row experience-sound-row">
@@ -57,8 +74,8 @@
                 <span class="sound-setting-note">Ambient background loop</span>
               </div>
               <div class="sound-choice-group" role="group" aria-label="Theme sound">
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="true">On</button>
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="false">Off</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
+                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
               </div>
             </div>
           </div>
@@ -69,17 +86,37 @@
     <main class="experience-overlay">
       <section class="experience-copy">
         <p class="experience-kicker">Immersive Portfolio Layer</p>
-        <h1>Step into a quieter, sharper dimension of the work.</h1>
-        <p class="experience-lead">
-          Three live projects sit inside a responsive 3D field. Drag to drift through the scene, hover to inspect a
+        <h1 data-cursor-label="Alternate Route" data-cursor-aside="same person, less gravity">
+          Step into a quieter, sharper dimension of the work.
+        </h1>
+        <p
+          class="experience-lead"
+          data-cursor-label="Field Note"
+          data-cursor-aside="this is the part where the portfolio pretends to be a game"
+          data-cursor-reveal="Three.js, but with better manners."
+        >
+          Four live projects sit inside a responsive 3D field. Drag to drift through the scene, hover to inspect a
           node, and click to launch the live build.
         </p>
 
         <div class="experience-actions">
-          <button class="experience-button" id="open-active-project" type="button">
+          <button
+            class="experience-button"
+            id="open-active-project"
+            type="button"
+            data-cursor-label="Launch Active"
+            data-cursor-aside="the orb approves this decision"
+          >
             Open Active Project
           </button>
-          <a class="experience-link" href="../#projects">Return to Main Site</a>
+          <a
+            class="experience-link"
+            href="../#hero"
+            data-cursor-label="Main Site"
+            data-cursor-aside="the normal world, more or less"
+          >
+            Return to Main Site
+          </a>
         </div>
       </section>
 

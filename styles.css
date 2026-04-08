@@ -34,6 +34,7 @@ html {
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   font-family: "Space Grotesk", sans-serif;
   font-size: var(--body);
   line-height: 1.4;
@@ -111,6 +112,143 @@ figure {
   background-size: 10rem 10rem;
   mix-blend-mode: soft-light;
   opacity: 0.2;
+}
+
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(133, 221, 255, 0.16), transparent 18%),
+    radial-gradient(circle at 50% 70%, rgba(200, 255, 98, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(4, 8, 12, 0.96), rgba(4, 8, 12, 0.985));
+  text-align: center;
+  transition: opacity 720ms ease, visibility 0s linear 720ms;
+}
+
+.site-loader::before,
+.site-loader::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.site-loader::before {
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 180px 100%, 56px 56px, 56px 56px;
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  animation: site-loader-pan 10s linear infinite;
+}
+
+.site-loader::after {
+  inset: 18% 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(133, 221, 255, 0.18), transparent 62%);
+  filter: blur(44px);
+  opacity: 0.5;
+  animation: site-loader-breathe 4.4s ease-in-out infinite;
+}
+
+.site-loader[hidden] {
+  display: none !important;
+}
+
+.site-loader.is-fading {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.site-loader-core {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(40vw, 11rem);
+  aspect-ratio: 1;
+}
+
+.site-loader-ring,
+.site-loader-dot {
+  position: absolute;
+  inset: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.site-loader-ring {
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.site-loader-ring-outer {
+  width: 100%;
+  border-top-color: var(--accent);
+  border-right-color: rgba(133, 221, 255, 0.72);
+  animation: loader-spin 2.4s linear infinite;
+}
+
+.site-loader-ring-middle {
+  width: 74%;
+  border-left-color: rgba(255, 255, 255, 0.34);
+  border-bottom-color: rgba(133, 221, 255, 0.54);
+  animation: loader-spin-reverse 1.7s linear infinite;
+}
+
+.site-loader-ring-inner {
+  width: 48%;
+  background: conic-gradient(
+    from 180deg,
+    rgba(200, 255, 98, 0.72),
+    rgba(133, 221, 255, 0.26),
+    transparent 68%,
+    rgba(200, 255, 98, 0.72)
+  );
+  -webkit-mask: radial-gradient(circle, transparent 52%, black 56%);
+  mask: radial-gradient(circle, transparent 52%, black 56%);
+  animation: loader-spin 3.2s linear infinite;
+}
+
+.site-loader-dot {
+  width: 1rem;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle, rgba(246, 240, 231, 0.98), rgba(133, 221, 255, 0.32) 64%, transparent 72%);
+  box-shadow:
+    0 0 24px rgba(133, 221, 255, 0.4),
+    0 0 40px rgba(200, 255, 98, 0.18);
+}
+
+.site-loader-label,
+.site-loader-phase {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+}
+
+.site-loader-label {
+  color: var(--soft);
+  font-size: 0.72rem;
+}
+
+.site-loader-phase {
+  font-family: "Syne", sans-serif;
+  font-size: clamp(1.7rem, 4vw, 3.1rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  text-transform: none;
+}
+
+.site-loader-copy {
+  max-width: 26rem;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .site-chrome {
@@ -342,6 +480,8 @@ figure {
   overflow-x: hidden;
   overscroll-behavior: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
 }
 
 .loop-shell::-webkit-scrollbar {
@@ -948,9 +1088,14 @@ figure {
     justify-content: flex-start;
   }
 
+  .sound-toggle {
+    min-height: 2.85rem;
+  }
+
   .sound-panel {
     right: auto;
     left: 0;
+    min-width: min(19rem, calc(100vw - 2rem));
   }
 
   .scene {
@@ -1020,7 +1165,7 @@ figure {
 @media (max-width: 640px) {
   :root {
     --scene-length: 122svh;
-    --mega: clamp(3.6rem, 18vw, 8rem);
+    --mega: clamp(2.15rem, 11.4vw, 3.85rem);
     --title: clamp(2.4rem, 12vw, 4.5rem);
   }
 
@@ -1030,10 +1175,47 @@ figure {
 
   .scene {
     padding-inline: 1rem;
+    padding-top: 12.4rem;
+  }
+
+  .scene-poster {
+    align-content: start;
   }
 
   .site-chrome {
+    grid-template-columns: auto auto;
+    align-items: start;
+    row-gap: 0.45rem;
+    column-gap: 0.75rem;
+    padding-top: 0.85rem;
+    padding-bottom: 0.65rem;
     padding-inline: 1rem;
+  }
+
+  .brand-lockup {
+    grid-column: 1;
+  }
+
+  .chrome-links {
+    grid-column: 2;
+    justify-content: flex-end;
+    align-self: start;
+    gap: 0.75rem;
+  }
+
+  .chrome-locale {
+    grid-column: 1 / -1;
+    max-width: 24ch;
+    font-size: 0.66rem;
+    line-height: 1.35;
+  }
+
+  .site-loader {
+    padding: 1rem;
+  }
+
+  .site-loader-core {
+    width: min(52vw, 9rem);
   }
 
   .mega-line-offset,
@@ -1043,7 +1225,35 @@ figure {
   }
 
   .poster-frame {
-    width: min(82vw, 22rem);
+    width: min(74vw, 19rem);
+  }
+
+  .poster-layout {
+    gap: 0.9rem;
+  }
+
+  .poster-copy {
+    gap: 0.55rem;
+  }
+
+  .mega-stack {
+    margin-top: 4.6rem;
+  }
+
+  .poster-frame figcaption {
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .lead-statement {
+    max-width: 16ch;
+  }
+
+  .scene-meta,
+  .micro-line {
+    font-size: 0.64rem;
   }
 
   .contact-link {
@@ -1056,6 +1266,11 @@ figure {
 
   .sound-choice-group {
     justify-self: start;
+  }
+
+  .sound-choice {
+    min-width: 3.8rem;
+    min-height: 2.5rem;
   }
 
   .gateway-link {
@@ -1083,5 +1298,52 @@ figure {
 
   .sound-choice {
     transition: none;
+  }
+
+  .site-loader::before,
+  .site-loader::after,
+  .site-loader-ring-outer,
+  .site-loader-ring-middle,
+  .site-loader-ring-inner {
+    animation: none;
+  }
+}
+
+@keyframes site-loader-pan {
+  from {
+    transform: translateX(-8%);
+  }
+  to {
+    transform: translateX(8%);
+  }
+}
+
+@keyframes site-loader-breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.32;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.58;
+  }
+}
+
+@keyframes loader-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes loader-spin-reverse {
+  from {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(0deg);
   }
 }

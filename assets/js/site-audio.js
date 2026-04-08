@@ -1,8 +1,8 @@
-const STORAGE_KEY = "jvw-portfolio-sound-settings";
+const STORAGE_KEY = "jvw-portfolio-sound-settings-v2";
 const AUDIO_BASE_URL = new URL("../audio/", import.meta.url);
 const DEFAULT_SETTINGS = Object.freeze({
-  effects: true,
-  ambience: true,
+  effects: false,
+  ambience: false,
 });
 
 const AUDIO_CUES = Object.freeze({
@@ -44,8 +44,8 @@ const readStoredState = () => {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
     return {
-      effects: parsed.effects !== false,
-      ambience: parsed.ambience !== false,
+      effects: parsed.effects === true,
+      ambience: parsed.ambience === true,
     };
   } catch {
     return { ...DEFAULT_SETTINGS };

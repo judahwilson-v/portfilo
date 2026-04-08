@@ -5,8 +5,8 @@ export const PROJECTS = [
     title: "Lake Portfolio",
     category: "Personal Brand Flow",
     blurb:
-      "A contact-focused portfolio route with a sharper handoff into outreach and direct conversation.",
-    url: "https://portfilo-lake.vercel.app/#contact",
+      "A kinetic portfolio route built to open at the statement first, then let the contact handoff happen naturally.",
+    url: "https://portfilo-lake.vercel.app/",
     accent: "#bcff66",
     glow: "#d4ff85",
     geometry: "sphere",
@@ -37,5 +37,19 @@ export const PROJECTS = [
     glow: "#ff7c67",
     geometry: "icosahedron",
     scale: 1,
+  },
+  {
+    id: "kl-40",
+    index: "04",
+    title: "KL-40",
+    category: "Experimental Interface",
+    blurb:
+      "A sharper concept build added as a fourth signal in the field, with a colder tone and a more fractured shape language.",
+    url: "https://kl-40-git-main-judahvijai-8414s-projects.vercel.app/",
+    accent: "#93d8ff",
+    glow: "#dff4ff",
+    geometry: "dodecahedron",
+    scale: 0.88,
+    shards: 5,
   },
 ];

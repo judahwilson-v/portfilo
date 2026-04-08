@@ -19,11 +19,23 @@
     rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2305070b'/%3E%3Crect x='15' y='15' width='34' height='34' rx='8' fill='%23c8ff62'/%3E%3C/svg%3E"
   />
+  <link rel="stylesheet" href="./assets/shared-effects.css" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <div class="site-grid" aria-hidden="true"></div>
   <div class="site-noise" aria-hidden="true"></div>
+  <div class="site-loader" id="site-loader" role="status" aria-live="polite">
+    <div class="site-loader-core" aria-hidden="true">
+      <span class="site-loader-ring site-loader-ring-outer"></span>
+      <span class="site-loader-ring site-loader-ring-middle"></span>
+      <span class="site-loader-ring site-loader-ring-inner"></span>
+      <span class="site-loader-dot"></span>
+    </div>
+    <p class="site-loader-label">Lake Portfolio</p>
+    <p class="site-loader-phase" id="site-loader-phase">Skimming the lake surface</p>
+    <p class="site-loader-copy" id="site-loader-copy">Filtering out the generic portfolio energy.</p>
+  </div>
 
   <header class="site-chrome">
     <div class="brand-lockup">
@@ -34,11 +46,22 @@
     <p class="chrome-locale">Kochi, Kerala. Built with code, pressure, and motion.</p>
 
     <nav class="chrome-links" aria-label="External links">
-      <a href="./experience/">Experience</a>
+      <a
+        href="./experience/"
+        data-cursor-label="Portal"
+        data-cursor-aside="the 3D room is one click away"
+      >
+        Experience
+      </a>
       <details class="sound-menu" data-sound-menu>
-        <summary class="sound-toggle" data-sound-summary>
+        <summary
+          class="sound-toggle"
+          data-sound-summary
+          data-cursor-label="Sound Desk"
+          data-cursor-aside="you are now the accidental audio engineer"
+        >
           <span>Sound</span>
-          <span class="sound-toggle-status" data-sound-status>FX + Theme</span>
+          <span class="sound-toggle-status" data-sound-status>Muted</span>
         </summary>
         <div class="sound-panel">
           <div class="sound-row">
@@ -47,8 +70,8 @@
               <span class="sound-setting-note">Clicks, hovers, transitions</span>
             </div>
             <div class="sound-choice-group" role="group" aria-label="Effects sound">
-              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="true">On</button>
-              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="false">Off</button>
+              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
+              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
             </div>
           </div>
           <div class="sound-row">
@@ -57,8 +80,8 @@
               <span class="sound-setting-note">Background ambience loop</span>
             </div>
             <div class="sound-choice-group" role="group" aria-label="Theme sound">
-              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="true">On</button>
-              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="false">Off</button>
+              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
+              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
             </div>
           </div>
         </div>
@@ -69,27 +92,44 @@
   <main class="loop-shell" data-loop-shell aria-label="Infinite portfolio loop">
     <div class="loop-track" data-loop-track>
       <div class="loop-segment" data-loop-source>
-        <section class="scene scene-poster" data-scene>
+        <section class="scene scene-poster" data-scene id="hero">
           <p class="scene-meta">AI-native builds / creative development / anti-template surfaces</p>
 
           <div class="poster-layout">
             <div class="poster-copy">
               <p class="micro-line">Built to move.</p>
-              <h1 class="mega-stack" data-scroll-slab style="--plane-rotate: -1deg;">
+              <h1
+                class="mega-stack"
+                data-scroll-slab
+                data-cursor-label="Main Character"
+                data-cursor-aside="yes, the name is doing most of the talking"
+                style="--plane-rotate: -1deg;"
+              >
                 <span class="mega-line">JUDAH</span>
                 <span class="mega-line mega-line-offset">VIJAI</span>
                 <span class="mega-line mega-line-accent">WILSON</span>
               </h1>
             </div>
 
-            <figure class="poster-frame" data-scroll-slab style="--plane-rotate: -4deg;">
+            <figure
+              class="poster-frame"
+              data-scroll-slab
+              data-cursor-label="Proof Of Life"
+              data-cursor-aside="he does, in fact, leave the code editor sometimes"
+              style="--plane-rotate: -4deg;"
+            >
               <img src="./assets/hero-temp.jpg" alt="Judah Vijai Wilson portrait" />
               <figcaption>Interfaces with tension, negative space, and a little violence in the rhythm.</figcaption>
             </figure>
           </div>
 
           <div class="poster-foot">
-            <p class="lead-statement">
+            <p
+              class="lead-statement"
+              data-cursor-label="Human Note"
+              data-cursor-aside="resume? not exactly. weather system? closer."
+              data-cursor-reveal="Not a PDF. We can all breathe."
+            >
               I build live web surfaces that feel closer to installations than resumes.
             </p>
 
@@ -115,6 +155,8 @@
               href="https://diamond-banquet-hall.vercel.app"
               target="_blank"
               rel="noreferrer"
+              data-cursor-label="Visit Build"
+              data-cursor-aside="hospitality, minus the boring brochure energy"
             >
               Open live build
             </a>
@@ -131,6 +173,8 @@
               href="https://olivoranaturals.vercel.app/"
               target="_blank"
               rel="noreferrer"
+              data-cursor-label="Visit Build"
+              data-cursor-aside="clean brand, zero decorative panic"
             >
               Open brand site
             </a>
@@ -179,8 +223,24 @@
           <p class="scene-meta">Gateway links</p>
 
           <div class="gateway-stack">
-            <a class="gateway-link" href="/trajectory/" data-scroll-slab>Trajectory</a>
-            <a class="gateway-link gateway-link-alt" href="/education/" data-scroll-slab>Education</a>
+            <a
+              class="gateway-link"
+              href="/trajectory/"
+              data-scroll-slab
+              data-cursor-label="Side Quest"
+              data-cursor-aside="career lore, lightly dramatized"
+            >
+              Trajectory
+            </a>
+            <a
+              class="gateway-link gateway-link-alt"
+              href="/education/"
+              data-scroll-slab
+              data-cursor-label="Academic Plot"
+              data-cursor-aside="grades and side missions inside"
+            >
+              Education
+            </a>
           </div>
         </section>
 
@@ -192,7 +252,15 @@
           </h2>
 
           <div class="contact-grid">
-            <a class="contact-link" href="https://github.com/judahwilson-v" target="_blank" rel="noreferrer" data-scroll-slab>
+            <a
+              class="contact-link"
+              href="https://github.com/judahwilson-v"
+              target="_blank"
+              rel="noreferrer"
+              data-scroll-slab
+              data-cursor-label="Send Signal"
+              data-cursor-aside="code first. small talk later."
+            >
               <span class="contact-link-label">GitHub</span>
               <span class="contact-link-value">judahwilson-v</span>
             </a>
@@ -203,28 +271,57 @@
               target="_blank"
               rel="noreferrer"
               data-scroll-slab
+              data-cursor-label="Send Signal"
+              data-cursor-aside="yes, there is evidence of sunlight"
             >
               <span class="contact-link-label">Instagram</span>
               <span class="contact-link-value">judah.wils0n</span>
             </a>
 
-            <a class="contact-link" href="https://www.linkedin.com/in/judahv/" target="_blank" rel="noreferrer" data-scroll-slab>
+            <a
+              class="contact-link"
+              href="https://www.linkedin.com/in/judahv/"
+              target="_blank"
+              rel="noreferrer"
+              data-scroll-slab
+              data-cursor-label="Send Signal"
+              data-cursor-aside="professionally polite, surprisingly real"
+            >
               <span class="contact-link-label">LinkedIn</span>
               <span class="contact-link-value">/in/judahv/</span>
             </a>
 
-            <a class="contact-link" href="mailto:judahvijai@gmail.com" data-scroll-slab>
+            <a
+              class="contact-link"
+              href="mailto:judahvijai@gmail.com"
+              data-scroll-slab
+              data-cursor-label="Send Signal"
+              data-cursor-aside="email: still undefeated"
+            >
               <span class="contact-link-label">Email</span>
               <span class="contact-link-value">judahvijai@gmail.com</span>
             </a>
 
-            <a class="contact-link" href="tel:+918848717711" data-scroll-slab>
+            <a
+              class="contact-link"
+              href="tel:+918848717711"
+              data-scroll-slab
+              data-cursor-label="Send Signal"
+              data-cursor-aside="old school. still effective."
+            >
               <span class="contact-link-label">Phone</span>
               <span class="contact-link-value">+91 8848717711</span>
             </a>
           </div>
 
-          <p class="contact-note">Scroll keeps looping. So does the work.</p>
+          <p
+            class="contact-note"
+            data-cursor-label="Tiny Truth"
+            data-cursor-aside="ambition with a refresh loop"
+            data-cursor-reveal="Scroll keeps looping. So does the overthinking."
+          >
+            Scroll keeps looping. So does the work.
+          </p>
         </section>
       </div>
     </div>

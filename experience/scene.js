@@ -3,30 +3,38 @@ import * as THREE from "three";
 const PROJECT_LAYOUTS = {
   regular: [
     {
-      position: [0, 1.65, -0.8],
+      position: [0, 1.95, -0.85],
       focusYaw: 0,
     },
     {
-      position: [-3.15, -1.1, 1.5],
+      position: [-3.3, 0.05, 1.5],
       focusYaw: 0.16,
     },
     {
-      position: [3.15, -1.1, 1.5],
+      position: [3.3, 0.05, 1.5],
       focusYaw: -0.16,
+    },
+    {
+      position: [0, -2.15, 2.05],
+      focusYaw: 0,
     },
   ],
   compact: [
     {
-      position: [0, 1.35, -0.55],
+      position: [0, 1.55, -0.55],
       focusYaw: 0,
     },
     {
-      position: [-2.35, -0.95, 1.15],
+      position: [-2.05, -0.15, 1.15],
       focusYaw: 0.13,
     },
     {
-      position: [2.35, -0.95, 1.15],
+      position: [2.05, -0.15, 1.15],
       focusYaw: -0.13,
+    },
+    {
+      position: [0, -1.85, 1.8],
+      focusYaw: 0,
     },
   ],
 };
@@ -109,6 +117,8 @@ const createNodeGeometry = (THREE, project) => {
       return new THREE.TorusGeometry(0.66 * scale, 0.18 * scale, 12, 56);
     case "icosahedron":
       return new THREE.IcosahedronGeometry(0.92 * scale, 0);
+    case "dodecahedron":
+      return new THREE.DodecahedronGeometry(0.84 * scale, 0);
     default:
       return new THREE.BoxGeometry(0.95 * scale, 0.95 * scale, 0.95 * scale);
   }
@@ -165,8 +175,8 @@ export const createExperienceScene = async ({
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x040811, isCompactViewport ? 0.085 : 0.07);
 
-  const camera = new THREE.PerspectiveCamera(isCompactViewport ? 46 : 42, 1, 0.1, 60);
-  camera.position.set(0, 0.7, isCompactViewport ? 8.9 : 8.15);
+  const camera = new THREE.PerspectiveCamera(isCompactViewport ? 47 : 42, 1, 0.1, 60);
+  camera.position.set(0, 0.55, isCompactViewport ? 9.6 : 8.65);
 
   const cameraRig = new THREE.Group();
   cameraRig.add(camera);
@@ -298,7 +308,7 @@ export const createExperienceScene = async ({
   floorHalo.scale.set(10.5, 10.5, 1);
   world.add(floorHalo);
 
-  const particleCount = reducedMotion ? 70 : isCompactViewport ? 110 : 170;
+  const particleCount = reducedMotion ? 76 : isCompactViewport ? 104 : 182;
   const particlePositions = new Float32Array(particleCount * 3);
   const particleSizes = new Float32Array(particleCount);
 
@@ -410,6 +420,41 @@ export const createExperienceScene = async ({
     orbit.rotation.y = Math.PI / 2;
     node.add(orbit);
 
+    const shardCluster = new THREE.Group();
+
+    if (project.shards) {
+      for (let shardIndex = 0; shardIndex < project.shards; shardIndex += 1) {
+        const shard = new THREE.Mesh(
+          trackGeometry(new THREE.TetrahedronGeometry(project.scale * 0.18, 0)),
+          trackMaterial(
+            new THREE.MeshBasicMaterial({
+              color: glowColor,
+              transparent: true,
+              opacity: 0.55,
+              blending: THREE.AdditiveBlending,
+            })
+          )
+        );
+
+        const angle = (Math.PI * 2 * shardIndex) / project.shards;
+        const radius = project.scale * (1.05 + (shardIndex % 2) * 0.28);
+        shard.position.set(
+          Math.cos(angle) * radius,
+          (shardIndex % 2 === 0 ? 1 : -1) * project.scale * 0.3,
+          Math.sin(angle) * radius
+        );
+        shard.rotation.set(angle * 0.6, angle, angle * 0.35);
+        shard.userData = {
+          baseY: shard.position.y,
+          wobbleOffset: angle,
+          spinRate: 0.6 + shardIndex * 0.08,
+        };
+        shardCluster.add(shard);
+      }
+
+      node.add(shardCluster);
+    }
+
     node.userData = {
       index,
       project,
@@ -417,6 +462,7 @@ export const createExperienceScene = async ({
       edgeLines,
       aura,
       orbit,
+      shardCluster,
       baseY: y,
       floatPhase: Math.random() * Math.PI * 2,
       floatSpeed: 0.82 + index * 0.12,
@@ -724,6 +770,7 @@ export const createExperienceScene = async ({
         edgeLines,
         aura,
         orbit,
+        shardCluster,
         baseY,
         floatPhase,
         floatSpeed,
@@ -744,6 +791,17 @@ export const createExperienceScene = async ({
       aura.material.opacity = THREE.MathUtils.lerp(aura.material.opacity, emphasis ? 0.74 : 0.26, 0.08);
       orbit.material.opacity = THREE.MathUtils.lerp(orbit.material.opacity, emphasis ? 0.5 : 0.14, 0.08);
       orbit.rotation.z += delta * (emphasis ? 1 : 0.45);
+
+      if (shardCluster?.children?.length) {
+        shardCluster.rotation.y += delta * (emphasis ? 0.9 : 0.45);
+        shardCluster.rotation.x = Math.sin(elapsed * 0.45 + floatPhase) * 0.2;
+
+        shardCluster.children.forEach((shard) => {
+          shard.rotation.x += delta * shard.userData.spinRate;
+          shard.rotation.y += delta * shard.userData.spinRate * 0.65;
+          shard.position.y = shard.userData.baseY + Math.sin(elapsed * 0.9 + shard.userData.wobbleOffset) * 0.08;
+        });
+      }
 
       const revealScale = entrance.active ? 1 : 0;
       const emphasisScale = revealScale === 1 && node.scale.x > 0.98 && emphasis ? 1.16 : 1;
