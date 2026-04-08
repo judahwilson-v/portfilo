@@ -74,20 +74,30 @@
       <span id="render-status">Preparing adaptive render</span>
     </div>
 
-    <div class="experience-loading" id="experience-loading" role="status" aria-live="polite">
-      <div class="loading-orbit" aria-hidden="true">
-        <span class="loading-orbit-core"></span>
-        <span class="loading-ring loading-ring-primary"></span>
-        <span class="loading-ring loading-ring-secondary"></span>
-      </div>
-      <p>Booting experience</p>
-      <span>Tracing module delivery, import map registration, and WebGL readiness.</span>
-      <div class="loading-signals" aria-label="Boot checks">
-        <span class="loading-signal" id="diagnostic-html-signal">HTML parsed</span>
-        <span class="loading-signal" id="diagnostic-modules-signal">ES modules: checking</span>
-        <span class="loading-signal" id="diagnostic-importmap-signal">Import maps: checking</span>
-        <span class="loading-signal" id="diagnostic-webgl-signal">WebGL API: checking</span>
-        <span class="loading-signal" id="diagnostic-module-entry-signal">Main module: waiting</span>
+    <div id="loader-ui">
+      <div class="experience-loading" id="experience-loading" role="status" aria-live="polite">
+        <p class="loader-label">Dimensional Transfer</p>
+        <div class="loader-core" aria-hidden="true">
+          <span class="loader-core-ring loader-core-ring-outer"></span>
+          <span class="loader-core-ring loader-core-ring-inner"></span>
+          <span class="loader-core-dot"></span>
+        </div>
+        <div class="loader-meta">
+          <span class="loader-phase" id="loader-phase">Aligning signal lattice</span>
+          <span class="loader-percentage" id="loader-percentage">0%</span>
+        </div>
+        <div
+          class="loader-track"
+          id="loader-track"
+          role="progressbar"
+          aria-label="Experience loading progress"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span class="loader-track-fill" id="loader-track-fill"></span>
+        </div>
+        <p class="loader-copy">Crossfading from interface space into the live project field.</p>
       </div>
     </div>
 
