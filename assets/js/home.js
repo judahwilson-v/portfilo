@@ -10,6 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const coarsePointer = window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches;
 const loaderSessionKey = "lake-entry-seen";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -69,7 +70,7 @@ const bindHomepageSoundTargets = (sound) => {
   }
 
   const targets = document.querySelectorAll(
-    ".chrome-links a, .scene-button, .scene-link, .social-link, .utility-link, .sound-toggle, .sound-choice, .cursor-toggle, [data-about-reveal]"
+    ".chrome-links a, .scene-button, .scene-link, .social-link, .utility-link, .sound-toggle, .sound-choice, [data-sound-master-toggle], .cursor-toggle, [data-about-reveal]"
   );
 
   sound.bindHover(targets);
@@ -147,10 +148,10 @@ const createDynamicFavicon = () => {
     square.angle += delta * 2.4;
 
     context.clearRect(0, 0, 32, 32);
-    context.fillStyle = "#05070b";
+    context.fillStyle = "#070506";
     context.fillRect(0, 0, 32, 32);
 
-    context.strokeStyle = "rgba(133, 221, 255, 0.35)";
+    context.strokeStyle = "rgba(225, 29, 63, 0.34)";
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(0, 16);
@@ -162,7 +163,7 @@ const createDynamicFavicon = () => {
     context.save();
     context.translate(square.x + square.size / 2, square.y + square.size / 2);
     context.rotate(square.angle);
-    context.fillStyle = "#c8ff62";
+    context.fillStyle = "#e11d3f";
     context.fillRect(-square.size / 2, -square.size / 2, square.size, square.size);
     context.strokeStyle = "#f6f0e7";
     context.strokeRect(-square.size / 2, -square.size / 2, square.size, square.size);
@@ -250,14 +251,24 @@ const updateGatewayWords = (words, progress) => {
 
   const phaseSize = 1 / words.length;
   const lastIndex = words.length - 1;
-  const states = words.map((_, index) => {
+  const states = words.map((word, index) => {
     const phaseStart = index * phaseSize;
     const center = index === 0
-      ? phaseStart + phaseSize * 0.2
+      ? phaseStart + phaseSize * 0.16
       : index === lastIndex
-        ? phaseStart + phaseSize * 0.82
+        ? phaseStart + phaseSize * 0.84
         : phaseStart + phaseSize * 0.5;
-    const focusRaw = clamp(1 - Math.abs(progress - center) / (phaseSize * 1.16), 0, 1);
+    const linger = clamp(
+      Number.parseFloat(word.dataset.gatewayWordLinger ?? "1"),
+      0.75,
+      2
+    );
+    const distance = Math.abs(progress - center);
+    const plateau = phaseSize * 0.16 * linger;
+    const falloff = phaseSize * 0.76 * linger;
+    const focusRaw = distance <= plateau
+      ? 1
+      : clamp(1 - (distance - plateau) / falloff, 0, 1);
 
     return {
       focus: smoothstep(0, 1, focusRaw),
@@ -284,14 +295,14 @@ const updateGatewayWords = (words, progress) => {
 
 const getGatewayWordTravel = (word) => {
   const speed = Number.parseFloat(word.dataset.gatewayWordSpeed ?? "0.4");
-  return clamp(window.innerHeight * speed, 96, window.innerHeight * 0.92);
+  return clamp(window.innerHeight * speed, 84, window.innerHeight * 0.68);
 };
 
 const sceneFocusProfiles = {
   hero: {
-    currentBias: 0.31,
-    focusSpread: 0.58,
-    focusExponent: 1.75,
+    currentBias: 0.44,
+    focusSpread: 0.92,
+    focusExponent: 1.22,
   },
   about: {
     currentBias: 0.34,
@@ -373,7 +384,7 @@ const setupParallax = ({ shell }) => {
           scroller: shell,
           start: "top bottom",
           end: "bottom top",
-          scrub: reducedMotion ? false : 0.7,
+          scrub: reducedMotion ? false : 0.45,
         },
       }
     );
@@ -384,25 +395,30 @@ const setupHeroEntrance = (scope = document) => {
   const title = scope.querySelector("[data-hero-title]");
   const statement = scope.querySelector("[data-hero-copy]");
   const actions = scope.querySelector(".hero-actions");
+  const photo = scope.querySelector("[data-hero-photo]");
   const notes = scope.querySelectorAll(".hero-signal-line, .hero-satellite, .hero-orbit");
 
-  if (!title || !statement || !actions) {
+  if (!title) {
     return;
   }
 
-  gsap
-    .timeline({
-      defaults: { ease: "power3.out" },
-      delay: reducedMotion ? 0 : 0.12,
-    })
-    .from(title.children, {
-      yPercent: 100,
-      opacity: 0,
-      stagger: 0.08,
-      duration: 0.9,
-    })
-    .from(
-      [statement, actions],
+  const secondaryTargets = [statement, actions, photo].filter(Boolean);
+
+  const timeline = gsap.timeline({
+    defaults: { ease: "power3.out" },
+    delay: reducedMotion ? 0 : 0.12,
+  });
+
+  timeline.from(title.children, {
+    yPercent: 100,
+    opacity: 0,
+    stagger: 0.08,
+    duration: 0.9,
+  });
+
+  if (secondaryTargets.length) {
+    timeline.from(
+      secondaryTargets,
       {
         y: 36,
         opacity: 0,
@@ -410,8 +426,11 @@ const setupHeroEntrance = (scope = document) => {
         duration: 0.7,
       },
       "-=0.38"
-    )
-    .from(
+    );
+  }
+
+  if (notes.length) {
+    timeline.from(
       notes,
       {
         y: 24,
@@ -419,8 +438,9 @@ const setupHeroEntrance = (scope = document) => {
         stagger: 0.06,
         duration: 0.5,
       },
-      "-=0.28"
+      secondaryTargets.length ? "-=0.28" : "-=0.32"
     );
+  }
 };
 
 const setTextRevealPosition = (surface, clientX, clientY) => {
@@ -498,8 +518,6 @@ const bindMaskedRevealSurface = (surface, { coarsePointer = false, allowTapLock 
 };
 
 const setupAboutScene = ({ shell }) => {
-  const coarsePointer = window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches;
-
   document.querySelectorAll(".scene-about").forEach((scene) => {
     const meta = scene.querySelector(".about-meta");
     const surface = scene.querySelector("[data-about-reveal]");
@@ -578,7 +596,7 @@ const setupGatewayScene = ({ shell }) => {
           scroller: shell,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1,
+          scrub: 0.45,
           invalidateOnRefresh: true,
         },
       });
@@ -602,7 +620,7 @@ const setupGatewayScene = ({ shell }) => {
       scroller: shell,
       start: "top top",
       end: "bottom bottom",
-      scrub: reducedMotion ? false : 1,
+      scrub: reducedMotion ? false : 0.45,
       onRefresh: (self) => {
         updateGatewayWords(words, self.progress);
       },
@@ -654,15 +672,15 @@ const setupContactScene = ({ shell }) => {
         {
           yPercent: 8,
           ease: "none",
-          scrollTrigger: {
-            trigger: scene,
-            scroller: shell,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.8,
-          },
-        }
-      );
+        scrollTrigger: {
+          trigger: scene,
+          scroller: shell,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 0.45,
+        },
+      }
+    );
     }
   });
 };
@@ -739,9 +757,9 @@ const setupInfiniteHomepage = () => {
   const lenis = new Lenis({
     wrapper: shell,
     content: track,
-    duration: reducedMotion ? 0 : 1.04,
+    duration: reducedMotion ? 0 : 0.82,
     smoothWheel: !reducedMotion,
-    syncTouch: true,
+    syncTouch: false,
     gestureOrientation: "vertical",
     autoRaf: false,
   });
@@ -772,8 +790,8 @@ const setupInfiniteHomepage = () => {
   let isResetting = false;
 
   const setVelocityVariables = (velocity = 0) => {
-    const skew = reducedMotion ? 0 : clamp(velocity * -0.0028, -0.9, 0.9);
-    const shift = reducedMotion ? 0 : clamp(Math.abs(velocity) * 0.045, 0, 4);
+    const skew = reducedMotion || coarsePointer ? 0 : clamp(velocity * -0.0018, -0.45, 0.45);
+    const shift = reducedMotion || coarsePointer ? 0 : clamp(Math.abs(velocity) * 0.03, 0, 2.2);
     root.style.setProperty("--scroll-skew", `${skew.toFixed(2)}deg`);
     root.style.setProperty("--velocity-shift", `${shift.toFixed(2)}px`);
   };
@@ -805,8 +823,11 @@ const setupInfiniteHomepage = () => {
     }
 
     const currentScrollTop = shell.scrollTop;
+    const wrapBuffer = Math.max(6, Math.min(window.innerHeight * 0.015, segmentHeight * 0.006));
+    const sourceStart = segmentHeight;
+    const sourceEnd = segmentHeight * 2;
 
-    if (currentScrollTop <= segmentHeight * 0.18) {
+    if (currentScrollTop < sourceStart - wrapBuffer) {
       isResetting = true;
       lenis.scrollTo(currentScrollTop + segmentHeight, { immediate: true, force: true });
       requestAnimationFrame(() => {
@@ -814,7 +835,7 @@ const setupInfiniteHomepage = () => {
         ScrollTrigger.update();
         updateSceneStates(shell, loopScenes);
       });
-    } else if (currentScrollTop >= segmentHeight * 1.82) {
+    } else if (currentScrollTop > sourceEnd + wrapBuffer) {
       isResetting = true;
       lenis.scrollTo(currentScrollTop - segmentHeight, { immediate: true, force: true });
       requestAnimationFrame(() => {
@@ -832,7 +853,6 @@ const setupInfiniteHomepage = () => {
 
   frameId = requestAnimationFrame(raf);
 
-  setupHeroEntrance(source);
   setupAboutScene({ shell });
   setupGatewayScene({ shell });
   setupContactScene({ shell });

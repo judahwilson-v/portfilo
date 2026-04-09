@@ -23,6 +23,7 @@ const getElements = () => ({
   projectBlurb: document.querySelector("#project-blurb"),
   projectIndex: document.querySelector("#project-index"),
   projectHint: document.querySelector("#project-hint"),
+  loadingShell: document.querySelector("#loader-ui"),
   loading: document.querySelector("#experience-loading"),
   fallback: document.querySelector("#experience-fallback"),
   fallbackLinks: document.querySelector("#fallback-links"),
@@ -206,6 +207,7 @@ const showFallback = (error) => {
   window.__experienceDiagnostics?.push(`Scene fallback: ${reason}`, "error");
 
   document.body.classList.add("scene-failed", "is-ready");
+  elements?.loadingShell?.setAttribute("hidden", "hidden");
   elements?.loading?.setAttribute("hidden", "hidden");
 
   if (elements?.fallback) {
@@ -298,7 +300,7 @@ const initExperience = () => {
 
   state.sound.bindHover(
     document.querySelectorAll(
-      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-cursor-toggle]"
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], [data-cursor-toggle]"
     )
   );
   state.sound.bindActivate(

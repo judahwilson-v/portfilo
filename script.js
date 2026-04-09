@@ -30,7 +30,7 @@ const bindHomepageSoundTargets = (sound) => {
   }
 
   const interactiveTargets = document.querySelectorAll(
-    ".chrome-links a, .scene-button, .scene-link, .utility-link, .social-link, .sound-toggle, .sound-choice, #enter-site"
+    ".chrome-links a, .scene-button, .scene-link, .utility-link, .social-link, .sound-toggle, .sound-choice, [data-sound-master-toggle], #enter-site"
   );
 
   sound.bindHover(interactiveTargets);
