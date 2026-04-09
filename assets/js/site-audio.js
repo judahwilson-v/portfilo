@@ -88,6 +88,20 @@ const getStatusLabel = (settings) => {
   return "Muted";
 };
 
+const hasAnySoundEnabled = (settings) => settings.effects || settings.ambience;
+
+const getMasterLabel = (settings) => {
+  if (settings.effects && settings.ambience) {
+    return "On";
+  }
+
+  if (!settings.effects && !settings.ambience) {
+    return "Off";
+  }
+
+  return "Custom";
+};
+
 class PortfolioSoundController {
   constructor({ menuRoot, autoLoopCues = [] } = {}) {
     this.menuRoot = menuRoot ?? null;
@@ -101,6 +115,8 @@ class PortfolioSoundController {
     this.statusNode = this.menuRoot?.querySelector("[data-sound-status]") ?? null;
     this.toggleAllButton = this.menuRoot?.querySelector("[data-sound-toggle-all]") ?? null;
     this.settingChoices = new Map();
+    this.masterToggleButtons = Array.from(document.querySelectorAll("[data-sound-master-toggle]"));
+    this.masterStatusNodes = Array.from(document.querySelectorAll("[data-sound-master-status]"));
     this.hasSyncedUi = false;
 
     this.handleFirstGesture = this.handleFirstGesture.bind(this);
@@ -114,7 +130,16 @@ class PortfolioSoundController {
   }
 
   bindMenu() {
+    this.masterToggleButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.unlock();
+        this.setAllEnabled(!hasAnySoundEnabled(this.settings));
+      });
+    });
+
     if (!this.menuRoot) {
+      this.syncMenu();
       return;
     }
 
@@ -238,24 +263,30 @@ class PortfolioSoundController {
   }
 
   syncMenu() {
+    const hasAnyEnabled = hasAnySoundEnabled(this.settings);
+    const statusLabel = getStatusLabel(this.settings);
+    const masterLabel = getMasterLabel(this.settings);
+
+    this.masterStatusNodes.forEach((node) => {
+      this.updateStatusNode(node, masterLabel);
+    });
+
+    this.masterToggleButtons.forEach((button) => {
+      button.setAttribute("aria-pressed", String(hasAnyEnabled));
+      button.setAttribute("aria-label", masterLabel === "Custom" ? "Sound custom" : hasAnyEnabled ? "Sound on" : "Sound off");
+      button.dataset.soundMasterState = masterLabel.toLowerCase();
+    });
+
     if (!this.menuRoot) {
+      this.hasSyncedUi = true;
       return;
     }
 
-    const hasAnyEnabled = this.settings.effects || this.settings.ambience;
-    const statusLabel = getStatusLabel(this.settings);
     this.menuRoot.dataset.soundState = statusLabel.toLowerCase().replace(/\s+\+\s+|\s+/g, "-");
 
     if (this.statusNode) {
       const nextLabel = this.toggleAllButton ? (hasAnyEnabled ? "On" : "Off") : statusLabel;
-
-      if (this.hasSyncedUi && this.statusNode.textContent !== nextLabel) {
-        this.statusNode.classList.remove("is-animating");
-        void this.statusNode.offsetWidth;
-        this.statusNode.classList.add("is-animating");
-      }
-
-      this.statusNode.textContent = nextLabel;
+      this.updateStatusNode(this.statusNode, nextLabel);
     }
 
     this.settingChoices.forEach((buttons, group) => {
@@ -276,6 +307,20 @@ class PortfolioSoundController {
     }
 
     this.hasSyncedUi = true;
+  }
+
+  updateStatusNode(node, nextLabel) {
+    if (!node) {
+      return;
+    }
+
+    if (this.hasSyncedUi && node.textContent !== nextLabel) {
+      node.classList.remove("is-animating");
+      void node.offsetWidth;
+      node.classList.add("is-animating");
+    }
+
+    node.textContent = nextLabel;
   }
 
   ensureLoopElement(name) {

@@ -23,6 +23,7 @@ const getElements = () => ({
   projectBlurb: document.querySelector("#project-blurb"),
   projectIndex: document.querySelector("#project-index"),
   projectHint: document.querySelector("#project-hint"),
+  loadingShell: document.querySelector("#loader-ui"),
   loading: document.querySelector("#experience-loading"),
   fallback: document.querySelector("#experience-fallback"),
   fallbackLinks: document.querySelector("#fallback-links"),
@@ -206,6 +207,7 @@ const showFallback = (error) => {
   window.__experienceDiagnostics?.push(`Scene fallback: ${reason}`, "error");
 
   document.body.classList.add("scene-failed", "is-ready");
+  elements?.loadingShell?.setAttribute("hidden", "hidden");
   elements?.loading?.setAttribute("hidden", "hidden");
 
   if (elements?.fallback) {
@@ -296,8 +298,12 @@ const initExperience = () => {
   updateReadout(state.selectedIndex);
   syncProjectLinkStates();
 
-  state.sound.bindHover(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
-  state.sound.bindActivate(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
+  state.sound.bindHover(
+    document.querySelectorAll(".experience-back, .experience-link, .experience-button, [data-sound-master-toggle]")
+  );
+  state.sound.bindActivate(
+    document.querySelectorAll(".experience-back, .experience-link, .experience-button, [data-sound-master-toggle]")
+  );
   state.cursor.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
   state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link"));
 
