@@ -273,7 +273,10 @@ class PortfolioSoundController {
 
     this.masterToggleButtons.forEach((button) => {
       button.setAttribute("aria-pressed", String(hasAnyEnabled));
-      button.setAttribute("aria-label", masterLabel === "Custom" ? "Sound custom" : hasAnyEnabled ? "Sound on" : "Sound off");
+      button.setAttribute(
+        "aria-label",
+        masterLabel === "Custom" ? "Sound custom" : hasAnyEnabled ? "Sound on" : "Sound off"
+      );
       button.dataset.soundMasterState = masterLabel.toLowerCase();
     });
 
