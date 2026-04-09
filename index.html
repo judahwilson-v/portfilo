@@ -30,6 +30,65 @@
   </script>
   <link rel="stylesheet" href="./assets/shared-effects.css" />
   <link rel="stylesheet" href="./home.css" />
+  <style>
+    /* Normalize visual weight across gateway words */
+    .gateway-word {
+      opacity: 0.55;
+      transform: translateY(6px) scale(0.98);
+      transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
+      filter: brightness(0.9);
+    }
+
+    /* Remove any unintended emphasis on middle (Trajectory) */
+    .gateway-word:nth-child(2) {
+      opacity: 0.55 !important;
+      transform: translateY(6px) scale(0.98) !important;
+      filter: brightness(0.9) !important;
+    }
+
+    /* Equal hover for all */
+    .gateway-word:hover {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: brightness(1.05);
+    }
+
+    /* Active / focus states consistent */
+    .gateway-word:focus-visible {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: brightness(1.05);
+      outline: none;
+    }
+
+    /* Interaction depth: subtle magnetic + ripple response */
+    .gateway-word {
+      will-change: transform, opacity, filter;
+    }
+
+    .gateway-word.is-active {
+      opacity: 1;
+      transform: translateY(0px) scale(1.02);
+      filter: brightness(1.08);
+    }
+
+    .gateway-word.dimmed {
+      opacity: 0.35;
+      transform: translateY(8px) scale(0.97);
+      filter: brightness(0.85);
+    }
+  </style>
+  <script>
+    // Disable browser restoring previous scroll (important)
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    // Kill hash BEFORE anything renders
+    if (window.location.hash) {
+      history.replaceState(null, "", window.location.pathname);
+    }
+  </script>
 </head>
 <body class="home-page">
   <div class="site-grid" aria-hidden="true"></div>
@@ -98,10 +157,10 @@
     </nav>
   </header>
 
-  <main class="loop-shell" data-loop-shell aria-label="Infinite homepage loop">
+  <main class="loop-shell" data-loop-shell data-start-index="0" aria-label="Infinite homepage loop">
     <div class="loop-track" data-loop-track>
       <div class="loop-segment" data-loop-source>
-        <section class="scene scene-hero" data-scene data-scene-id="hero" id="hero">
+        <section class="scene scene-hero" data-scene data-scene-id="hero" id="hero" data-default-start="true">
           <div class="scene-stage hero-stage">
             <div class="hero-copy">
               <p class="micro-line">Built to move, edited to stay readable.</p>
@@ -170,7 +229,7 @@
           </div>
         </section>
 
-        <section class="scene scene-gateway" data-scene data-scene-id="work" id="work">
+        <section class="scene scene-gateway" data-scene data-scene-id="work" id="work" data-default-start="false">
           <div class="scene-stage scene-stage-sticky gateway-stage">
             <div class="gateway-copy">
               <p class="scene-meta gateway-meta" data-gateway-fade>Gateway links</p>
@@ -191,8 +250,8 @@
                   class="gateway-word"
                   href="./experience/"
                   data-gateway-word
-                  data-gateway-word-speed="0.12"
-                  data-gateway-word-linger="1.3"
+                  data-gateway-word-speed="0.3"
+                  data-gateway-word-linger="1.35"
                   data-text-reveal
                   data-cursor-label="Open Experience"
                   data-cursor-aside="basically the projects i did"
@@ -214,7 +273,7 @@
                   class="gateway-word"
                   href="./trajectory/"
                   data-gateway-word
-                  data-gateway-word-speed="0.34"
+                  data-gateway-word-speed="0.32"
                   data-gateway-word-linger="1.35"
                   data-text-reveal
                   data-cursor-label="Open Trajectory"
@@ -237,8 +296,8 @@
                   class="gateway-word"
                   href="./education/"
                   data-gateway-word
-                  data-gateway-word-speed="0.56"
-                  data-gateway-word-linger="1.5"
+                  data-gateway-word-speed="0.34"
+                  data-gateway-word-linger="1.35"
                   data-text-reveal
                   data-cursor-label="Open Education"
                   data-cursor-aside="aye vettil poda, click somewhere else"
@@ -404,6 +463,83 @@
     </div>
   </main>
 
+  <script>
+    // HARD OVERRIDE: block any JS (Lenis / GSAP / custom) from forcing scroll during init
+    (function () {
+      const originalScrollTo = window.scrollTo;
+      let locked = true;
+
+      window.scrollTo = function () {
+        if (!locked) {
+          originalScrollTo.apply(window, arguments);
+        }
+      };
+
+      // Unlock after initial load cycle
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          locked = false;
+          originalScrollTo(0, 0);
+        }, 300);
+      });
+    })();
+  </script>
   <script type="module" src="./assets/js/home.js"></script>
+</script>
+  <script>
+    window.addEventListener("load", () => {
+      // Force scroll instantly
+      window.scrollTo(0, 0);
+
+      // Keep overriding (for Lenis / GSAP)
+      let attempts = 0;
+      const forceTop = () => {
+        window.scrollTo(0, 0);
+        attempts++;
+        if (attempts < 10) requestAnimationFrame(forceTop);
+      };
+      forceTop();
+    });
+  </script>
+
+  <script>
+    // Interaction depth: magnetic hover + ripple across siblings
+    const words = document.querySelectorAll('.gateway-word');
+
+    words.forEach((word) => {
+      word.addEventListener('mouseenter', () => {
+        words.forEach(w => {
+          if (w !== word) {
+            w.classList.add('dimmed');
+            w.classList.remove('is-active');
+          }
+        });
+        word.classList.add('is-active');
+      });
+
+      word.addEventListener('mouseleave', () => {
+        words.forEach(w => {
+          w.classList.remove('dimmed');
+          w.classList.remove('is-active');
+        });
+      });
+
+      // subtle magnetic effect
+      word.addEventListener('mousemove', (e) => {
+        const rect = word.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const moveX = (x - rect.width / 2) * 0.05;
+        const moveY = (y - rect.height / 2) * 0.05;
+
+        word.style.transform = `translateY(${moveY}px) translateX(${moveX}px) scale(1.02)`;
+      });
+
+      word.addEventListener('mouseleave', () => {
+        word.style.transform = '';
+      });
+    });
+  </script>
 </body>
 </html>
