@@ -296,10 +296,18 @@ const initExperience = () => {
   updateReadout(state.selectedIndex);
   syncProjectLinkStates();
 
-  state.sound.bindHover(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
-  state.sound.bindActivate(document.querySelectorAll(".experience-back, .experience-link, .experience-button"));
+  state.sound.bindHover(
+    document.querySelectorAll(
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-cursor-toggle]"
+    )
+  );
+  state.sound.bindActivate(
+    document.querySelectorAll(
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], [data-cursor-toggle]"
+    )
+  );
   state.cursor.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
-  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link"));
+  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link, [data-cursor-toggle]"));
 
   elements.prankButton?.addEventListener("click", () => {
     state.sound?.play("uiConfirm", { cooldownMs: 180 });
