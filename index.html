@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Kinetic portfolio of Judah Vijai Wilson. AI-native web surfaces, creative development, and live builds shaped with motion, pressure, and negative space."
+    content="Cinematic portfolio of Judah Vijai Wilson. Minimal homepage, meaningful cursor states, and gateway routes into trajectory, education, and the 3D experience."
   />
   <meta name="theme-color" content="#05070b" />
   <title>Judah Vijai Wilson | Lake Portfolio 2026</title>
@@ -19,314 +19,450 @@
     rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2305070b'/%3E%3Crect x='15' y='15' width='34' height='34' rx='8' fill='%23c8ff62'/%3E%3C/svg%3E"
   />
+  <script type="importmap">
+    {
+      "imports": {
+        "gsap": "https://esm.sh/gsap@3.13.0",
+        "gsap/ScrollTrigger": "https://esm.sh/gsap@3.13.0/ScrollTrigger",
+        "lenis": "https://esm.sh/lenis@1.3.4"
+      }
+    }
+  </script>
   <link rel="stylesheet" href="./assets/shared-effects.css" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./home.css" />
 </head>
-<body>
+<body class="home-page">
   <div class="site-grid" aria-hidden="true"></div>
   <div class="site-noise" aria-hidden="true"></div>
+  <div class="site-haze" aria-hidden="true"></div>
+
   <div class="site-loader" id="site-loader" role="status" aria-live="polite">
+    <p class="site-loader-label">Lake Portfolio / Homepage</p>
     <div class="site-loader-core" aria-hidden="true">
       <span class="site-loader-ring site-loader-ring-outer"></span>
       <span class="site-loader-ring site-loader-ring-middle"></span>
       <span class="site-loader-ring site-loader-ring-inner"></span>
       <span class="site-loader-dot"></span>
     </div>
-    <p class="site-loader-label">Lake Portfolio</p>
-    <p class="site-loader-phase" id="site-loader-phase">Skimming the lake surface</p>
-    <p class="site-loader-copy" id="site-loader-copy">Filtering out the generic portfolio energy.</p>
+    <h1 class="site-loader-phase" data-loader-phase>Aligning interface drift</h1>
+    <p class="site-loader-copy">
+      Minimal surface up front. Deeper routes waiting underneath.
+    </p>
+    <p class="site-loader-note">Sound is ready when you interact. Cursor stays opinionated.</p>
   </div>
 
   <header class="site-chrome">
-    <div class="brand-lockup">
+    <a
+      class="brand-lockup"
+      href="#hero"
+      data-nav-link
+      data-cursor-label="Return To Judah"
+      data-cursor-aside="the homepage is intentionally about one name first"
+      data-cursor-mode="focus"
+    >
       <span class="brand-mark">JVW</span>
       <span class="brand-subline">Lake Portfolio / 2026</span>
-    </div>
+    </a>
 
-    <p class="chrome-locale">Kochi, Kerala. Built with code, pressure, and motion.</p>
-
-    <nav class="chrome-links" aria-label="External links">
+    <nav class="chrome-links" aria-label="Primary navigation">
       <a
         href="./experience/"
-        data-cursor-label="Portal"
-        data-cursor-aside="the 3D room is one click away"
+        data-cursor-label="Open"
+        data-cursor-aside="External jump. Different tab energy."
+        data-cursor-mode="launch"
+        data-cursor-hold-label="Switch Route"
+        data-cursor-hold-aside="Still better than a PDF portfolio."
+        data-cursor-press-label="Projects"
+        data-cursor-press-aside="This one actually works."
       >
-        Experience
+        Projects
       </a>
-      <details class="sound-menu" data-sound-menu>
-        <summary
-          class="sound-toggle"
+      <button
+        class="cursor-toggle"
+        type="button"
+        data-cursor-toggle
+        data-cursor-label="Cursor Switch"
+        data-cursor-aside="On when you want personality. Off when you want plain business."
+        data-cursor-mode="magnetic"
+        data-magnetic
+        data-cursor-hold-aside="No dark patterns here."
+      >
+        <span>Cursor</span>
+        <span data-cursor-toggle-label>On</span>
+      </button>
+      <div class="sound-menu sound-menu-minimal" data-sound-menu>
+        <button
+          class="sound-toggle sound-toggle-minimal"
+          type="button"
           data-sound-summary
-          data-cursor-label="Sound Desk"
-          data-cursor-aside="you are now the accidental audio engineer"
+          data-sound-toggle-all
+          aria-pressed="true"
+          aria-label="Sound on"
+          data-cursor-label="Sound On"
+          data-cursor-aside="Ambient theme and interface effects share one clean toggle."
+          data-cursor-mode="focus"
+          data-cursor-hold-aside="Minimal control. Immediate feedback."
         >
-          <span>Sound</span>
-          <span class="sound-toggle-status" data-sound-status>Muted</span>
-        </summary>
-        <div class="sound-panel">
-          <div class="sound-row">
-            <div class="sound-setting-copy">
-              <span class="sound-setting-label">Effects</span>
-              <span class="sound-setting-note">Clicks, hovers, transitions</span>
-            </div>
-            <div class="sound-choice-group" role="group" aria-label="Effects sound">
-              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
-              <button class="sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
-            </div>
-          </div>
-          <div class="sound-row">
-            <div class="sound-setting-copy">
-              <span class="sound-setting-label">Theme</span>
-              <span class="sound-setting-note">Background ambience loop</span>
-            </div>
-            <div class="sound-choice-group" role="group" aria-label="Theme sound">
-              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
-              <button class="sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
-            </div>
-          </div>
-        </div>
-      </details>
+          <span class="sound-toggle-track" aria-hidden="true">
+            <span class="sound-toggle-label">Sound</span>
+            <span class="sound-toggle-status" data-sound-status>On</span>
+          </span>
+        </button>
+      </div>
     </nav>
   </header>
 
-  <main class="loop-shell" data-loop-shell aria-label="Infinite portfolio loop">
+  <main class="loop-shell" data-loop-shell aria-label="Infinite homepage loop">
     <div class="loop-track" data-loop-track>
       <div class="loop-segment" data-loop-source>
-        <section class="scene scene-poster" data-scene id="hero">
-          <p class="scene-meta">AI-native builds / creative development / anti-template surfaces</p>
-
-          <div class="poster-layout">
-            <div class="poster-copy">
-              <p class="micro-line">Built to move.</p>
+        <section class="scene scene-hero" data-scene data-scene-id="hero" id="hero">
+          <div class="scene-stage hero-stage">
+            <div class="hero-copy">
+              <p class="micro-line">Built to move, edited to stay readable.</p>
               <h1
-                class="mega-stack"
-                data-scroll-slab
-                data-cursor-label="Main Character"
-                data-cursor-aside="yes, the name is doing most of the talking"
-                style="--plane-rotate: -1deg;"
+                class="hero-stack"
+                data-hero-title
+                data-cursor-label="Judah Vijai Wilson"
+                data-cursor-aside="The homepage is doing the obvious thing: leading with the actual person."
+                data-cursor-mode="focus"
+                data-cursor-reveal="Big type is not a gimmick here. It is the entire hierarchy."
+                data-cursor-hold-aside="Movement with restraint."
               >
-                <span class="mega-line">JUDAH</span>
-                <span class="mega-line mega-line-offset">VIJAI</span>
-                <span class="mega-line mega-line-accent">WILSON</span>
+                <span class="hero-line hero-line-primary">Judah</span>
+                <span class="hero-line hero-line-secondary">
+                  <span class="hero-line-rail" aria-hidden="true">
+                    <span class="hero-line-dot"></span>
+                    <span class="hero-line-stem"></span>
+                  </span>
+                  <span class="hero-line-name">Vijai</span>
+                  <span class="hero-inline-dot" aria-hidden="true"></span>
+                  <span class="hero-line-name hero-line-accent">Wilson</span>
+                </span>
               </h1>
-            </div>
-
-            <figure
-              class="poster-frame"
-              data-scroll-slab
-              data-cursor-label="Proof Of Life"
-              data-cursor-aside="he does, in fact, leave the code editor sometimes"
-              style="--plane-rotate: -4deg;"
-            >
-              <img src="./assets/hero-temp.jpg" alt="Judah Vijai Wilson portrait" />
-              <figcaption>Interfaces with tension, negative space, and a little violence in the rhythm.</figcaption>
-            </figure>
-          </div>
-
-          <div class="poster-foot">
-            <p
-              class="lead-statement"
-              data-cursor-label="Human Note"
-              data-cursor-aside="resume? not exactly. weather system? closer."
-              data-cursor-reveal="Not a PDF. We can all breathe."
-            >
-              I build live web surfaces that feel closer to installations than resumes.
-            </p>
-
-            <div class="signal-pair">
-              <span>Cursor / Vercel / Supabase / Claude</span>
-              <span>Real clients / school leadership / hardware prototypes</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="scene scene-work" data-scene>
-          <p class="scene-meta">Selected pressure points</p>
-          <span class="scene-word">LIVE</span>
-
-          <article class="slab slab-a" data-scroll-slab style="--plane-rotate: -3deg;">
-            <p class="slab-label">Diamond Banquet Hall</p>
-            <h2>Hospitality turned into a contact-first digital front door.</h2>
-            <p class="slab-copy">
-              Production launch, responsive flow, local-business urgency, zero decorative filler.
-            </p>
-            <a
-              class="slab-link"
-              href="https://diamond-banquet-hall.vercel.app"
-              target="_blank"
-              rel="noreferrer"
-              data-cursor-label="Visit Build"
-              data-cursor-aside="hospitality, minus the boring brochure energy"
-            >
-              Open live build
-            </a>
-          </article>
-
-          <article class="slab slab-b" data-scroll-slab style="--plane-rotate: 2deg;">
-            <p class="slab-label">Olivora</p>
-            <h2>Brand presence without the weight of an overdesigned brochure.</h2>
-            <p class="slab-copy">
-              Static brand site, lightweight delivery, product-led structure, and no wasted chrome.
-            </p>
-            <a
-              class="slab-link"
-              href="https://olivoranaturals.vercel.app/"
-              target="_blank"
-              rel="noreferrer"
-              data-cursor-label="Visit Build"
-              data-cursor-aside="clean brand, zero decorative panic"
-            >
-              Open brand site
-            </a>
-          </article>
-        </section>
-
-        <section class="scene scene-sense" data-scene>
-          <p class="scene-meta">Hardware + AI / prototype</p>
-
-          <div class="sense-layout">
-            <div class="sense-copy">
-              <h2 class="sense-heading" data-scroll-slab style="--plane-rotate: -2deg;">
-                Sense Stick / Core Build
-              </h2>
-              <p class="sense-caption">
-                A smart mobility aid for visually impaired users.
+              <p
+                class="hero-statement"
+                data-hero-copy
+                data-cursor-label="Why This Exists"
+                data-cursor-aside="Because static portfolios behave like brochures, and I do not."
+                data-cursor-mode="focus"
+                data-cursor-hold-aside="Built by a real human. Me."
+              >
+                I'm Judah Vijai Wilson, and I build web surfaces that feel directed, responsive, and precise without collapsing into overdesigned noise.
               </p>
-              <p class="scene-support">
-                Developed and presented at St. Albert's College Expo as a working prototype.
-              </p>
-            </div>
 
-            <div class="phase-grid">
-              <div class="phase-block">
-                <p class="phase-title">Working Hardware</p>
-                <div class="phase-lines">
-                  <span class="phase-line">Ultrasonic sensing</span>
-                  <span class="phase-line">Near-environment awareness</span>
-                  <span class="phase-line">Arduino logic</span>
-                </div>
+              <div class="hero-actions">
+                <a
+                  class="scene-button"
+                  href="#about"
+                  data-nav-link
+                  data-cursor-label="Open"
+                  data-cursor-aside="The next scene is the quieter intro before the gateway."
+                  data-cursor-mode="magnetic"
+                  data-magnetic
+                  data-cursor-hold-label="Read About"
+                  data-cursor-hold-aside="One more beat before the route split."
+                  data-cursor-press-label="Good Choice"
+                  data-cursor-press-aside="Still better than a PDF portfolio."
+                >
+                  Read about me
+                </a>
+                <a
+                  class="scene-link"
+                  href="#contact"
+                  data-nav-link
+                  data-cursor-label="Open"
+                  data-cursor-aside="Contact without the polite corporate frosting."
+                  data-cursor-mode="focus"
+                  data-cursor-hold-aside="Not everything needs to shout."
+                  data-cursor-repeat-aside="You found it faster than most."
+                >
+                  Stay in the loop
+                </a>
               </div>
+            </div>
 
-              <div class="phase-block phase-block-alt">
-                <p class="phase-title">Conceptual Layers</p>
-                <div class="phase-lines">
-                  <span class="phase-line">AI facial recognition</span>
-                  <span class="phase-line">Bluetooth audio</span>
-                  <span class="phase-line">Cloud navigation</span>
-                </div>
+            <div class="hero-atmosphere" data-parallax-speed="-0.16" data-parallax-depth="0.9">
+              <div class="hero-orbit hero-orbit-a" data-parallax-speed="0.12" data-parallax-depth="0.5"></div>
+              <div class="hero-orbit hero-orbit-b" data-parallax-speed="-0.1" data-parallax-depth="0.4"></div>
+              <p
+                class="hero-satellite"
+                data-cursor-label="Scene Direction"
+                data-cursor-aside="no poster image. just depth, spacing, and timing doing the work."
+                data-cursor-mode="focus"
+              >
+                Main page stripped back to four beats: name, about, gateways, loop finish.
+              </p>
+              <div class="hero-signal-list">
+                <p class="hero-signal-line" data-parallax-speed="-0.09" data-parallax-depth="0.3">Meaningful cursor states</p>
+                <p class="hero-signal-line" data-parallax-speed="0.1" data-parallax-depth="0.5">Smooth finite loop</p>
+                <p class="hero-signal-line" data-parallax-speed="-0.07" data-parallax-depth="0.4">Dark lake palette</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="scene scene-gateway" data-scene>
-          <p class="scene-meta">Gateway links</p>
-
-          <div class="gateway-stack">
-            <a
-              class="gateway-link"
-              href="/trajectory/"
-              data-scroll-slab
-              data-cursor-label="Side Quest"
-              data-cursor-aside="career lore, lightly dramatized"
-            >
-              Trajectory
-            </a>
-            <a
-              class="gateway-link gateway-link-alt"
-              href="/education/"
-              data-scroll-slab
-              data-cursor-label="Academic Plot"
-              data-cursor-aside="grades and side missions inside"
-            >
-              Education
-            </a>
+        <section class="scene scene-about" data-scene data-scene-id="about" id="about">
+          <div class="scene-stage about-stage">
+            <div class="about-wrap">
+              <p class="scene-meta about-meta">About</p>
+              <div
+                class="about-surface"
+                data-about-reveal
+                tabindex="0"
+                role="group"
+                aria-describedby="about-hover-copy"
+                data-cursor-label="Unfiltered Version"
+                data-cursor-aside="Move through the paragraph and the second voice breaks through."
+                data-cursor-mode="reveal"
+                data-cursor-tone="about"
+                data-cursor-hold-label="Keep Hovering"
+                data-cursor-hold-aside="The honest copy only lands if you linger."
+                data-cursor-press-label="Reveal"
+                data-cursor-press-aside="Same section, less filtered."
+              >
+                <p class="about-copy about-copy-base">
+                  I'm a 12th grade student developer based in Kochi, Kerala, building digital experiences that feel simple and genuinely useful. I focus on clean design, smooth interactions, and reliable performance, constantly learning and refining how ideas turn into real, usable products that balance creativity with structure and clarity.
+                </p>
+                <div class="about-hover-layer" aria-hidden="true">
+                  <p class="about-copy about-copy-hover">
+                    Idk man, does that impress? Basically I'm trying to say I want to make dope shit. I don't know if this works on every device - it's probably more optimized for phone. If you find anything cool, that means I spent a ton of hours trying to impress.
+                  </p>
+                </div>
+              </div>
+              <p class="about-hint">Hover or tap to reveal the less-filtered version.</p>
+              <p class="sr-only" id="about-hover-copy">
+                Alternate version on hover: Idk man, does that impress? Basically I'm trying to say I want to make dope shit. I don't know if this works on every device - it's probably more optimized for phone. If you find anything cool, that means I spent a ton of hours trying to impress.
+              </p>
+            </div>
           </div>
         </section>
 
-        <section class="scene scene-contact" data-scene id="contact">
-          <p class="scene-meta">Available for projects, internships, and creative builds</p>
+        <section class="scene scene-gateway" data-scene data-scene-id="work" id="work">
+          <div class="scene-stage scene-stage-sticky gateway-stage">
+            <div class="gateway-copy">
+              <p class="scene-meta gateway-meta" data-gateway-fade>Gateway links</p>
+              <p class="gateway-note" data-gateway-fade>Hover the words. The second line is where the honest version shows up.</p>
+              <span class="sr-only">Open the Experience, Trajectory, and Education routes.</span>
+            </div>
 
-          <h2 class="contact-title" data-scroll-slab style="--plane-rotate: -2deg;">
-            LET'S BUILD SOMETHING THAT DOESN'T SIT STILL.
-          </h2>
+            <div class="gateway-field" data-gateway-fade>
+              <div class="gateway-rails" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="gateway-word-stack">
+                <a
+                  class="gateway-word"
+                  href="./experience/"
+                  data-gateway-word
+                  data-gateway-word-speed="0.18"
+                  data-text-reveal
+                  data-cursor-label="Open Experience"
+                  data-cursor-aside="basically the projects i did"
+                  data-cursor-mode="launch"
+                  data-cursor-tone="gateway"
+                  data-cursor-hold-label="Projects Route"
+                  data-cursor-hold-aside="3D field, live project nodes, and the actual proof."
+                  data-cursor-press-label="Enter"
+                  data-cursor-press-aside="open the work."
+                  data-cursor-repeat-aside="yes, this is the one with the projects."
+                >
+                  <span class="gateway-word-text gateway-word-base">Experience</span>
+                  <span class="gateway-word-text gateway-word-hover" aria-hidden="true">basically the projects i did</span>
+                </a>
 
-          <div class="contact-grid">
-            <a
-              class="contact-link"
-              href="https://github.com/judahwilson-v"
-              target="_blank"
-              rel="noreferrer"
-              data-scroll-slab
-              data-cursor-label="Send Signal"
-              data-cursor-aside="code first. small talk later."
-            >
-              <span class="contact-link-label">GitHub</span>
-              <span class="contact-link-value">judahwilson-v</span>
-            </a>
+                <a
+                  class="gateway-word"
+                  href="./trajectory/"
+                  data-gateway-word
+                  data-gateway-word-speed="0.48"
+                  data-text-reveal
+                  data-cursor-label="Open Trajectory"
+                  data-cursor-aside="praise god i got responsibility"
+                  data-cursor-mode="focus"
+                  data-cursor-tone="gateway"
+                  data-cursor-hold-label="Responsibility Trail"
+                  data-cursor-hold-aside="Leadership, internships, editorial work. Less brochure, more receipts."
+                  data-cursor-press-label="Enter"
+                  data-cursor-press-aside="open the timeline."
+                  data-cursor-repeat-aside="still the route where i explain why people trusted me."
+                >
+                  <span class="gateway-word-text gateway-word-base">Trajectory</span>
+                  <span class="gateway-word-text gateway-word-hover" aria-hidden="true">praise god i got responsibility</span>
+                </a>
 
-            <a
-              class="contact-link"
-              href="https://www.instagram.com/judah.wils0n/"
-              target="_blank"
-              rel="noreferrer"
-              data-scroll-slab
-              data-cursor-label="Send Signal"
-              data-cursor-aside="yes, there is evidence of sunlight"
-            >
-              <span class="contact-link-label">Instagram</span>
-              <span class="contact-link-value">judah.wils0n</span>
-            </a>
-
-            <a
-              class="contact-link"
-              href="https://www.linkedin.com/in/judahv/"
-              target="_blank"
-              rel="noreferrer"
-              data-scroll-slab
-              data-cursor-label="Send Signal"
-              data-cursor-aside="professionally polite, surprisingly real"
-            >
-              <span class="contact-link-label">LinkedIn</span>
-              <span class="contact-link-value">/in/judahv/</span>
-            </a>
-
-            <a
-              class="contact-link"
-              href="mailto:judahvijai@gmail.com"
-              data-scroll-slab
-              data-cursor-label="Send Signal"
-              data-cursor-aside="email: still undefeated"
-            >
-              <span class="contact-link-label">Email</span>
-              <span class="contact-link-value">judahvijai@gmail.com</span>
-            </a>
-
-            <a
-              class="contact-link"
-              href="tel:+918848717711"
-              data-scroll-slab
-              data-cursor-label="Send Signal"
-              data-cursor-aside="old school. still effective."
-            >
-              <span class="contact-link-label">Phone</span>
-              <span class="contact-link-value">+91 8848717711</span>
-            </a>
+                <a
+                  class="gateway-word"
+                  href="./education/"
+                  data-gateway-word
+                  data-gateway-word-speed="0.82"
+                  data-text-reveal
+                  data-cursor-label="Open Education"
+                  data-cursor-aside="aye vettil poda, click somewhere else"
+                  data-cursor-mode="focus"
+                  data-cursor-tone="gateway"
+                  data-cursor-hold-label="Academic Route"
+                  data-cursor-hold-aside="unless you really came for marks, stream, and future plans."
+                  data-cursor-press-label="Fine"
+                  data-cursor-press-aside="the academic route is here."
+                  data-cursor-repeat-aside="still the education page. no plot twist."
+                >
+                  <span class="gateway-word-text gateway-word-base">Education</span>
+                  <span class="gateway-word-text gateway-word-hover" aria-hidden="true">aye vettil poda, click somewhere else</span>
+                </a>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <p
-            class="contact-note"
-            data-cursor-label="Tiny Truth"
-            data-cursor-aside="ambition with a refresh loop"
-            data-cursor-reveal="Scroll keeps looping. So does the overthinking."
-          >
-            Scroll keeps looping. So does the work.
-          </p>
+        <section class="scene scene-contact" data-scene data-scene-id="contact" id="contact">
+          <div class="scene-stage contact-stage">
+            <div class="contact-backdrop" aria-hidden="true">
+              <span>Judah</span>
+              <span>Wilson</span>
+            </div>
+
+            <div class="contact-grid">
+              <div class="contact-panel">
+                <p class="scene-meta">Stay in the loop</p>
+                <h2 class="contact-title" data-masked-heading>I make websites feel alive without making them confusing.</h2>
+                <p class="scene-copy">
+                  Mostly portfolio sites, experiments, and product UI where motion actually helps instead of just showing off.
+                </p>
+
+                <p
+                  class="contact-note"
+                  data-cursor-label="Loop Mechanic"
+                  data-cursor-aside="the final frame nudges back toward the first on purpose"
+                  data-cursor-mode="focus"
+                  data-cursor-reveal="The loop reset is meant to feel like a return to the opening poster, not a broken scroll."
+                >
+                  Same idea as the about section: hover the text and the second version reveals through it.
+                </p>
+              </div>
+
+              <div class="contact-socials">
+                <div class="social-grid">
+                  <a
+                    class="social-link"
+                    href="https://github.com/judahwilson-v"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-text-reveal
+                    data-cursor-label="Open GitHub"
+                    data-cursor-aside="nerd me"
+                    data-cursor-mode="launch"
+                    data-cursor-tone="contact"
+                    data-cursor-hold-label="Code Trail"
+                    data-cursor-hold-aside="projects, commits, and the bugs that built them."
+                    data-cursor-press-label="Launch"
+                    data-cursor-press-aside="different tab. same obsession."
+                    data-cursor-repeat-aside="still the nerd tab."
+                  >
+                    <span class="social-label">GitHub</span>
+                    <span class="social-value-stack">
+                      <span class="social-value social-value-base">judahwilson-v</span>
+                      <span class="social-value social-value-hover" aria-hidden="true">nerd me</span>
+                    </span>
+                  </a>
+                  <a
+                    class="social-link"
+                    href="https://www.linkedin.com/in/judahv/"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-text-reveal
+                    data-cursor-label="Open LinkedIn"
+                    data-cursor-aside="serious me"
+                    data-cursor-mode="launch"
+                    data-cursor-tone="contact"
+                    data-cursor-hold-label="Professional Mode"
+                    data-cursor-hold-aside="same person, cleaner sentences, fewer side quests."
+                    data-cursor-press-label="Launch"
+                    data-cursor-press-aside="professional tab activated."
+                    data-cursor-repeat-aside="yep, the serious version."
+                  >
+                    <span class="social-label">LinkedIn</span>
+                    <span class="social-value-stack">
+                      <span class="social-value social-value-base">/in/judahv/</span>
+                      <span class="social-value social-value-hover" aria-hidden="true">serious me</span>
+                    </span>
+                  </a>
+                  <a
+                    class="social-link"
+                    href="mailto:judahvijai@gmail.com"
+                    data-text-reveal
+                    data-cursor-label="Send Email"
+                    data-cursor-aside="bruh, people still email to text? it's here for the sake of being here."
+                    data-cursor-mode="launch"
+                    data-cursor-tone="contact"
+                    data-cursor-hold-label="Still Works"
+                    data-cursor-hold-aside="i still read it, so it survives."
+                    data-cursor-press-label="Send"
+                    data-cursor-press-aside="mail app gets involved."
+                    data-cursor-repeat-aside="yes, somehow email still exists."
+                  >
+                    <span class="social-label">Email</span>
+                    <span class="social-value-stack">
+                      <span class="social-value social-value-base">judahvijai@gmail.com</span>
+                      <span class="social-value social-value-hover" aria-hidden="true">bruh people still email to text? it just here for the sake</span>
+                    </span>
+                  </a>
+                  <a
+                    class="social-link"
+                    href="https://wa.me/918848717711"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-text-reveal
+                    data-cursor-label="Open WhatsApp"
+                    data-cursor-aside="actually reliable source to text me"
+                    data-cursor-mode="launch"
+                    data-cursor-tone="contact"
+                    data-cursor-hold-label="Reliable Route"
+                    data-cursor-hold-aside="probably the fastest reply."
+                    data-cursor-press-label="Text Me"
+                    data-cursor-press-aside="opens the real channel."
+                    data-cursor-repeat-aside="still the reliable one."
+                  >
+                    <span class="social-label">WhatsApp</span>
+                    <span class="social-value-stack">
+                      <span class="social-value social-value-base">+91 8848717711</span>
+                      <span class="social-value social-value-hover" aria-hidden="true">actually reliable source to text me</span>
+                    </span>
+                  </a>
+                  <a
+                    class="social-link"
+                    href="https://www.instagram.com/judah.wils0n/"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-text-reveal
+                    data-cursor-label="Open Instagram"
+                    data-cursor-aside="ah, i deactivated this"
+                    data-cursor-mode="launch"
+                    data-cursor-tone="contact"
+                    data-cursor-hold-label="Dormant Feed"
+                    data-cursor-hold-aside="this link is running mostly on legacy energy."
+                    data-cursor-press-label="Launch"
+                    data-cursor-press-aside="different tab, low expectations."
+                    data-cursor-repeat-aside="still not promising activity."
+                  >
+                    <span class="social-label">Instagram</span>
+                    <span class="social-value-stack">
+                      <span class="social-value social-value-base">judah.wils0n</span>
+                      <span class="social-value social-value-hover" aria-hidden="true">ah i deactivated this acc</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
   </main>
 
-  <script type="module" src="./script.js"></script>
+  <script type="module" src="./assets/js/home.js"></script>
 </body>
 </html>
