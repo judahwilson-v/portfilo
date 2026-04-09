@@ -16,11 +16,9 @@ const state = {
 let elements;
 
 const getElements = () => ({
-  openButton: document.querySelector("#open-active-project"),
+  prankButton: document.querySelector("#experience-prank-button"),
   projectList: document.querySelector("#project-list"),
-  projectReadout: document.querySelector("#project-readout"),
   projectCategory: document.querySelector("#project-category"),
-  projectSignalNote: document.querySelector("#project-signal-note"),
   projectTitle: document.querySelector("#project-title"),
   projectBlurb: document.querySelector("#project-blurb"),
   projectIndex: document.querySelector("#project-index"),
@@ -29,12 +27,10 @@ const getElements = () => ({
   fallback: document.querySelector("#experience-fallback"),
   fallbackLinks: document.querySelector("#fallback-links"),
   renderStatus: document.querySelector("#render-status"),
-  interactionHint: document.querySelector("#interaction-hint"),
   canvas: document.querySelector(".experience-canvas"),
 });
 
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const supportsFinePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 const getCurrentIndex = () => state.previewIndex ?? state.selectedIndex;
 const getErrorMessage = (error) => (error instanceof Error ? error.message : String(error));
@@ -50,20 +46,11 @@ const updateReadout = (index) => {
   elements.projectTitle.textContent = project.title;
   elements.projectBlurb.textContent = project.blurb;
   elements.projectIndex.textContent = project.index;
-  elements.projectReadout?.style.setProperty("--project-accent", project.accent);
-  elements.projectReadout?.classList.toggle("is-previewing", state.previewIndex !== null);
-
-  if (elements.projectSignalNote) {
-    elements.projectSignalNote.textContent =
-      state.previewIndex === null
-        ? "Stable orbit. Mild ego."
-        : "Preview live. The shiny object is winning.";
-  }
 
   elements.projectHint.textContent =
     state.previewIndex === null
-      ? "Tap the node or use the button. Nobody gets extra credit for guessing."
-      : "Previewing signal. One more tap and the next tab appears.";
+      ? "Click a node or use the rail to open the selected link."
+      : "Previewing signal. Click the node to open it.";
 };
 
 const syncProjectLinkStates = () => {
@@ -139,9 +126,12 @@ const renderProjectList = () => {
         target="_blank"
         rel="noreferrer"
         style="--accent-color: ${project.accent};"
-        data-cursor-label="Project Signal"
-        data-cursor-aside="${project.title} wants to be clicked. deeply."
+        data-cursor-label="Open"
+        data-cursor-aside="${project.title}. This one actually works."
         data-cursor-tone="project"
+        data-cursor-hold-label="Launch"
+        data-cursor-hold-aside="You hovered. That's commitment."
+        data-cursor-press-aside="Different tab energy."
       >
         <div class="project-link-head">
           <span class="project-card-index">${project.index}</span>
@@ -150,7 +140,7 @@ const renderProjectList = () => {
         <h3>${project.title}</h3>
         <p>${project.blurb}</p>
         <div class="project-link-foot">
-          <span class="project-link-label">Launch live site</span>
+          <span class="project-link-label">${project.ctaLabel ?? "Launch live site"}</span>
           <span class="project-link-arrow">-></span>
         </div>
       </a>
@@ -196,7 +186,7 @@ const renderFallbackLinks = () => {
         href="${project.url}"
         target="_blank"
         rel="noreferrer"
-        data-cursor-label="Fallback Link"
+        data-cursor-label="Open"
         data-cursor-aside="${project.title}, minus the nebula theatrics."
         data-cursor-tone="project"
       >${project.title}</a>
@@ -253,7 +243,7 @@ const bootScene = async () => {
         }
         state.cursor?.setOverrideMessage({
           label: PROJECTS[index]?.title ?? "Project Signal",
-          aside: "yes, click the shiny one. that is the entire point.",
+          aside: "Yes, click the shiny one. That is the entire point.",
           tone: "project",
         });
         previewProject(index, "scene");
@@ -294,7 +284,7 @@ const initExperience = () => {
     defaultAside: "careful, the nebula has opinions.",
   });
 
-  if (!elements.openButton || !elements.projectList || !elements.canvas) {
+  if (!elements.projectList || !elements.canvas) {
     showFallback(new Error("Experience route failed to find the required DOM mount points."));
     return;
   }
@@ -308,24 +298,21 @@ const initExperience = () => {
 
   state.sound.bindHover(
     document.querySelectorAll(
-      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, .cursor-toggle, .cursor-choice"
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-cursor-toggle]"
     )
   );
   state.sound.bindActivate(
     document.querySelectorAll(
-      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], .cursor-toggle, .cursor-choice"
+      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], [data-cursor-toggle]"
     )
   );
-  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link, .cursor-toggle, .cursor-choice"));
+  state.cursor.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
+  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link, [data-cursor-toggle]"));
 
-  elements.openButton.addEventListener("click", () => {
+  elements.prankButton?.addEventListener("click", () => {
     state.sound?.play("uiConfirm", { cooldownMs: 180 });
-    openProject();
+    window.alert("sike it does not work");
   });
-
-  elements.interactionHint.textContent = supportsFinePointer()
-    ? "Move to steer. Drag to drift. Click a node to open."
-    : "Tap a node to open. Scroll like a normal human.";
 
   if (prefersReducedMotion()) {
     elements.renderStatus.textContent = "Reduced motion enabled";

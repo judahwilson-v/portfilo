@@ -29,8 +29,9 @@
     <div class="experience-stage" aria-hidden="true">
       <canvas
         class="experience-canvas"
-        data-cursor-label="Drag Field"
-        data-cursor-aside="careful, the shiny objects bite back"
+        data-cursor-label="Precision Mode"
+        data-cursor-aside="Careful. The shiny objects bite back."
+        data-cursor-hold-aside="Movement with restraint."
       ></canvas>
       <div class="experience-stage-glow"></div>
       <div class="experience-stage-grid"></div>
@@ -40,103 +41,61 @@
       <a
         class="experience-back"
         href="../#hero"
-        data-cursor-label="Return"
-        data-cursor-aside="back to the oversized nameplate"
+        data-cursor-label="Open"
+        data-cursor-aside="Back to the oversized nameplate."
+        data-cursor-hold-aside="You can come back."
       >
-        Back to Portfolio
+        Return
       </a>
       <div class="experience-header-tools">
-        <p class="experience-status">Adaptive render / smaller orbit / mobile thumbs officially respected</p>
-        <div class="experience-control-strip">
+        <p class="experience-label">3d experience</p>
+        <p class="experience-status">move to steer , drag to drift , click to open node</p>
+        <div class="experience-header-actions">
           <button
-            class="experience-sound-toggle sound-quick-toggle"
+            class="experience-cursor-toggle"
             type="button"
-            data-sound-master-toggle
-            data-cursor-label="Sound Switch"
-            data-cursor-aside="one click. the galaxy will survive."
+            data-cursor-toggle
+            data-cursor-label="Cursor Switch"
+            data-cursor-aside="The field can be cosmic without forcing the cursor to stay awake."
+            data-cursor-mode="magnetic"
+            data-magnetic
+            data-cursor-hold-aside="No dark patterns here."
           >
-            <span>Sound</span>
-            <span class="experience-sound-status" data-sound-master-status>Off</span>
+            <span>Cursor</span>
+            <span data-cursor-toggle-label>On</span>
           </button>
-        <details class="sound-menu experience-sound-menu" data-sound-menu>
-          <summary
-            class="experience-sound-toggle"
-            data-sound-summary
-            data-cursor-label="Sound Mix"
-            data-cursor-aside="same controls. slightly more cosmic paperwork."
-          >
-            <span>Mix</span>
-            <span class="experience-sound-status" data-sound-status>Muted</span>
-          </summary>
-          <div class="sound-panel experience-sound-panel">
-            <div class="sound-row experience-sound-row">
-              <div class="sound-setting-copy">
-                <span class="sound-setting-label">Effects</span>
-                <span class="sound-setting-note">Clicks, pings, and tiny orbital drama</span>
-              </div>
-              <div class="sound-choice-group" role="group" aria-label="Effects sound">
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
-              </div>
-            </div>
-            <div class="sound-row experience-sound-row">
-              <div class="sound-setting-copy">
-                <span class="sound-setting-label">Theme</span>
-                <span class="sound-setting-note">Ambient loop for responsibly dramatic browsing</span>
-              </div>
-              <div class="sound-choice-group" role="group" aria-label="Theme sound">
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
-                <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
-              </div>
-            </div>
-          </div>
-        </details>
-          <details class="cursor-menu experience-cursor-menu" data-cursor-menu hidden>
+          <details class="sound-menu experience-sound-menu" data-sound-menu>
             <summary
-              class="cursor-toggle"
-              data-cursor-summary
-              data-cursor-label="Cursor Cabinet"
-              data-cursor-aside="because even the pointer deserves wardrobe choices."
+              class="experience-sound-toggle"
+              data-sound-summary
+              data-cursor-label="Sound Desk"
+              data-cursor-aside="Same controls. Slightly more cosmic consequences."
+              data-cursor-hold-aside="Optimized? Debatable."
             >
-              <span>Cursor</span>
-              <span class="cursor-toggle-status" data-cursor-status>Signal</span>
+              <span>Sound</span>
+              <span class="experience-sound-status" data-sound-status>Muted</span>
             </summary>
-            <div class="cursor-panel">
-              <button class="cursor-choice" type="button" data-cursor-mode="signal" aria-pressed="true">
-                <span class="cursor-choice-copy">
-                  <span class="cursor-choice-label">Signal</span>
-                  <span class="cursor-choice-note">Current default. Still doing the most.</span>
-                </span>
-                <span class="cursor-choice-swatch" aria-hidden="true"></span>
-              </button>
-              <button class="cursor-choice" type="button" data-cursor-mode="radar" aria-pressed="false">
-                <span class="cursor-choice-copy">
-                  <span class="cursor-choice-label">Radar</span>
-                  <span class="cursor-choice-note">Sharper sweep. Slightly more mission control.</span>
-                </span>
-                <span class="cursor-choice-swatch" aria-hidden="true"></span>
-              </button>
-              <button class="cursor-choice" type="button" data-cursor-mode="dot" aria-pressed="false">
-                <span class="cursor-choice-copy">
-                  <span class="cursor-choice-label">Dot</span>
-                  <span class="cursor-choice-note">Minimal and less likely to steal the scene.</span>
-                </span>
-                <span class="cursor-choice-swatch" aria-hidden="true"></span>
-              </button>
-              <button class="cursor-choice" type="button" data-cursor-mode="halo" aria-pressed="false">
-                <span class="cursor-choice-copy">
-                  <span class="cursor-choice-label">Halo</span>
-                  <span class="cursor-choice-note">Soft glow. Surprisingly well behaved.</span>
-                </span>
-                <span class="cursor-choice-swatch" aria-hidden="true"></span>
-              </button>
-              <button class="cursor-choice" type="button" data-cursor-mode="native" aria-pressed="false">
-                <span class="cursor-choice-copy">
-                  <span class="cursor-choice-label">Native</span>
-                  <span class="cursor-choice-note">System cursor. Corporate, but in a comforting way.</span>
-                </span>
-                <span class="cursor-choice-swatch" aria-hidden="true"></span>
-              </button>
+            <div class="sound-panel experience-sound-panel">
+              <div class="sound-row experience-sound-row">
+                <div class="sound-setting-copy">
+                  <span class="sound-setting-label">Effects</span>
+                  <span class="sound-setting-note">Clicks, pings, transitions</span>
+                </div>
+                <div class="sound-choice-group" role="group" aria-label="Effects sound">
+                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
+                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
+                </div>
+              </div>
+              <div class="sound-row experience-sound-row">
+                <div class="sound-setting-copy">
+                  <span class="sound-setting-label">Theme</span>
+                  <span class="sound-setting-note">Ambient background loop</span>
+                </div>
+                <div class="sound-choice-group" role="group" aria-label="Theme sound">
+                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
+                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
+                </div>
+              </div>
             </div>
           </details>
         </div>
@@ -144,57 +103,12 @@
     </header>
 
     <main class="experience-overlay">
-      <section class="experience-copy">
-        <p class="experience-kicker">Immersive Portfolio Layer</p>
-        <h1 data-cursor-label="Alternate Route" data-cursor-aside="same person, less gravity">
-          A sharper look at the work. Still a little dramatic.
-        </h1>
-        <p
-          class="experience-lead"
-          data-cursor-label="Field Note"
-          data-cursor-aside="this is the part where the portfolio pretends to be a game"
-          data-cursor-reveal="Three.js, but with better manners."
-        >
-          Four live projects sit in a smaller 3D field. Tap or click a node, open the live build, and avoid getting
-          emotionally attached to the glowing geometry.
-        </p>
-
-        <div class="experience-actions">
-          <button
-            class="experience-button"
-            id="open-active-project"
-            type="button"
-            data-cursor-label="Launch Active"
-            data-cursor-aside="the orb approves this decision"
-          >
-            Open Active Project
-          </button>
-          <a
-            class="experience-link"
-            href="../#hero"
-            data-cursor-label="Main Site"
-            data-cursor-aside="the normal world, more or less"
-          >
-            Return to Main Site
-          </a>
-        </div>
-      </section>
-
       <aside class="experience-rail">
-        <div class="project-readout" id="project-readout">
-          <div class="project-readout-head">
-            <div>
-              <p class="experience-kicker">Active Signal</p>
-              <p class="project-signal-note" id="project-signal-note">Stable orbit. Mild ego.</p>
-            </div>
-            <span class="project-signal-lamp" aria-hidden="true"><span></span></span>
-          </div>
+        <div class="project-readout">
+          <p class="experience-kicker">Active Signal</p>
           <p class="project-category" id="project-category"></p>
           <h2 id="project-title"></h2>
           <p class="project-blurb" id="project-blurb"></p>
-          <div class="project-meter" aria-hidden="true">
-            <span></span>
-          </div>
           <div class="project-meta">
             <span id="project-index"></span>
             <span id="project-hint">Select a node or use the rail to open it.</span>
@@ -202,12 +116,43 @@
         </div>
 
         <nav class="project-list" aria-label="Project nodes" id="project-list"></nav>
+
+        <section
+          class="experience-prototype"
+          data-cursor-label="Prototype Signal"
+          data-cursor-aside="Sense Stick moved here because the homepage had better things to do."
+          data-cursor-mode="focus"
+          data-cursor-reveal="Assistive-tech work belongs in the deeper route, not as a homepage interruption."
+          data-cursor-hold-aside="Proof, not claims."
+        >
+          <p class="experience-kicker">Prototype Signal</p>
+          <h3>Sense Stick</h3>
+          <p>
+            A smart mobility aid concept for visually impaired users, developed and presented at St. Albert's College Expo with ultrasonic sensing, embedded logic, and a live proof post now attached to node five.
+          </p>
+          <div class="prototype-tags">
+            <span>Ultrasonic sensing</span>
+            <span>Environment awareness</span>
+            <span>Arduino logic</span>
+            <span>Assistive-tech direction</span>
+          </div>
+        </section>
       </aside>
     </main>
 
     <div class="experience-hud">
-      <span id="interaction-hint">Move to steer. Drag to drift. Tap a node to open.</span>
-      <span id="render-status">Preparing adaptive render</span>
+      <button
+        class="experience-button experience-prank-button"
+        id="experience-prank-button"
+        type="button"
+        data-cursor-label="Open"
+        data-cursor-aside="This one is not serious."
+        data-cursor-hold-aside="You can still try."
+        data-cursor-press-aside="sike it does not work."
+      >
+        click here
+      </button>
+      <span id="render-status">loading field</span>
     </div>
 
     <div id="loader-ui">

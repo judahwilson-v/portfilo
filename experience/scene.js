@@ -3,38 +3,46 @@ import * as THREE from "three";
 const PROJECT_LAYOUTS = {
   regular: [
     {
-      position: [0, 1.95, -0.85],
-      focusYaw: 0,
+      position: [0, 1.18, 0.24],
+      focusYaw: 0.04,
     },
     {
-      position: [-3.3, 0.05, 1.5],
-      focusYaw: 0.16,
+      position: [-1.9, 0.48, 1.15],
+      focusYaw: 0.18,
     },
     {
-      position: [3.3, 0.05, 1.5],
-      focusYaw: -0.16,
+      position: [1.96, 0.42, 1.12],
+      focusYaw: -0.18,
     },
     {
-      position: [0, -2.15, 2.05],
-      focusYaw: 0,
+      position: [-1.18, -1.24, 1.96],
+      focusYaw: 0.08,
+    },
+    {
+      position: [1.24, -1.16, 2.18],
+      focusYaw: -0.08,
     },
   ],
   compact: [
     {
-      position: [0, 1.55, -0.55],
-      focusYaw: 0,
+      position: [0, 0.98, 0.34],
+      focusYaw: 0.03,
     },
     {
-      position: [-2.05, -0.15, 1.15],
-      focusYaw: 0.13,
+      position: [-1.34, 0.34, 0.96],
+      focusYaw: 0.12,
     },
     {
-      position: [2.05, -0.15, 1.15],
-      focusYaw: -0.13,
+      position: [1.38, 0.28, 0.94],
+      focusYaw: -0.12,
     },
     {
-      position: [0, -1.85, 1.8],
-      focusYaw: 0,
+      position: [-0.9, -1.02, 1.52],
+      focusYaw: 0.05,
+    },
+    {
+      position: [0.94, -0.96, 1.64],
+      focusYaw: -0.05,
     },
   ],
 };
@@ -119,6 +127,12 @@ const createNodeGeometry = (THREE, project) => {
       return new THREE.IcosahedronGeometry(0.92 * scale, 0);
     case "dodecahedron":
       return new THREE.DodecahedronGeometry(0.84 * scale, 0);
+    case "sense-stick":
+      if (typeof THREE.CapsuleGeometry === "function") {
+        return new THREE.CapsuleGeometry(0.14 * scale, 0.92 * scale, 6, 12);
+      }
+
+      return new THREE.CylinderGeometry(0.11 * scale, 0.15 * scale, 1.02 * scale, 16);
     default:
       return new THREE.BoxGeometry(0.95 * scale, 0.95 * scale, 0.95 * scale);
   }
@@ -138,8 +152,6 @@ export const createExperienceScene = async ({
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const isCompactViewport = window.matchMedia("(max-width: 820px)").matches;
-  const allowDragField = supportsFinePointer;
-  const systemScale = isCompactViewport ? 0.62 : 0.78;
   const projectLayout = isCompactViewport ? PROJECT_LAYOUTS.compact : PROJECT_LAYOUTS.regular;
 
   const trackedGeometries = new Set();
@@ -172,32 +184,30 @@ export const createExperienceScene = async ({
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = isCompactViewport ? 1 : 1.08;
+  renderer.toneMappingExposure = isCompactViewport ? 1.02 : 1.08;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x040811, isCompactViewport ? 0.085 : 0.07);
+  scene.fog = new THREE.FogExp2(0x040811, isCompactViewport ? 0.078 : 0.062);
 
   const camera = new THREE.PerspectiveCamera(isCompactViewport ? 47 : 42, 1, 0.1, 60);
-  camera.position.set(0, 0.48, isCompactViewport ? 10.8 : 9.35);
+  camera.position.set(0, 0.32, isCompactViewport ? 10.2 : 9.75);
 
   const cameraRig = new THREE.Group();
   cameraRig.add(camera);
   scene.add(cameraRig);
 
   const world = new THREE.Group();
-  world.scale.setScalar(systemScale);
-  world.position.set(isCompactViewport ? 0.22 : 0.14, isCompactViewport ? -0.2 : -0.08, 0);
   scene.add(world);
 
-  const ambient = new THREE.AmbientLight(0x8aa2bf, 0.55);
-  const hemi = new THREE.HemisphereLight(0x88dfff, 0x02050a, 0.9);
-  const keyLight = new THREE.SpotLight(0x8cf6ff, isCompactViewport ? 55 : 70, 28, Math.PI / 7, 0.5, 1.2);
+  const ambient = new THREE.AmbientLight(0x8aa2bf, 0.48);
+  const hemi = new THREE.HemisphereLight(0x88dfff, 0x02050a, 0.74);
+  const keyLight = new THREE.SpotLight(0x8cf6ff, isCompactViewport ? 46 : 56, 24, Math.PI / 7, 0.5, 1.2);
   keyLight.position.set(5.8, 8, 7.6);
 
-  const rimLight = new THREE.PointLight(0xff9f8e, isCompactViewport ? 4.5 : 6, 20, 2);
+  const rimLight = new THREE.PointLight(0xff9f8e, isCompactViewport ? 3.4 : 4.4, 16, 2);
   rimLight.position.set(-5.6, 0.4, 4.4);
 
-  const fillLight = new THREE.PointLight(0xbcff66, isCompactViewport ? 2.5 : 3.4, 24, 2);
+  const fillLight = new THREE.PointLight(0xbcff66, isCompactViewport ? 1.9 : 2.4, 18, 2);
   fillLight.position.set(0, -2.5, 4.2);
 
   scene.add(ambient, hemi, keyLight, rimLight, fillLight);
@@ -208,17 +218,17 @@ export const createExperienceScene = async ({
   world.add(core);
 
   const coreShell = new THREE.Mesh(
-    trackGeometry(new THREE.IcosahedronGeometry(0.78, 1)),
+    trackGeometry(new THREE.IcosahedronGeometry(0.34, 1)),
     trackMaterial(
       new THREE.MeshPhysicalMaterial({
         color: 0xa4fbff,
         emissive: 0x1c3444,
-        emissiveIntensity: 0.7,
+        emissiveIntensity: 0.54,
         roughness: 0.12,
         metalness: 0.24,
         transmission: 0.22,
         transparent: true,
-        opacity: 0.88,
+        opacity: 0.82,
         clearcoat: 1,
         clearcoatRoughness: 0.08,
       })
@@ -227,12 +237,12 @@ export const createExperienceScene = async ({
   core.add(coreShell);
 
   const coreWire = new THREE.LineSegments(
-    trackGeometry(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.05, 0))),
+    trackGeometry(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(0.48, 0))),
     trackMaterial(
       new THREE.LineBasicMaterial({
         color: 0x8cf6ff,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.18,
       })
     )
   );
@@ -244,22 +254,22 @@ export const createExperienceScene = async ({
         map: glowTexture,
         color: 0x8cf6ff,
         transparent: true,
-        opacity: 0.58,
+        opacity: 0.38,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       })
     )
   );
-  coreAura.scale.set(4.8, 4.8, 1);
+  coreAura.scale.set(2.02, 2.02, 1);
   core.add(coreAura);
 
   const orbitalRing = new THREE.Mesh(
-    trackGeometry(new THREE.TorusGeometry(1.95, 0.045, 16, 96)),
+    trackGeometry(new THREE.TorusGeometry(0.88, 0.022, 16, 88)),
     trackMaterial(
       new THREE.MeshBasicMaterial({
         color: 0x8cf6ff,
         transparent: true,
-        opacity: 0.34,
+        opacity: 0.22,
         blending: THREE.AdditiveBlending,
       })
     )
@@ -268,12 +278,12 @@ export const createExperienceScene = async ({
   core.add(orbitalRing);
 
   const outerRing = new THREE.Mesh(
-    trackGeometry(new THREE.TorusGeometry(2.55, 0.03, 12, 110)),
+    trackGeometry(new THREE.TorusGeometry(1.38, 0.014, 12, 100)),
     trackMaterial(
       new THREE.MeshBasicMaterial({
         color: 0xbcff66,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.1,
         blending: THREE.AdditiveBlending,
       })
     )
@@ -282,18 +292,18 @@ export const createExperienceScene = async ({
   world.add(outerRing);
 
   const floorDisc = new THREE.Mesh(
-    trackGeometry(new THREE.RingGeometry(2.9, 5.65, 96)),
+    trackGeometry(new THREE.RingGeometry(0.94, 2.8, 72)),
     trackMaterial(
       new THREE.MeshBasicMaterial({
         color: 0x102131,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.34,
+        opacity: 0.16,
       })
     )
   );
   floorDisc.rotation.x = -Math.PI / 2;
-  floorDisc.position.y = -1.85;
+  floorDisc.position.y = -1.32;
   world.add(floorDisc);
 
   const floorHalo = new THREE.Sprite(
@@ -302,30 +312,30 @@ export const createExperienceScene = async ({
         map: glowTexture,
         color: 0x8cf6ff,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.09,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       })
     )
   );
-  floorHalo.position.set(0, -1.62, 0);
-  floorHalo.scale.set(10.5, 10.5, 1);
+  floorHalo.position.set(0, -1.18, 0);
+  floorHalo.scale.set(4.6, 4.6, 1);
   world.add(floorHalo);
 
-  const particleCount = reducedMotion ? 68 : isCompactViewport ? 88 : 146;
+  const particleCount = reducedMotion ? 16 : isCompactViewport ? 28 : 40;
   const particlePositions = new Float32Array(particleCount * 3);
   const particleSizes = new Float32Array(particleCount);
 
   for (let index = 0; index < particleCount; index += 1) {
     const stride = index * 3;
-    const radius = 3.9 + Math.random() * 4.9;
+    const radius = 2.2 + Math.random() * 3.6;
     const theta = Math.random() * Math.PI * 2;
-    const spread = (Math.random() - 0.5) * 4.8;
+    const spread = (Math.random() - 0.5) * 3.1;
 
     particlePositions[stride] = Math.cos(theta) * radius;
     particlePositions[stride + 1] = spread;
-    particlePositions[stride + 2] = Math.sin(theta) * radius * 0.9;
-    particleSizes[index] = 0.02 + Math.random() * 0.03;
+    particlePositions[stride + 2] = Math.sin(theta) * radius * 0.84;
+    particleSizes[index] = 0.01 + Math.random() * 0.016;
   }
 
   const particleGeometry = trackGeometry(new THREE.BufferGeometry());
@@ -335,9 +345,9 @@ export const createExperienceScene = async ({
   const particleMaterial = trackMaterial(
     new THREE.PointsMaterial({
       color: 0xe8f8ff,
-      size: isCompactViewport ? 0.032 : 0.028,
+      size: isCompactViewport ? 0.024 : 0.02,
       transparent: true,
-      opacity: 0.66,
+      opacity: 0.32,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
@@ -401,28 +411,63 @@ export const createExperienceScene = async ({
           map: glowTexture,
           color: glowColor,
           transparent: true,
-          opacity: index === selectedIndex ? 0.62 : 0.26,
+          opacity: index === selectedIndex ? 0.5 : 0.18,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         })
       )
     );
-    aura.scale.set(project.scale * 3.2, project.scale * 3.2, 1);
+    aura.scale.set(project.scale * 2.1, project.scale * 2.1, 1);
     node.add(aura);
 
     const orbit = new THREE.Mesh(
-      trackGeometry(new THREE.TorusGeometry(project.scale * 1.18, 0.015, 8, 56)),
+      trackGeometry(new THREE.TorusGeometry(project.scale * 1.02, project.scale * 0.01, 8, 48)),
       trackMaterial(
         new THREE.MeshBasicMaterial({
           color: glowColor,
           transparent: true,
-          opacity: 0.14,
+          opacity: 0.1,
           blending: THREE.AdditiveBlending,
         })
       )
     );
     orbit.rotation.y = Math.PI / 2;
     node.add(orbit);
+
+    let sensorHead = null;
+    let sensorHalo = null;
+
+    if (project.geometry === "sense-stick") {
+      mesh.rotation.z = Math.PI * 0.08;
+
+      sensorHead = new THREE.Mesh(
+        trackGeometry(new THREE.SphereGeometry(project.scale * 0.18, 12, 12)),
+        trackMaterial(
+          new THREE.MeshBasicMaterial({
+            color: glowColor,
+            transparent: true,
+            opacity: 0.92,
+          })
+        )
+      );
+      sensorHead.position.y = project.scale * 0.68;
+      node.add(sensorHead);
+
+      sensorHalo = new THREE.Mesh(
+        trackGeometry(new THREE.TorusGeometry(project.scale * 0.34, project.scale * 0.02, 8, 48)),
+        trackMaterial(
+          new THREE.MeshBasicMaterial({
+            color: glowColor,
+            transparent: true,
+            opacity: 0.22,
+            blending: THREE.AdditiveBlending,
+          })
+        )
+      );
+      sensorHalo.position.y = sensorHead.position.y;
+      sensorHalo.rotation.x = Math.PI / 2;
+      node.add(sensorHalo);
+    }
 
     const shardCluster = new THREE.Group();
 
@@ -434,17 +479,17 @@ export const createExperienceScene = async ({
             new THREE.MeshBasicMaterial({
               color: glowColor,
               transparent: true,
-              opacity: 0.55,
+              opacity: 0.42,
               blending: THREE.AdditiveBlending,
             })
           )
         );
 
         const angle = (Math.PI * 2 * shardIndex) / project.shards;
-        const radius = project.scale * (1.05 + (shardIndex % 2) * 0.28);
+        const radius = project.scale * (0.88 + (shardIndex % 2) * 0.22);
         shard.position.set(
           Math.cos(angle) * radius,
-          (shardIndex % 2 === 0 ? 1 : -1) * project.scale * 0.3,
+          (shardIndex % 2 === 0 ? 1 : -1) * project.scale * 0.22,
           Math.sin(angle) * radius
         );
         shard.rotation.set(angle * 0.6, angle, angle * 0.35);
@@ -466,11 +511,13 @@ export const createExperienceScene = async ({
       edgeLines,
       aura,
       orbit,
+      sensorHead,
+      sensorHalo,
       shardCluster,
       baseY: y,
       floatPhase: Math.random() * Math.PI * 2,
-      floatSpeed: 0.82 + index * 0.12,
-      spinSpeed: 0.12 + index * 0.02,
+      floatSpeed: 0.62 + index * 0.08,
+      spinSpeed: 0.06 + index * 0.015,
     };
 
     node.scale.setScalar(0);
@@ -684,17 +731,11 @@ export const createExperienceScene = async ({
   };
 
   const handlePointerDown = (event) => {
+    motion.dragging = true;
     motion.dragPointerId = event.pointerId;
     motion.dragDistance = 0;
     motion.lastX = event.clientX;
     motion.lastY = event.clientY;
-
-    if (!allowDragField && event.pointerType !== "mouse") {
-      motion.dragging = false;
-      return;
-    }
-
-    motion.dragging = true;
     canvas.setPointerCapture(event.pointerId);
   };
 
@@ -703,19 +744,14 @@ export const createExperienceScene = async ({
       return;
     }
 
-    const wasDragging = motion.dragging;
     motion.dragging = false;
     motion.dragPointerId = null;
 
-    if (wasDragging && canvas.hasPointerCapture(event.pointerId)) {
+    if (canvas.hasPointerCapture(event.pointerId)) {
       canvas.releasePointerCapture(event.pointerId);
     }
 
-    if (event.type === "pointercancel") {
-      return;
-    }
-
-    if (motion.dragDistance > (allowDragField ? 8 : 14)) {
+    if (motion.dragDistance > 8) {
       return;
     }
 
@@ -772,11 +808,11 @@ export const createExperienceScene = async ({
     );
     camera.lookAt(0, 0.05, 0);
 
-    core.rotation.y += delta * (reducedMotion ? 0.1 : 0.32);
-    core.rotation.x = Math.sin(elapsed * 0.32) * 0.08;
-    orbitalRing.rotation.z += delta * 0.24;
-    outerRing.rotation.z -= delta * 0.1;
-    particleField.rotation.y += delta * 0.025;
+    core.rotation.y += delta * (reducedMotion ? 0.06 : 0.18);
+    core.rotation.x = Math.sin(elapsed * 0.28) * 0.04;
+    orbitalRing.rotation.z += delta * 0.14;
+    outerRing.rotation.z -= delta * 0.06;
+    particleField.rotation.y += delta * 0.01;
 
     projectNodes.forEach((node, index) => {
       const emphasis = index === highlightedIndex;
@@ -785,6 +821,8 @@ export const createExperienceScene = async ({
         edgeLines,
         aura,
         orbit,
+        sensorHead,
+        sensorHalo,
         shardCluster,
         baseY,
         floatPhase,
@@ -792,9 +830,9 @@ export const createExperienceScene = async ({
         spinSpeed,
       } = node.userData;
 
-      node.position.y = baseY + Math.sin(elapsed * floatSpeed + floatPhase) * (reducedMotion ? 0.04 : 0.18);
+      node.position.y = baseY + Math.sin(elapsed * floatSpeed + floatPhase) * (reducedMotion ? 0.02 : 0.06);
       node.rotation.y += delta * spinSpeed;
-      node.rotation.x = Math.sin(elapsed * 0.5 + floatPhase) * 0.1;
+      node.rotation.x = Math.sin(elapsed * 0.42 + floatPhase) * 0.05;
 
       mesh.material.emissiveIntensity = THREE.MathUtils.lerp(
         mesh.material.emissiveIntensity,
@@ -803,23 +841,40 @@ export const createExperienceScene = async ({
       );
 
       edgeLines.material.opacity = THREE.MathUtils.lerp(edgeLines.material.opacity, emphasis ? 0.7 : 0.22, 0.08);
-      aura.material.opacity = THREE.MathUtils.lerp(aura.material.opacity, emphasis ? 0.74 : 0.26, 0.08);
-      orbit.material.opacity = THREE.MathUtils.lerp(orbit.material.opacity, emphasis ? 0.5 : 0.14, 0.08);
-      orbit.rotation.z += delta * (emphasis ? 1 : 0.45);
+      aura.material.opacity = THREE.MathUtils.lerp(aura.material.opacity, emphasis ? 0.64 : 0.18, 0.08);
+      orbit.material.opacity = THREE.MathUtils.lerp(orbit.material.opacity, emphasis ? 0.28 : 0.1, 0.08);
+      orbit.rotation.z += delta * (emphasis ? 0.55 : 0.22);
+
+      if (sensorHalo) {
+        sensorHalo.material.opacity = THREE.MathUtils.lerp(
+          sensorHalo.material.opacity,
+          emphasis ? 0.4 : 0.16,
+          0.08
+        );
+        sensorHalo.rotation.z += delta * (emphasis ? 0.9 : 0.38);
+      }
+
+      if (sensorHead) {
+        sensorHead.material.opacity = THREE.MathUtils.lerp(
+          sensorHead.material.opacity,
+          emphasis ? 1 : 0.84,
+          0.08
+        );
+      }
 
       if (shardCluster?.children?.length) {
-        shardCluster.rotation.y += delta * (emphasis ? 0.9 : 0.45);
-        shardCluster.rotation.x = Math.sin(elapsed * 0.45 + floatPhase) * 0.2;
+        shardCluster.rotation.y += delta * (emphasis ? 0.54 : 0.24);
+        shardCluster.rotation.x = Math.sin(elapsed * 0.45 + floatPhase) * 0.12;
 
         shardCluster.children.forEach((shard) => {
           shard.rotation.x += delta * shard.userData.spinRate;
           shard.rotation.y += delta * shard.userData.spinRate * 0.65;
-          shard.position.y = shard.userData.baseY + Math.sin(elapsed * 0.9 + shard.userData.wobbleOffset) * 0.08;
+          shard.position.y = shard.userData.baseY + Math.sin(elapsed * 0.9 + shard.userData.wobbleOffset) * 0.05;
         });
       }
 
       const revealScale = entrance.active ? 1 : 0;
-      const emphasisScale = revealScale === 1 && node.scale.x > 0.98 && emphasis ? 1.16 : 1;
+      const emphasisScale = revealScale === 1 && node.scale.x > 0.98 && emphasis ? 1.08 : 1;
 
       node.scale.lerp(
         targetScale.setScalar(revealScale * emphasisScale),

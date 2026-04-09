@@ -1,15 +1,10 @@
-const STORAGE_KEY = "jvw-portfolio-cursor-settings-v1";
-const DEFAULT_MODE = "signal";
-const CURSOR_MODES = Object.freeze({
-  signal: "Signal",
-  radar: "Radar",
-  dot: "Dot",
-  halo: "Halo",
-  native: "Native",
-});
+const STORAGE_KEY = "lake-cursor-enabled";
 
 const supportsSignalCursor = () =>
   window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
+
+const prefersReducedMotion = () =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const toElements = (target) => {
   if (!target) {
@@ -23,20 +18,21 @@ const toElements = (target) => {
   return Array.from(target).filter((element) => element instanceof Element);
 };
 
-const readStoredMode = () => {
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const readStoredState = () => {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
-    return parsed.mode in CURSOR_MODES ? parsed.mode : DEFAULT_MODE;
+    return window.localStorage.getItem(STORAGE_KEY) !== "0";
   } catch {
-    return DEFAULT_MODE;
+    return true;
   }
 };
 
-const writeStoredMode = (mode) => {
+const writeStoredState = (enabled) => {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode }));
+    window.localStorage.setItem(STORAGE_KEY, enabled ? "1" : "0");
   } catch {
-    // Ignore storage failures and keep the current page session working.
+    // Storage errors should not break pointer interaction.
   }
 };
 
@@ -44,19 +40,24 @@ class SignalCursor {
   constructor({
     defaultLabel = "Move Gently",
     defaultAside = "the page already has enough drama",
+    defaultMode = "default",
     defaultTone = "default",
-    menuRoot = document.querySelector("[data-cursor-menu]"),
   } = {}) {
-    this.supported = supportsSignalCursor();
-    this.mode = readStoredMode();
-    this.menuRoot = menuRoot ?? null;
-    this.summary = this.menuRoot?.querySelector("[data-cursor-summary]") ?? null;
-    this.statusNodes = Array.from(document.querySelectorAll("[data-cursor-status]"));
-    this.optionButtons = new Map();
+    this.supported = supportsSignalCursor() && !prefersReducedMotion();
+    this.enabled = this.supported && readStoredState();
+    this.defaultMessage = {
+      label: defaultLabel,
+      aside: defaultAside,
+      mode: defaultMode,
+      tone: defaultTone,
+    };
+    this.manualOverrideMessage = null;
+    this.interactionOverrideMessage = null;
     this.currentTarget = null;
-    this.overrideMessage = null;
-    this.element = null;
-    this.frameId = null;
+    this.boundToggles = new Map();
+    this.magneticElements = new Set();
+    this.hoverVisits = new WeakMap();
+    this.holdTimer = 0;
     this.pointer = {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -64,87 +65,22 @@ class SignalCursor {
       targetY: window.innerHeight / 2,
       visible: false,
     };
-    this.defaultMessage = {
-      label: defaultLabel,
-      aside: defaultAside,
-      tone: defaultTone,
-    };
+
+    if (!this.supported) {
+      return;
+    }
 
     this.render = this.render.bind(this);
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerUp = this.handlePointerUp.bind(this);
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
-    this.handleDocumentPointerDown = this.handleDocumentPointerDown.bind(this);
-    this.handleDocumentKeydown = this.handleDocumentKeydown.bind(this);
-
-    this.bindMenu();
-    this.syncMenu();
-    this.syncMountState();
-  }
-
-  get enabled() {
-    return this.supported && this.mode !== "native";
-  }
-
-  bindMenu() {
-    if (!this.menuRoot) {
-      return;
-    }
-
-    this.menuRoot.querySelectorAll("[data-cursor-mode]").forEach((button) => {
-      const mode = button.getAttribute("data-cursor-mode");
-
-      if (!mode || !(mode in CURSOR_MODES)) {
-        return;
-      }
-
-      const buttons = this.optionButtons.get(mode) ?? [];
-      buttons.push(button);
-      this.optionButtons.set(mode, buttons);
-
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.setMode(mode);
-      });
-    });
-
-    document.addEventListener("pointerdown", this.handleDocumentPointerDown);
-    document.addEventListener("keydown", this.handleDocumentKeydown);
-  }
-
-  handleDocumentPointerDown(event) {
-    if (!this.menuRoot?.open) {
-      return;
-    }
-
-    if (this.menuRoot.contains(event.target)) {
-      return;
-    }
-
-    this.menuRoot.open = false;
-  }
-
-  handleDocumentKeydown(event) {
-    if (event.key !== "Escape" || !this.menuRoot?.open) {
-      return;
-    }
-
-    this.menuRoot.open = false;
-    this.summary?.focus();
-  }
-
-  createElement() {
-    if (this.element) {
-      return;
-    }
+    this.updateCopyPlacement = this.updateCopyPlacement.bind(this);
 
     this.element = document.createElement("div");
     this.element.className = "signal-cursor";
     this.element.setAttribute("aria-hidden", "true");
     this.element.innerHTML = `
-      <span class="signal-cursor-aura"></span>
       <span class="signal-cursor-ring"></span>
       <span class="signal-cursor-core"></span>
       <div class="signal-cursor-copy">
@@ -155,119 +91,81 @@ class SignalCursor {
 
     this.labelNode = this.element.querySelector(".signal-cursor-label");
     this.asideNode = this.element.querySelector(".signal-cursor-aside");
+    this.element.dataset.edgeX = "right";
+    this.element.dataset.edgeY = "bottom";
 
     document.body.append(this.element);
-    document.documentElement.classList.add("has-signal-cursor");
+    this.refreshMessage();
+    this.syncEnabledState();
 
     window.addEventListener("pointermove", this.handlePointerMove, { passive: true });
     window.addEventListener("pointerdown", this.handlePointerDown, { passive: true });
     window.addEventListener("pointerup", this.handlePointerUp, { passive: true });
     window.addEventListener("pointerleave", this.handlePointerLeave);
 
-    this.refreshMessage();
     this.frameId = window.requestAnimationFrame(this.render);
   }
 
-  removeElement() {
-    if (!this.element) {
-      return;
-    }
-
-    window.removeEventListener("pointermove", this.handlePointerMove);
-    window.removeEventListener("pointerdown", this.handlePointerDown);
-    window.removeEventListener("pointerup", this.handlePointerUp);
-    window.removeEventListener("pointerleave", this.handlePointerLeave);
-    window.cancelAnimationFrame(this.frameId);
-
-    this.currentTarget?.classList.remove("is-cursor-target");
-    this.currentTarget = null;
-    this.frameId = null;
-    this.pointer.visible = false;
-    this.element.remove();
-    this.element = null;
-    this.labelNode = null;
-    this.asideNode = null;
-    document.documentElement.classList.remove("has-signal-cursor");
-  }
-
-  syncMountState() {
-    if (this.enabled) {
-      this.createElement();
-      this.refreshMessage();
-      return;
-    }
-
-    this.removeElement();
-  }
-
-  setMode(mode) {
-    if (!(mode in CURSOR_MODES) || this.mode === mode) {
-      return;
-    }
-
-    this.mode = mode;
-    writeStoredMode(mode);
-
-    if (this.menuRoot) {
-      this.menuRoot.open = false;
-    }
-
-    this.syncMenu();
-    this.syncMountState();
-  }
-
-  syncMenu() {
-    const label = CURSOR_MODES[this.mode] ?? CURSOR_MODES[DEFAULT_MODE];
-
-    if (this.menuRoot) {
-      this.menuRoot.hidden = !this.supported;
-      this.menuRoot.dataset.cursorMode = this.mode;
-    }
-
-    this.statusNodes.forEach((node) => {
-      node.textContent = label;
-    });
-
-    this.optionButtons.forEach((buttons, mode) => {
-      const isActive = mode === this.mode;
-
-      buttons.forEach((button) => {
-        button.setAttribute("aria-pressed", String(isActive));
-        button.dataset.active = isActive ? "true" : "false";
-      });
-    });
-  }
-
   handlePointerMove(event) {
-    if (!this.element) {
+    if (!this.enabled) {
       return;
     }
 
     this.pointer.visible = true;
     this.pointer.targetX = event.clientX;
     this.pointer.targetY = event.clientY;
+    this.updateCopyPlacement(event.clientX, event.clientY);
     this.element.classList.add("is-visible");
   }
 
   handlePointerDown() {
-    this.element?.classList.add("is-pressed");
+    if (!this.enabled) {
+      return;
+    }
+
+    this.element.classList.add("is-pressed");
+    this.clearHoldTimer();
+    this.applyInteractionMessage(this.currentTarget, "press");
   }
 
   handlePointerUp() {
-    this.element?.classList.remove("is-pressed");
+    if (!this.supported) {
+      return;
+    }
+
+    this.element.classList.remove("is-pressed");
+    this.clearInteractionOverride();
+
+    if (this.currentTarget) {
+      this.scheduleHoldMessage(this.currentTarget);
+    }
   }
 
   handlePointerLeave() {
-    if (!this.element) {
+    if (!this.supported) {
       return;
     }
 
     this.pointer.visible = false;
+    this.element.dataset.edgeX = "right";
+    this.element.dataset.edgeY = "bottom";
     this.element.classList.remove("is-visible");
   }
 
+  updateCopyPlacement(x, y) {
+    if (!this.supported) {
+      return;
+    }
+
+    const horizontalAllowance = Math.min(Math.max(window.innerWidth * 0.28, 280), 420);
+    const verticalAllowance = Math.min(Math.max(window.innerHeight * 0.24, 170), 260);
+
+    this.element.dataset.edgeX = x > window.innerWidth - horizontalAllowance ? "left" : "right";
+    this.element.dataset.edgeY = y > window.innerHeight - verticalAllowance ? "top" : "bottom";
+  }
+
   render() {
-    if (!this.element) {
+    if (!this.supported) {
       return;
     }
 
@@ -281,21 +179,25 @@ class SignalCursor {
     return {
       label: target?.getAttribute("data-cursor-label") || this.defaultMessage.label,
       aside: target?.getAttribute("data-cursor-aside") || this.defaultMessage.aside,
+      mode: target?.getAttribute("data-cursor-mode") || this.defaultMessage.mode,
       tone: target?.getAttribute("data-cursor-tone") || this.defaultMessage.tone,
     };
   }
 
   refreshMessage() {
-    if (!this.element || !this.labelNode || !this.asideNode) {
+    if (!this.supported) {
       return;
     }
 
-    const message = this.overrideMessage ?? this.getMessageFromTarget(this.currentTarget);
+    const message =
+      this.manualOverrideMessage ??
+      this.interactionOverrideMessage ??
+      this.getMessageFromTarget(this.currentTarget);
 
     this.labelNode.textContent = message.label;
     this.asideNode.textContent = message.aside;
+    this.element.dataset.mode = message.mode;
     this.element.dataset.tone = message.tone;
-    this.element.dataset.style = this.mode;
   }
 
   applyTarget(target) {
@@ -313,7 +215,7 @@ class SignalCursor {
   }
 
   clearTarget(target) {
-    if (!this.enabled) {
+    if (!this.supported) {
       return;
     }
 
@@ -331,43 +233,281 @@ class SignalCursor {
       return;
     }
 
-    this.overrideMessage = message;
+    this.manualOverrideMessage = {
+      ...this.defaultMessage,
+      ...message,
+    };
     this.refreshMessage();
   }
 
   clearOverrideMessage() {
+    if (!this.supported) {
+      return;
+    }
+
+    this.manualOverrideMessage = null;
+    this.refreshMessage();
+  }
+
+  clearInteractionOverride() {
+    if (!this.supported) {
+      return;
+    }
+
+    this.interactionOverrideMessage = null;
+    this.refreshMessage();
+  }
+
+  resetMagneticElements() {
+    this.magneticElements.forEach((element) => {
+      element.style.translate = "";
+    });
+  }
+
+  clearHoldTimer() {
+    if (this.holdTimer) {
+      window.clearTimeout(this.holdTimer);
+      this.holdTimer = 0;
+    }
+  }
+
+  getStateMessageFromTarget(target, prefix) {
+    if (!target) {
+      return null;
+    }
+
+    const label = target.getAttribute(`data-cursor-${prefix}-label`);
+    const aside = target.getAttribute(`data-cursor-${prefix}-aside`);
+    const mode = target.getAttribute(`data-cursor-${prefix}-mode`);
+    const tone = target.getAttribute(`data-cursor-${prefix}-tone`);
+
+    if (!label && !aside && !mode && !tone) {
+      return null;
+    }
+
+    return {
+      ...this.getMessageFromTarget(target),
+      ...(label ? { label } : {}),
+      ...(aside ? { aside } : {}),
+      ...(mode ? { mode } : {}),
+      ...(tone ? { tone } : {}),
+    };
+  }
+
+  applyInteractionMessage(target, prefix) {
     if (!this.enabled) {
       return;
     }
 
-    this.overrideMessage = null;
+    const message = this.getStateMessageFromTarget(target, prefix);
+
+    if (!message) {
+      return;
+    }
+
+    this.interactionOverrideMessage = message;
     this.refreshMessage();
+  }
+
+  scheduleHoldMessage(target) {
+    this.clearHoldTimer();
+
+    if (!this.enabled || !target || this.manualOverrideMessage) {
+      return;
+    }
+
+    const holdMessage = this.getStateMessageFromTarget(target, "hold");
+
+    if (!holdMessage) {
+      return;
+    }
+
+    const delay = Number.parseInt(target.getAttribute("data-cursor-hold-delay") ?? "520", 10);
+
+    this.holdTimer = window.setTimeout(() => {
+      this.holdTimer = 0;
+
+      if (!this.enabled || this.currentTarget !== target || this.manualOverrideMessage) {
+        return;
+      }
+
+      this.interactionOverrideMessage = holdMessage;
+      this.refreshMessage();
+    }, Number.isFinite(delay) ? delay : 520);
+  }
+
+  syncToggleNode(node) {
+    if (!(node instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    if (!this.supported) {
+      node.hidden = true;
+      node.disabled = true;
+      return;
+    }
+
+    const isEnabled = this.enabled;
+    const labelNode = node.querySelector("[data-cursor-toggle-label]");
+
+    node.hidden = false;
+    node.disabled = false;
+    node.dataset.state = isEnabled ? "on" : "off";
+    node.setAttribute("aria-pressed", String(isEnabled));
+    node.setAttribute("aria-label", isEnabled ? "Turn custom cursor off" : "Turn custom cursor on");
+
+    if (labelNode) {
+      labelNode.textContent = isEnabled ? "On" : "Off";
+    }
+  }
+
+  syncEnabledState() {
+    if (!this.supported) {
+      document.documentElement.classList.remove("has-signal-cursor");
+      return;
+    }
+
+    document.documentElement.classList.toggle("has-signal-cursor", this.enabled);
+
+    if (!this.enabled) {
+      this.pointer.visible = false;
+      this.element.classList.remove("is-visible", "is-pressed");
+      this.clearHoldTimer();
+      this.clearTarget();
+      this.clearInteractionOverride();
+      this.clearOverrideMessage();
+      this.resetMagneticElements();
+    }
+
+    this.element.hidden = !this.enabled;
+    this.boundToggles.forEach((_, node) => {
+      this.syncToggleNode(node);
+    });
+  }
+
+  setEnabled(nextState) {
+    if (!this.supported) {
+      return;
+    }
+
+    this.enabled = Boolean(nextState);
+    writeStoredState(this.enabled);
+    this.syncEnabledState();
+  }
+
+  toggle() {
+    if (!this.supported) {
+      return;
+    }
+
+    this.setEnabled(!this.enabled);
+  }
+
+  attachToggle(target) {
+    toElements(target).forEach((element) => {
+      if (!(element instanceof HTMLButtonElement) || this.boundToggles.has(element)) {
+        this.syncToggleNode(element);
+        return;
+      }
+
+      const handleClick = () => {
+        this.toggle();
+      };
+
+      element.addEventListener("click", handleClick);
+      this.boundToggles.set(element, handleClick);
+      this.syncToggleNode(element);
+    });
   }
 
   bindTargets(target) {
     toElements(target).forEach((element) => {
-      element.addEventListener("pointerenter", () => {
+      const isMagnetic = element.hasAttribute("data-magnetic");
+
+      if (isMagnetic) {
+        this.magneticElements.add(element);
+      }
+
+      const resetMagnetic = () => {
+        if (!isMagnetic) {
+          return;
+        }
+
+        element.style.translate = "";
+      };
+
+      const handleActivate = () => {
+        if (!this.enabled) {
+          return;
+        }
+
+        const visitCount = (this.hoverVisits.get(element) ?? 0) + 1;
+        this.hoverVisits.set(element, visitCount);
         this.applyTarget(element);
-      });
+        this.clearInteractionOverride();
 
-      element.addEventListener("pointerleave", () => {
+        if (visitCount > 1) {
+          this.applyInteractionMessage(element, "repeat");
+        }
+
+        this.scheduleHoldMessage(element);
+      };
+
+      const handleDeactivate = () => {
+        this.clearHoldTimer();
+        resetMagnetic();
+        this.clearInteractionOverride();
         this.clearTarget(element);
-      });
+      };
 
-      element.addEventListener("focus", () => {
-        this.applyTarget(element);
-      });
+      element.addEventListener("pointerenter", handleActivate);
+      element.addEventListener("focus", handleActivate);
 
-      element.addEventListener("blur", () => {
-        this.clearTarget(element);
+      element.addEventListener("pointerleave", handleDeactivate);
+      element.addEventListener("blur", handleDeactivate);
+
+      if (!isMagnetic) {
+        return;
+      }
+
+      element.addEventListener("pointermove", (event) => {
+        if (!this.enabled) {
+          return;
+        }
+
+        const rect = element.getBoundingClientRect();
+        const offsetX = event.clientX - (rect.left + rect.width / 2);
+        const offsetY = event.clientY - (rect.top + rect.height / 2);
+        const maxTravel = Number.parseFloat(element.getAttribute("data-magnetic")) || 12;
+        const x = clamp(offsetX * 0.18, -maxTravel, maxTravel);
+        const y = clamp(offsetY * 0.18, -maxTravel, maxTravel);
+
+        element.style.translate = `${x}px ${y}px`;
       });
     });
   }
 
   destroy() {
-    document.removeEventListener("pointerdown", this.handleDocumentPointerDown);
-    document.removeEventListener("keydown", this.handleDocumentKeydown);
-    this.removeElement();
+    if (!this.supported) {
+      return;
+    }
+
+    window.removeEventListener("pointermove", this.handlePointerMove);
+    window.removeEventListener("pointerdown", this.handlePointerDown);
+    window.removeEventListener("pointerup", this.handlePointerUp);
+    window.removeEventListener("pointerleave", this.handlePointerLeave);
+    window.cancelAnimationFrame(this.frameId);
+
+    this.boundToggles.forEach((handler, node) => {
+      node.removeEventListener("click", handler);
+    });
+    this.boundToggles.clear();
+
+    this.clearHoldTimer();
+    this.resetMagneticElements();
+    this.currentTarget?.classList.remove("is-cursor-target");
+    this.element.remove();
+    document.documentElement.classList.remove("has-signal-cursor");
   }
 }
 
