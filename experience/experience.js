@@ -1,3 +1,4 @@
+import { gsap, reducedMotion } from "../assets/js/motion-system.js";
 import { createPortfolioSound } from "../assets/js/site-audio.js";
 import { createSignalCursor } from "../assets/js/site-cursor.js";
 import { PROJECTS } from "./projects.js";
@@ -30,8 +31,6 @@ const getElements = () => ({
   renderStatus: document.querySelector("#render-status"),
   canvas: document.querySelector(".experience-canvas"),
 });
-
-const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const getCurrentIndex = () => state.previewIndex ?? state.selectedIndex;
 const getErrorMessage = (error) => (error instanceof Error ? error.message : String(error));
@@ -134,15 +133,23 @@ const renderProjectList = () => {
         data-cursor-hold-aside="You hovered. That's commitment."
         data-cursor-press-aside="Different tab energy."
       >
-        <div class="project-link-head">
-          <span class="project-card-index">${project.index}</span>
-          <span class="project-link-label">${project.category}</span>
+        <div class="project-link-preview" aria-hidden="true">
+          <span class="project-preview-index">${project.index}</span>
+          <span class="project-preview-beam"></span>
+          <span class="project-preview-core"></span>
+          <span class="project-preview-label">${project.category}</span>
         </div>
-        <h3>${project.title}</h3>
-        <p>${project.blurb}</p>
-        <div class="project-link-foot">
-          <span class="project-link-label">${project.ctaLabel ?? "Launch live site"}</span>
-          <span class="project-link-arrow">-></span>
+        <div class="project-link-body">
+          <div class="project-link-head">
+            <span class="project-card-index">${project.index}</span>
+            <span class="project-link-label">${project.category}</span>
+          </div>
+          <h3>${project.title}</h3>
+          <p>${project.blurb}</p>
+          <div class="project-link-foot">
+            <span class="project-link-label">${project.ctaLabel ?? "Launch live site"}</span>
+            <span class="project-link-arrow">-></span>
+          </div>
         </div>
       </a>
     `
@@ -177,6 +184,41 @@ const renderProjectList = () => {
       state.sound?.play("uiConfirm", { cooldownMs: 180 });
       selectProject(index);
     });
+  });
+};
+
+const animateInterface = () => {
+  if (reducedMotion) {
+    return;
+  }
+
+  gsap.from(".experience-header > *", {
+    y: 18,
+    opacity: 0,
+    duration: 0.7,
+    stagger: 0.08,
+    ease: "power3.out",
+    clearProps: "transform,opacity",
+  });
+
+  gsap.from(".experience-rail > *", {
+    y: 26,
+    opacity: 0,
+    duration: 0.82,
+    stagger: 0.1,
+    ease: "power3.out",
+    delay: 0.08,
+    clearProps: "transform,opacity",
+  });
+
+  gsap.from(".project-link", {
+    y: 24,
+    opacity: 0,
+    duration: 0.72,
+    stagger: 0.06,
+    ease: "power3.out",
+    delay: 0.16,
+    clearProps: "transform,opacity",
   });
 };
 
@@ -316,9 +358,11 @@ const initExperience = () => {
     window.alert("sike it does not work");
   });
 
-  if (prefersReducedMotion()) {
+  if (reducedMotion) {
     elements.renderStatus.textContent = "Reduced motion enabled";
   }
+
+  animateInterface();
 
   if ("requestIdleCallback" in window) {
     window.requestIdleCallback(() => {

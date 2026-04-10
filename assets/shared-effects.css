@@ -1,10 +1,10 @@
 :root {
-  --signal-cursor-accent: var(--accent, var(--xp-accent, #c8ff62));
-  --signal-cursor-accent-cool: var(--accent-cool, var(--xp-accent-alt, #85ddff));
-  --signal-cursor-accent-warm: var(--accent-warm, #ff9874);
-  --signal-cursor-ink: var(--ink, var(--xp-text, #f6f0e7));
-  --signal-cursor-soft: var(--soft, var(--xp-soft, rgba(246, 240, 231, 0.42)));
-  --signal-cursor-panel: color-mix(in srgb, var(--bg, var(--xp-bg, #05070b)) 82%, transparent);
+  --signal-cursor-accent: var(--accent, var(--xp-accent, #ff3b30));
+  --signal-cursor-accent-cool: var(--accent-cool, var(--xp-accent-alt, #ff6b5e));
+  --signal-cursor-accent-warm: var(--accent-warm, #ff8f66);
+  --signal-cursor-ink: var(--ink, var(--xp-text, #f4f1eb));
+  --signal-cursor-soft: var(--soft, var(--xp-soft, rgba(244, 241, 235, 0.38)));
+  --signal-cursor-panel: color-mix(in srgb, var(--bg, var(--xp-bg, #000000)) 82%, transparent);
 }
 
 .heading-masked-reveal {
@@ -130,7 +130,7 @@
     transform: translate(-50%, -50%);
     border-radius: 999px;
     mix-blend-mode: difference;
-    transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
+    transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
   }
 
   .signal-cursor-ring {
@@ -175,7 +175,7 @@
       calc(var(--cursor-copy-base-y) + var(--cursor-copy-mode-y) + var(--cursor-copy-press-y)),
       0
     );
-    transition: transform 220ms ease, border-color 220ms ease;
+    transition: transform 140ms ease, border-color 140ms ease;
   }
 
   .signal-cursor-label,

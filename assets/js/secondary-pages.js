@@ -1,10 +1,16 @@
 import { initMaskedHeadings } from "./masked-headings.js";
+import {
+  animateBatchIn,
+  clamp,
+  createSmoothScroller,
+  gsap,
+  reducedMotion,
+  ScrollTrigger,
+  withScroller,
+} from "./motion-system.js";
 import { createSignalCursor } from "./site-cursor.js";
 
 const root = document.documentElement;
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const cursorAttributeNames = [
   "data-cursor-label",
@@ -75,6 +81,80 @@ const updateSceneStates = (shell, scenes) => {
   });
 };
 
+const setupHeaderEntrance = () => {
+  const copy = document.querySelectorAll(".secondary-header-copy > *");
+  const tools = document.querySelectorAll(".secondary-header-tools > *");
+
+  gsap.from(copy, {
+    y: reducedMotion ? 0 : 18,
+    opacity: reducedMotion ? 1 : 0,
+    duration: 0.72,
+    stagger: 0.08,
+    ease: "power3.out",
+  });
+
+  gsap.from(tools, {
+    y: reducedMotion ? 0 : 14,
+    opacity: reducedMotion ? 1 : 0,
+    duration: 0.62,
+    stagger: 0.05,
+    ease: "power3.out",
+    delay: reducedMotion ? 0 : 0.08,
+  });
+};
+
+const setupSceneAnimations = ({ shell, scenes }) => {
+  scenes.forEach((scene) => {
+    const targets = scene.querySelectorAll(
+      ".scene-meta, .secondary-scene-title, .secondary-scene-support, .secondary-scene-note, .phase-grid, .single-slab-row, .degree-details, .gateway-link"
+    );
+
+    animateBatchIn({
+      targets,
+      trigger: scene,
+      scroller: shell,
+      start: "top 84%",
+      fromY: 36,
+      stagger: 0.07,
+    });
+
+    if (reducedMotion) {
+      return;
+    }
+
+    const slabs = scene.querySelectorAll("[data-scroll-slab]");
+
+    gsap.from(scene.querySelectorAll(".secondary-slab, .degree-word"), {
+      opacity: 0,
+      duration: 0.72,
+      stagger: 0.08,
+      ease: "power2.out",
+      scrollTrigger: withScroller(shell, {
+        trigger: scene,
+        start: "top 84%",
+        toggleActions: "play none none none",
+      }),
+    });
+
+    slabs.forEach((slab) => {
+      gsap.fromTo(
+        slab,
+        { yPercent: -4 },
+        {
+          yPercent: 4,
+          ease: "none",
+          scrollTrigger: withScroller(shell, {
+            trigger: scene,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.4,
+          }),
+        }
+      );
+    });
+  });
+};
+
 const initLoopShell = (shell) => {
   const track = shell.querySelector("[data-loop-track]");
   const source = shell.querySelector("[data-loop-source]");
@@ -105,19 +185,24 @@ const initLoopShell = (shell) => {
 
   const scenes = Array.from(track.querySelectorAll("[data-scene]")).filter(Boolean);
   const motionTargets = Array.from(track.querySelectorAll("[data-scroll-slab]")).filter(Boolean);
+  const scroller = createSmoothScroller({
+    wrapper: shell,
+    content: track,
+    duration: reducedMotion ? 0 : 0.96,
+    syncScrollTrigger: true,
+  });
 
+  if (!scroller) {
+    return null;
+  }
+
+  const { lenis } = scroller;
   let segmentHeight = 0;
   let isResetting = false;
-  let lastScrollTop = 0;
-  let lastTimestamp = performance.now();
-  let velocity = 0;
-  let frameId = 0;
 
-  const applyMotion = () => {
-    velocity *= 0.88;
-
-    const skew = reducedMotion ? 0 : clamp(velocity * -0.05, -8, 8);
-    const shift = reducedMotion ? 0 : clamp(Math.abs(velocity) * 2.2, 0, 24);
+  const applyMotion = (velocity = 0) => {
+    const skew = reducedMotion ? 0 : clamp(velocity * -0.0018, -0.45, 0.45);
+    const shift = reducedMotion ? 0 : clamp(Math.abs(velocity) * 0.03, 0, 2.2);
 
     root.style.setProperty("--scroll-skew", `${skew.toFixed(2)}deg`);
     root.style.setProperty("--velocity-shift", `${shift.toFixed(2)}px`);
@@ -126,8 +211,6 @@ const initLoopShell = (shell) => {
       element.style.setProperty("--dynamic-skew", `${skew.toFixed(2)}deg`);
       element.style.setProperty("--dynamic-shift", `${shift.toFixed(2)}px`);
     });
-
-    frameId = window.requestAnimationFrame(applyMotion);
   };
 
   const measure = () => {
@@ -139,70 +222,87 @@ const initLoopShell = (shell) => {
     }
 
     if (shell.scrollTop === 0) {
-      shell.scrollTop = segmentHeight;
+      lenis.scrollTo(segmentHeight, { immediate: true, force: true });
     }
 
-    lastScrollTop = shell.scrollTop;
-    lastTimestamp = performance.now();
     updateSceneStates(shell, scenes);
   };
 
-  const handleScroll = () => {
-    if (!segmentHeight || isResetting) {
+  lenis.on("scroll", (event) => {
+    if (!segmentHeight) {
       return;
     }
 
-    const now = performance.now();
-    const currentScrollTop = shell.scrollTop;
-    const delta = currentScrollTop - lastScrollTop;
-    const elapsed = Math.max(now - lastTimestamp, 16);
+    applyMotion(event.velocity ?? 0);
+    updateSceneStates(shell, scenes);
 
-    velocity = delta / elapsed;
-    lastScrollTop = currentScrollTop;
-    lastTimestamp = now;
-
-    if (currentScrollTop <= segmentHeight * 0.12) {
-      isResetting = true;
-      shell.scrollTop = currentScrollTop + segmentHeight;
-      lastScrollTop = shell.scrollTop;
-      window.requestAnimationFrame(() => {
-        isResetting = false;
-        updateSceneStates(shell, scenes);
-      });
-    } else if (currentScrollTop >= segmentHeight * 1.88) {
-      isResetting = true;
-      shell.scrollTop = currentScrollTop - segmentHeight;
-      lastScrollTop = shell.scrollTop;
-      window.requestAnimationFrame(() => {
-        isResetting = false;
-        updateSceneStates(shell, scenes);
-      });
-    } else {
-      updateSceneStates(shell, scenes);
+    if (isResetting) {
+      return;
     }
+
+    const currentScrollTop = shell.scrollTop;
+    const wrapBuffer = Math.max(6, Math.min(window.innerHeight * 0.015, segmentHeight * 0.006));
+    const sourceStart = segmentHeight;
+    const sourceEnd = segmentHeight * 2;
+
+    if (currentScrollTop < sourceStart - wrapBuffer) {
+      isResetting = true;
+      lenis.scrollTo(currentScrollTop + segmentHeight, { immediate: true, force: true });
+      requestAnimationFrame(() => {
+        isResetting = false;
+        ScrollTrigger.update();
+        updateSceneStates(shell, scenes);
+      });
+    } else if (currentScrollTop > sourceEnd + wrapBuffer) {
+      isResetting = true;
+      lenis.scrollTo(currentScrollTop - segmentHeight, { immediate: true, force: true });
+      requestAnimationFrame(() => {
+        isResetting = false;
+        ScrollTrigger.update();
+        updateSceneStates(shell, scenes);
+      });
+    }
+  });
+
+  setupSceneAnimations({ shell, scenes });
+
+  const handleResize = () => {
+    measure();
+    ScrollTrigger.refresh();
   };
 
-  shell.addEventListener("scroll", handleScroll, { passive: true });
-  window.addEventListener("resize", measure);
-  window.addEventListener("load", measure, { once: true });
+  window.addEventListener("resize", handleResize);
+  ScrollTrigger.addEventListener("refresh", measure);
 
   if (document.fonts?.ready) {
-    document.fonts.ready.then(measure).catch(() => {});
+    document.fonts.ready.then(() => {
+      measure();
+      ScrollTrigger.refresh();
+    }).catch(() => {});
   }
 
   measure();
-  frameId = window.requestAnimationFrame(applyMotion);
+  ScrollTrigger.refresh();
 
   return {
     destroy() {
-      shell.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", measure);
-      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", handleResize);
+      ScrollTrigger.removeEventListener("refresh", measure);
+      scroller.destroy();
       maskedHeadings.destroy();
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.scroller === shell) {
+          trigger.kill();
+        }
+      });
       beforeClone.remove();
       afterClone.remove();
       root.style.removeProperty("--scroll-skew");
       root.style.removeProperty("--velocity-shift");
+      motionTargets.forEach((element) => {
+        element.style.removeProperty("--dynamic-skew");
+        element.style.removeProperty("--dynamic-shift");
+      });
     },
   };
 };
@@ -213,6 +313,7 @@ const initSecondaryPage = () => {
     .filter(Boolean);
 
   syncChromeHeight();
+  setupHeaderEntrance();
 
   const cursor = createSignalCursor({
     defaultLabel: "Route Cursor",
