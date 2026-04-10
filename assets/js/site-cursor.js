@@ -56,6 +56,7 @@ class SignalCursor {
     this.currentTarget = null;
     this.boundToggles = new Map();
     this.magneticElements = new Set();
+    this.magneticStates = new Map();
     this.hoverVisits = new WeakMap();
     this.holdTimer = 0;
     this.pointer = {
@@ -169,10 +170,105 @@ class SignalCursor {
       return;
     }
 
-    this.pointer.x += (this.pointer.targetX - this.pointer.x) * 0.22;
-    this.pointer.y += (this.pointer.targetY - this.pointer.y) * 0.22;
+    this.pointer.x = this.pointer.targetX;
+    this.pointer.y = this.pointer.targetY;
     this.element.style.transform = `translate3d(${this.pointer.x}px, ${this.pointer.y}px, 0)`;
+    this.updateMagneticElements();
     this.frameId = window.requestAnimationFrame(this.render);
+  }
+
+  ensureMagneticState(element) {
+    if (!(element instanceof Element)) {
+      return null;
+    }
+
+    const existing = this.magneticStates.get(element);
+
+    if (existing) {
+      existing.maxTravel = Math.max(
+        4,
+        Number.parseFloat(element.getAttribute("data-magnetic")) || 12
+      );
+      return existing;
+    }
+
+    const state = {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+      velocityX: 0,
+      velocityY: 0,
+      active: false,
+      maxTravel: Math.max(4, Number.parseFloat(element.getAttribute("data-magnetic")) || 12),
+    };
+
+    this.magneticStates.set(element, state);
+    return state;
+  }
+
+  setMagneticTarget(element, x = 0, y = 0) {
+    const state = this.ensureMagneticState(element);
+
+    if (!state) {
+      return;
+    }
+
+    state.targetX = clamp(x, -state.maxTravel, state.maxTravel);
+    state.targetY = clamp(y, -state.maxTravel, state.maxTravel);
+    state.active = true;
+  }
+
+  releaseMagnetic(element, immediate = false) {
+    const state = this.magneticStates.get(element);
+
+    if (!state) {
+      return;
+    }
+
+    state.targetX = 0;
+    state.targetY = 0;
+    state.active = false;
+
+    if (!immediate) {
+      return;
+    }
+
+    state.x = 0;
+    state.y = 0;
+    state.velocityX = 0;
+    state.velocityY = 0;
+    element.style.translate = "";
+  }
+
+  updateMagneticElements() {
+    this.magneticStates.forEach((state, element) => {
+      const dx = state.targetX - state.x;
+      const dy = state.targetY - state.y;
+
+      state.velocityX = (state.velocityX + dx * 0.35) * 0.55;
+      state.velocityY = (state.velocityY + dy * 0.35) * 0.55;
+      state.x += state.velocityX;
+      state.y += state.velocityY;
+
+      const hasSettled =
+        !state.active &&
+        Math.abs(state.x) < 0.04 &&
+        Math.abs(state.y) < 0.04 &&
+        Math.abs(state.velocityX) < 0.04 &&
+        Math.abs(state.velocityY) < 0.04;
+
+      if (hasSettled) {
+        state.x = 0;
+        state.y = 0;
+        state.velocityX = 0;
+        state.velocityY = 0;
+        element.style.translate = "";
+        return;
+      }
+
+      element.style.translate = `${state.x.toFixed(2)}px ${state.y.toFixed(2)}px`;
+    });
   }
 
   getMessageFromTarget(target) {
@@ -259,8 +355,8 @@ class SignalCursor {
   }
 
   resetMagneticElements() {
-    this.magneticElements.forEach((element) => {
-      element.style.translate = "";
+    this.magneticStates.forEach((_, element) => {
+      this.releaseMagnetic(element, true);
     });
   }
 
@@ -426,6 +522,7 @@ class SignalCursor {
 
       if (isMagnetic) {
         this.magneticElements.add(element);
+        this.ensureMagneticState(element);
       }
 
       const resetMagnetic = () => {
@@ -433,7 +530,7 @@ class SignalCursor {
           return;
         }
 
-        element.style.translate = "";
+        this.releaseMagnetic(element);
       };
 
       const handleActivate = () => {
@@ -482,7 +579,7 @@ class SignalCursor {
         const x = clamp(offsetX * 0.18, -maxTravel, maxTravel);
         const y = clamp(offsetY * 0.18, -maxTravel, maxTravel);
 
-        element.style.translate = `${x}px ${y}px`;
+        this.setMagneticTarget(element, x, y);
       });
     });
   }

@@ -1,16 +1,16 @@
 :root {
-  --xp-bg: #03070d;
-  --xp-bg-alt: #07111b;
-  --xp-panel: rgba(8, 15, 24, 0.58);
-  --xp-panel-strong: rgba(8, 14, 22, 0.8);
+  --xp-bg: #000000;
+  --xp-bg-alt: #080808;
+  --xp-panel: rgba(10, 10, 10, 0.72);
+  --xp-panel-strong: rgba(12, 12, 12, 0.9);
   --xp-line: rgba(255, 255, 255, 0.1);
-  --xp-line-strong: rgba(140, 246, 255, 0.34);
-  --xp-text: #edf6ff;
-  --xp-muted: rgba(237, 246, 255, 0.72);
-  --xp-soft: rgba(237, 246, 255, 0.5);
-  --xp-accent: #8cf6ff;
-  --xp-accent-alt: #bcff66;
-  --xp-warm: #ff9f8e;
+  --xp-line-strong: rgba(255, 132, 149, 0.36);
+  --xp-text: #f4f1eb;
+  --xp-muted: rgba(244, 241, 235, 0.72);
+  --xp-soft: rgba(244, 241, 235, 0.5);
+  --xp-accent: #ff8495;
+  --xp-accent-alt: #f4f1eb;
+  --xp-warm: #ff9e73;
   --xp-shadow: 0 30px 80px rgba(0, 0, 0, 0.44);
   --xp-radius-lg: 30px;
   --xp-radius-md: 22px;
@@ -31,9 +31,9 @@ body {
   font-family: "Space Grotesk", sans-serif;
   color: var(--xp-text);
   background:
-    radial-gradient(circle at top left, rgba(140, 246, 255, 0.12), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(255, 159, 142, 0.08), transparent 26%),
-    linear-gradient(180deg, #02060b 0%, #06111a 56%, #02060b 100%);
+    radial-gradient(circle at top left, rgba(255, 132, 149, 0.12), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(255, 158, 115, 0.08), transparent 26%),
+    linear-gradient(180deg, #050505 0%, #000000 48%, #050505 100%);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -70,9 +70,9 @@ p {
 .experience-stage {
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 38%, rgba(140, 246, 255, 0.05), transparent 24%),
+    radial-gradient(circle at 50% 38%, rgba(255, 132, 149, 0.06), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent 28%),
-    linear-gradient(180deg, rgba(3, 7, 13, 0.08), rgba(3, 7, 13, 0.56));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.64));
 }
 
 .experience-stage::before {
@@ -101,9 +101,9 @@ p {
 
 .experience-stage-glow {
   background:
-    radial-gradient(circle at 50% 40%, rgba(140, 246, 255, 0.11), transparent 15%),
-    radial-gradient(circle at 30% 68%, rgba(188, 255, 102, 0.05), transparent 18%),
-    radial-gradient(circle at 72% 24%, rgba(255, 159, 142, 0.05), transparent 18%);
+    radial-gradient(circle at 50% 40%, rgba(255, 132, 149, 0.12), transparent 15%),
+    radial-gradient(circle at 30% 68%, rgba(244, 241, 235, 0.04), transparent 18%),
+    radial-gradient(circle at 72% 24%, rgba(255, 158, 115, 0.05), transparent 18%);
   mix-blend-mode: screen;
   opacity: 0.52;
 }
@@ -369,11 +369,11 @@ p {
 
 .experience-overlay {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 27rem);
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
   align-items: end;
   min-height: calc(100svh - 7.6rem);
-  padding: 2.25rem 1.5rem 6rem;
+  padding: clamp(5rem, 12vh, 7rem) 1.5rem 6rem;
 }
 
 .experience-copy,
@@ -473,9 +473,9 @@ p {
 .experience-rail {
   display: grid;
   gap: 1rem;
-  grid-column: 2;
-  width: min(100%, 27rem);
-  justify-self: end;
+  grid-column: 1;
+  width: min(100%, 72rem);
+  justify-self: center;
 }
 
 .project-readout,
@@ -491,7 +491,9 @@ p {
 }
 
 .project-readout {
-  padding: 1.35rem;
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(1.4rem, 3vw, 2rem);
 }
 
 .project-category {
@@ -523,7 +525,7 @@ p {
 
 .project-list {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
   pointer-events: auto;
 }
 
@@ -565,12 +567,19 @@ p {
 
 .project-link {
   position: relative;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.9fr) minmax(0, 1.1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  justify-content: stretch;
   min-width: 0;
+  min-height: 15.5rem;
   width: 100%;
-  padding: 1rem 1.1rem;
+  padding: 1.2rem;
   text-align: left;
   overflow: hidden;
+  transform-origin: center center;
+  will-change: transform, opacity;
 }
 
 .project-link::before {
@@ -592,7 +601,94 @@ p {
 }
 
 .project-link.is-selected {
-  transform: translateX(-6px);
+  transform: translateY(-4px) scale(1.01);
+}
+
+.project-link-preview {
+  position: relative;
+  min-height: 13rem;
+  border-radius: calc(var(--xp-radius-lg) - 8px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 30%, color-mix(in srgb, var(--accent-color, var(--xp-accent)) 38%, transparent), transparent 22%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.04), transparent 54%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-link-preview::before,
+.project-link-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.project-link-preview::before {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 1.5rem 1.5rem;
+  mask-image: radial-gradient(circle at center, black 34%, transparent 88%);
+  opacity: 0.38;
+}
+
+.project-link-preview::after {
+  background: linear-gradient(135deg, transparent 22%, rgba(255, 255, 255, 0.08), transparent 76%);
+  transform: translateX(-120%);
+  transition: transform 600ms ease;
+}
+
+.project-preview-index,
+.project-preview-label {
+  position: absolute;
+  left: 1rem;
+  z-index: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.project-preview-index {
+  top: 1rem;
+  color: rgba(244, 241, 235, 0.72);
+  font-size: 0.76rem;
+}
+
+.project-preview-label {
+  bottom: 1rem;
+  color: rgba(244, 241, 235, 0.6);
+  font-size: 0.66rem;
+}
+
+.project-preview-beam,
+.project-preview-core {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+}
+
+.project-preview-beam {
+  width: 140%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-color, var(--xp-accent)), transparent);
+  opacity: 0.54;
+}
+
+.project-preview-core {
+  width: 6.75rem;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--accent-color, var(--xp-accent)) 78%, white 22%), transparent 58%);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--accent-color, var(--xp-accent)) 46%, transparent),
+    0 0 58px color-mix(in srgb, var(--accent-color, var(--xp-accent)) 24%, transparent);
+  transition: transform 420ms ease, filter 420ms ease;
+}
+
+.project-link-body {
+  display: grid;
+  align-content: space-between;
 }
 
 .project-link-head,
@@ -610,15 +706,18 @@ p {
 
 .project-link h3 {
   margin-top: 0.6rem;
-  font-size: 1.25rem;
-  line-height: 1.08;
+  max-width: 14ch;
+  font-family: "Syne", sans-serif;
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
 }
 
 .project-link p {
   margin-top: 0.55rem;
   color: var(--xp-muted);
   line-height: 1.6;
-  font-size: 0.92rem;
+  font-size: 1rem;
 }
 
 .project-link-foot {
@@ -633,6 +732,21 @@ p {
 .project-link-arrow {
   font-size: 1.1rem;
   color: var(--accent-color, var(--xp-accent));
+}
+
+.project-link:hover .project-link-preview::after,
+.project-link:focus-visible .project-link-preview::after,
+.project-link.is-selected .project-link-preview::after,
+.project-link.is-previewed .project-link-preview::after {
+  transform: translateX(120%);
+}
+
+.project-link:hover .project-preview-core,
+.project-link:focus-visible .project-preview-core,
+.project-link.is-selected .project-preview-core,
+.project-link.is-previewed .project-preview-core {
+  transform: translate(-50%, -50%) scale(1.08);
+  filter: saturate(1.1);
 }
 
 .experience-hud {
@@ -1023,16 +1137,13 @@ body.scene-failed .experience-fallback {
 
 @media (max-width: 1080px) {
   .experience-overlay {
-    grid-template-columns: 1fr;
     align-items: start;
     padding-top: 4rem;
   }
 
   .experience-rail {
-    grid-column: 1;
-    max-width: 42rem;
+    max-width: 100%;
     width: 100%;
-    justify-self: start;
   }
 }
 
@@ -1070,6 +1181,10 @@ body.scene-failed .experience-fallback {
 
   .experience-overlay {
     padding-bottom: 7.5rem;
+  }
+
+  .project-link {
+    grid-template-columns: 1fr;
   }
 
   .project-meta,
@@ -1143,6 +1258,18 @@ body.scene-failed .experience-fallback {
   .experience-diagnostics {
     right: 1rem;
     bottom: 1rem;
+  }
+
+  .project-readout {
+    padding: 1.2rem;
+  }
+
+  .project-link {
+    padding: 1rem;
+  }
+
+  .project-link-preview {
+    min-height: 10rem;
   }
 }
 
