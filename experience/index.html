@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="An immersive 3D portfolio layer for Judah Vijai Wilson featuring interactive project nodes and cinematic motion." />
+    content="An immersive 3D portfolio experience for Judah Vijai Wilson — scroll-driven, spatial navigation through live project nodes." />
   <meta name="theme-color" content="#000000" />
-  <title>Enter Experience | Judah Vijai Wilson</title>
+  <title>Experience | Judah Vijai Wilson</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -25,343 +25,357 @@
 </head>
 
 <body class="experience-page">
-  <div class="experience-shell">
-    <div class="experience-stage" aria-hidden="true">
-      <canvas
-        class="experience-canvas"
-        data-cursor-label="Precision Mode"
-        data-cursor-aside="Careful. The shiny objects bite back."
-        data-cursor-hold-aside="Movement with restraint."
-      ></canvas>
-      <div class="experience-stage-glow"></div>
-      <div class="experience-stage-grid"></div>
-    </div>
 
-    <header class="experience-header">
-      <a
-        class="experience-back"
-        href="../#hero"
-        data-cursor-label="Open"
-        data-cursor-aside="Back to the oversized nameplate."
-        data-cursor-hold-aside="You can come back."
-      >
-        Return
-      </a>
-      <div class="experience-header-tools">
-        <p class="experience-label">3d experience</p>
-        <p class="experience-status">move to steer , drag to drift , click to open node</p>
-        <div class="experience-header-actions">
-          <button
-            class="experience-cursor-toggle"
-            type="button"
-            data-cursor-toggle
-            data-cursor-label="Cursor Switch"
-            data-cursor-aside="The field can be cosmic without forcing the cursor to stay awake."
-            data-cursor-mode="magnetic"
-            data-magnetic
-            data-cursor-hold-aside="No dark patterns here."
+  <!-- ═══ Film Grain Overlay (CSS-only) ═══ -->
+  <div class="exp-grain" aria-hidden="true"></div>
+
+  <!-- ═══ Fixed 3D Canvas ═══ -->
+  <div class="exp-canvas-wrap" aria-hidden="true">
+    <canvas class="exp-canvas" id="exp-canvas"></canvas>
+  </div>
+
+  <!-- ═══ Header ═══ -->
+  <header class="exp-header">
+    <a
+      class="exp-back"
+      href="../#hero"
+      data-cursor-label="Return"
+      data-cursor-aside="Back to the homepage."
+      data-cursor-mode="focus"
+    >← Return</a>
+    <div class="exp-header-right">
+      <div class="exp-header-actions">
+        <button
+          class="exp-toggle-btn"
+          type="button"
+          data-cursor-toggle
+          data-cursor-label="Cursor"
+          data-cursor-aside="Toggle the custom cursor."
+          data-cursor-mode="magnetic"
+          data-magnetic
+        >
+          <span>Cursor</span>
+          <span data-cursor-toggle-label>On</span>
+        </button>
+        <details class="sound-menu exp-sound-menu" data-sound-menu>
+          <summary
+            class="exp-toggle-btn"
+            data-sound-summary
+            data-cursor-label="Sound"
+            data-cursor-aside="Toggle sound effects."
           >
-            <span>Cursor</span>
-            <span data-cursor-toggle-label>On</span>
-          </button>
-          <details class="sound-menu experience-sound-menu" data-sound-menu>
-            <summary
-              class="experience-sound-toggle"
-              data-sound-summary
-              data-cursor-label="Sound Desk"
-              data-cursor-aside="Same controls. Slightly more cosmic consequences."
-              data-cursor-hold-aside="Optimized? Debatable."
-            >
-              <span>Sound</span>
-              <span class="experience-sound-status" data-sound-status>Muted</span>
-            </summary>
-            <div class="sound-panel experience-sound-panel">
-              <div class="sound-row experience-sound-row">
-                <div class="sound-setting-copy">
-                  <span class="sound-setting-label">Effects</span>
-                  <span class="sound-setting-note">Clicks, pings, transitions</span>
-                </div>
-                <div class="sound-choice-group" role="group" aria-label="Effects sound">
-                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
-                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
-                </div>
+            <span>Sound</span>
+            <span class="exp-sound-status" data-sound-status>Muted</span>
+          </summary>
+          <div class="sound-panel exp-sound-panel">
+            <div class="sound-row exp-sound-row">
+              <div class="sound-setting-copy">
+                <span class="sound-setting-label">Effects</span>
+                <span class="sound-setting-note">Clicks, pings, transitions</span>
               </div>
-              <div class="sound-row experience-sound-row">
-                <div class="sound-setting-copy">
-                  <span class="sound-setting-label">Theme</span>
-                  <span class="sound-setting-note">Ambient background loop</span>
-                </div>
-                <div class="sound-choice-group" role="group" aria-label="Theme sound">
-                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
-                  <button class="sound-choice experience-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
-                </div>
+              <div class="sound-choice-group" role="group" aria-label="Effects sound">
+                <button class="sound-choice exp-sound-choice" type="button" data-sound-setting="effects" data-sound-value="true" aria-pressed="false">On</button>
+                <button class="sound-choice exp-sound-choice" type="button" data-sound-setting="effects" data-sound-value="false" aria-pressed="true">Off</button>
               </div>
             </div>
-          </details>
-        </div>
-      </div>
-    </header>
-
-    <main class="experience-overlay">
-      <aside class="experience-rail">
-        <div class="project-readout">
-          <p class="experience-kicker">Active Signal</p>
-          <p class="project-category" id="project-category"></p>
-          <h2 id="project-title"></h2>
-          <p class="project-blurb" id="project-blurb"></p>
-          <div class="project-meta">
-            <span id="project-index"></span>
-            <span id="project-hint">Select a node or use the rail to open it.</span>
+            <div class="sound-row exp-sound-row">
+              <div class="sound-setting-copy">
+                <span class="sound-setting-label">Theme</span>
+                <span class="sound-setting-note">Ambient background loop</span>
+              </div>
+              <div class="sound-choice-group" role="group" aria-label="Theme sound">
+                <button class="sound-choice exp-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="true" aria-pressed="false">On</button>
+                <button class="sound-choice exp-sound-choice" type="button" data-sound-setting="ambience" data-sound-value="false" aria-pressed="true">Off</button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <nav class="project-list" aria-label="Project nodes" id="project-list"></nav>
-      </aside>
-    </main>
-
-    <div class="experience-hud">
-      <button
-        class="experience-button experience-prank-button"
-        id="experience-prank-button"
-        type="button"
-        data-cursor-label="Open"
-        data-cursor-aside="This one is not serious."
-        data-cursor-hold-aside="You can still try."
-        data-cursor-press-aside="sike it does not work."
-      >
-        click here
-      </button>
-      <span id="render-status">loading field</span>
+        </details>
+      </div>
     </div>
+  </header>
 
-    <div id="loader-ui">
-      <div class="experience-loading" id="experience-loading" role="status" aria-live="polite">
-        <p class="loader-label">Dimensional Transfer</p>
-        <div class="loader-core" aria-hidden="true">
-          <span class="loader-core-ring loader-core-ring-outer"></span>
-          <span class="loader-core-ring loader-core-ring-inner"></span>
-          <span class="loader-core-dot"></span>
-        </div>
-        <div class="loader-meta">
-          <span class="loader-phase" id="loader-phase">Aligning signal lattice</span>
-          <span class="loader-percentage" id="loader-percentage">0%</span>
-        </div>
-        <div
-          class="loader-track"
-          id="loader-track"
-          role="progressbar"
-          aria-label="Experience loading progress"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow="0"
+  <!-- ═══ Scroll-Driven Sections (content + scroll triggers) ═══ -->
+  <main class="exp-scroll-container" id="exp-scroll-container">
+
+    <!-- Scene 1: Entry — Identity -->
+    <section class="exp-section exp-section-entry" data-exp-section="entry">
+      <div class="exp-section-content">
+        <p class="exp-kicker">Experience</p>
+        <h1 class="exp-hero-title">
+          <span class="exp-title-line">The Work</span>
+        </h1>
+        <p class="exp-hero-sub">Scroll to navigate. Hover to interact. Click to explore.</p>
+      </div>
+    </section>
+
+    <!-- Scene 2–6: One per project -->
+    <section class="exp-section exp-section-project" data-exp-section="project" data-project-index="0">
+      <div class="exp-section-content exp-project-info" id="exp-project-0">
+        <p class="exp-project-index">01</p>
+        <h2 class="exp-project-title"></h2>
+        <p class="exp-project-category"></p>
+        <p class="exp-project-blurb"></p>
+        <a class="exp-project-cta" href="#" target="_blank" rel="noreferrer"
+          data-cursor-label="Launch"
+          data-cursor-aside="Open the live site."
+          data-cursor-mode="launch"
         >
-          <span class="loader-track-fill" id="loader-track-fill"></span>
-        </div>
-        <p class="loader-copy">Crossfading from interface space into the live project field.</p>
+          <span class="exp-cta-text">Launch live site</span>
+          <span class="exp-cta-arrow">→</span>
+        </a>
       </div>
+    </section>
+
+    <section class="exp-section exp-section-project" data-exp-section="project" data-project-index="1">
+      <div class="exp-section-content exp-project-info" id="exp-project-1">
+        <p class="exp-project-index">02</p>
+        <h2 class="exp-project-title"></h2>
+        <p class="exp-project-category"></p>
+        <p class="exp-project-blurb"></p>
+        <a class="exp-project-cta" href="#" target="_blank" rel="noreferrer"
+          data-cursor-label="Launch"
+          data-cursor-aside="Open the live site."
+          data-cursor-mode="launch"
+        >
+          <span class="exp-cta-text">Launch live site</span>
+          <span class="exp-cta-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="exp-section exp-section-project" data-exp-section="project" data-project-index="2">
+      <div class="exp-section-content exp-project-info" id="exp-project-2">
+        <p class="exp-project-index">03</p>
+        <h2 class="exp-project-title"></h2>
+        <p class="exp-project-category"></p>
+        <p class="exp-project-blurb"></p>
+        <a class="exp-project-cta" href="#" target="_blank" rel="noreferrer"
+          data-cursor-label="Launch"
+          data-cursor-aside="Open the live site."
+          data-cursor-mode="launch"
+        >
+          <span class="exp-cta-text">Launch live site</span>
+          <span class="exp-cta-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="exp-section exp-section-project" data-exp-section="project" data-project-index="3">
+      <div class="exp-section-content exp-project-info" id="exp-project-3">
+        <p class="exp-project-index">04</p>
+        <h2 class="exp-project-title"></h2>
+        <p class="exp-project-category"></p>
+        <p class="exp-project-blurb"></p>
+        <a class="exp-project-cta" href="#" target="_blank" rel="noreferrer"
+          data-cursor-label="Launch"
+          data-cursor-aside="Open the live site."
+          data-cursor-mode="launch"
+        >
+          <span class="exp-cta-text">Launch live site</span>
+          <span class="exp-cta-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="exp-section exp-section-project" data-exp-section="project" data-project-index="4">
+      <div class="exp-section-content exp-project-info" id="exp-project-4">
+        <p class="exp-project-index">05</p>
+        <h2 class="exp-project-title"></h2>
+        <p class="exp-project-category"></p>
+        <p class="exp-project-blurb"></p>
+        <a class="exp-project-cta" href="#" target="_blank" rel="noreferrer"
+          data-cursor-label="Launch"
+          data-cursor-aside="Open the live site."
+          data-cursor-mode="launch"
+        >
+          <span class="exp-cta-text">Launch live site</span>
+          <span class="exp-cta-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Scene 7: Exit -->
+    <section class="exp-section exp-section-exit" data-exp-section="exit">
+      <div class="exp-section-content">
+        <p class="exp-kicker">End of field</p>
+        <h2 class="exp-exit-title">That's the work.</h2>
+        <a class="exp-exit-cta" href="../#contact"
+          data-cursor-label="Contact"
+          data-cursor-aside="Let's connect."
+          data-cursor-mode="focus"
+        >Get in touch →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ Active Project Overlay (shown on cube click) ═══ -->
+  <div class="exp-overlay" id="exp-overlay" hidden>
+    <div class="exp-overlay-panel">
+      <button class="exp-overlay-close" id="exp-overlay-close" type="button"
+        data-cursor-label="Close"
+        data-cursor-aside="Return to the field."
+        data-cursor-mode="focus"
+      >✕</button>
+      <p class="exp-overlay-index" id="exp-overlay-index"></p>
+      <p class="exp-overlay-category" id="exp-overlay-category"></p>
+      <h2 class="exp-overlay-title" id="exp-overlay-title"></h2>
+      <p class="exp-overlay-blurb" id="exp-overlay-blurb"></p>
+      <a class="exp-overlay-launch" id="exp-overlay-launch" href="#" target="_blank" rel="noreferrer"
+        data-cursor-label="Launch"
+        data-cursor-aside="Open in new tab."
+        data-cursor-mode="launch"
+      >
+        <span id="exp-overlay-cta-text">Launch live site</span>
+        <span class="exp-cta-arrow">→</span>
+      </a>
     </div>
-
-    <section class="experience-diagnostics" id="experience-diagnostics" hidden aria-live="assertive">
-      <div class="experience-diagnostics-head">
-        <p class="experience-kicker">Boot Diagnostics</p>
-        <span id="experience-diagnostics-summary">Watching module delivery.</span>
-      </div>
-      <div class="experience-diagnostic-output" id="experience-diagnostic-output" data-empty="true"></div>
-    </section>
-
-    <section class="experience-fallback" id="experience-fallback" hidden>
-      <p class="experience-kicker">Fallback Access</p>
-      <h2>WebGL is unavailable. The projects are still reachable below.</h2>
-      <div class="fallback-links" id="fallback-links"></div>
-    </section>
   </div>
+
+  <!-- ═══ HUD ═══ -->
+  <div class="exp-hud">
+    <span class="exp-hud-label" id="exp-hud-status">loading field</span>
+    <span class="exp-hud-hint">scroll to navigate</span>
+  </div>
+
+  <!-- ═══ Loader ═══ -->
+  <div id="loader-ui">
+    <div class="exp-loading" id="exp-loading" role="status" aria-live="polite">
+      <p class="loader-label">Dimensional Transfer</p>
+      <div class="loader-core" aria-hidden="true">
+        <span class="loader-core-ring loader-core-ring-outer"></span>
+        <span class="loader-core-ring loader-core-ring-inner"></span>
+        <span class="loader-core-dot"></span>
+      </div>
+      <div class="loader-meta">
+        <span class="loader-phase" id="loader-phase">Aligning signal lattice</span>
+        <span class="loader-percentage" id="loader-percentage">0%</span>
+      </div>
+      <div
+        class="loader-track"
+        id="loader-track"
+        role="progressbar"
+        aria-label="Experience loading progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <span class="loader-track-fill" id="loader-track-fill"></span>
+      </div>
+      <p class="loader-copy">Crossfading from interface space into the live project field.</p>
+    </div>
+  </div>
+
+  <!-- ═══ Diagnostics ═══ -->
+  <section class="exp-diagnostics" id="experience-diagnostics" hidden aria-live="assertive">
+    <div class="exp-diagnostics-head">
+      <p class="exp-kicker">Boot Diagnostics</p>
+      <span id="experience-diagnostics-summary">Watching module delivery.</span>
+    </div>
+    <div class="exp-diagnostic-output" id="experience-diagnostic-output" data-empty="true"></div>
+  </section>
+
+  <!-- ═══ Fallback ═══ -->
+  <section class="exp-fallback" id="experience-fallback" hidden>
+    <p class="exp-kicker">Fallback Access</p>
+    <h2>WebGL is unavailable. The projects are still reachable below.</h2>
+    <div class="exp-fallback-links" id="fallback-links"></div>
+  </section>
 
   <script>
     (() => {
       const diagnosticsPanel = document.getElementById("experience-diagnostics");
       const diagnosticsOutput = document.getElementById("experience-diagnostic-output");
       const diagnosticsSummary = document.getElementById("experience-diagnostics-summary");
-      const signalNodes = {
-        html: document.getElementById("diagnostic-html-signal"),
-        modules: document.getElementById("diagnostic-modules-signal"),
-        importmap: document.getElementById("diagnostic-importmap-signal"),
-        webgl: document.getElementById("diagnostic-webgl-signal"),
-        moduleEntry: document.getElementById("diagnostic-module-entry-signal"),
-      };
 
       const setSummary = (message) => {
-        if (diagnosticsSummary) {
-          diagnosticsSummary.textContent = message;
-        }
+        if (diagnosticsSummary) diagnosticsSummary.textContent = message;
       };
 
       const showDiagnostics = () => {
-        if (diagnosticsPanel) {
-          diagnosticsPanel.hidden = false;
-        }
-      };
-
-      const setSignal = (key, message, state = "info") => {
-        const node = signalNodes[key];
-
-        if (!node) {
-          return;
-        }
-
-        node.textContent = message;
-        node.dataset.state = state;
+        if (diagnosticsPanel) diagnosticsPanel.hidden = false;
       };
 
       const appendDiagnostic = (message, level = "info") => {
-        if (!diagnosticsOutput) {
-          return;
-        }
-
+        if (!diagnosticsOutput) return;
         if (diagnosticsOutput.dataset.empty === "true") {
           diagnosticsOutput.textContent = "";
           diagnosticsOutput.dataset.empty = "false";
         }
-
         const line = document.createElement("div");
         line.className = `diagnostic-line diagnostic-line-${level}`;
         line.textContent = message;
         diagnosticsOutput.append(line);
-
-        if (level === "error" || level === "warn") {
-          showDiagnostics();
-        }
+        if (level === "error" || level === "warn") showDiagnostics();
       };
 
       const formatErrorDetail = (value) => {
-        if (value instanceof Error) {
-          return value.stack || value.message;
-        }
-
-        if (typeof value === "string") {
-          return value;
-        }
-
-        try {
-          return JSON.stringify(value);
-        } catch {
-          return String(value);
-        }
+        if (value instanceof Error) return value.stack || value.message;
+        if (typeof value === "string") return value;
+        try { return JSON.stringify(value); } catch { return String(value); }
       };
 
-      console.log("1. HTML Parsed successfully.");
       setSummary("Watching module delivery and runtime failures.");
-      setSignal("html", "HTML parsed", "ok");
       appendDiagnostic("1. HTML Parsed successfully.", "ok");
 
       const modulesSupported = "noModule" in document.createElement("script");
-      setSignal(
-        "modules",
-        modulesSupported ? "ES modules supported" : "ES modules unsupported",
-        modulesSupported ? "ok" : "error"
-      );
       appendDiagnostic(`ES module support detected: ${modulesSupported}.`, modulesSupported ? "info" : "error");
 
-      const importMapSupported = Boolean(
-        window.HTMLScriptElement &&
-          typeof window.HTMLScriptElement.supports === "function" &&
-          window.HTMLScriptElement.supports("importmap")
-      );
-      let importMapState = importMapSupported ? "ok" : "error";
-      let importMapMessage = importMapSupported ? "Import maps supported" : "Import maps unsupported";
-
       const importMapScript = document.querySelector('script[type="importmap"]');
-
       if (!importMapScript) {
-        importMapState = "error";
-        importMapMessage = "Import map missing";
         appendDiagnostic("No import map tag was found in the document.", "error");
       } else {
         try {
-          const parsedImportMap = JSON.parse(importMapScript.textContent);
-          const mappedThree = parsedImportMap && parsedImportMap.imports && parsedImportMap.imports.three;
-
+          const parsed = JSON.parse(importMapScript.textContent);
+          const mappedThree = parsed?.imports?.three;
           if (!mappedThree) {
-            importMapState = "error";
-            importMapMessage = 'Import map missing "three"';
             appendDiagnostic('The import map does not define a "three" specifier.', "error");
           } else {
             appendDiagnostic(`Import map entry for "three": ${mappedThree}`, "info");
           }
         } catch (error) {
-          importMapState = "error";
-          importMapMessage = "Import map JSON invalid";
           appendDiagnostic(`Import map JSON parse failed: ${formatErrorDetail(error)}`, "error");
         }
       }
 
-      setSignal("importmap", importMapMessage, importMapState);
-
       const webglApiPresent = Boolean(window.WebGLRenderingContext);
-      setSignal(
-        "webgl",
-        webglApiPresent ? "WebGL API present" : "WebGL API missing",
-        webglApiPresent ? "ok" : "error"
-      );
-      appendDiagnostic(
-        `window.WebGLRenderingContext present: ${webglApiPresent}.`,
-        webglApiPresent ? "info" : "error"
-      );
+      appendDiagnostic(`window.WebGLRenderingContext present: ${webglApiPresent}.`, webglApiPresent ? "info" : "error");
 
       window.__experienceDiagnostics = {
-        push(message, level = "info") {
-          appendDiagnostic(message, level);
-        },
+        push(message, level = "info") { appendDiagnostic(message, level); },
       };
 
       window.addEventListener("experience:module-entered", () => {
         window.__experienceModuleReached = true;
-        setSignal("moduleEntry", "Main module entered", "ok");
         appendDiagnostic("experience.js executed and reached module entry.", "ok");
       });
 
-      window.addEventListener(
-        "error",
-        (event) => {
-          if (event.target && event.target !== window) {
-            const target = event.target;
-            const resourceUrl = target.currentSrc || target.src || target.href || "(inline resource)";
-            const tagName = target.tagName ? target.tagName.toLowerCase() : "resource";
-
-            appendDiagnostic(`Resource load error on <${tagName}>: ${resourceUrl}`, "error");
-
-            if (target.id === "experience-module-entry") {
-              setSignal("moduleEntry", "Main module failed to load", "error");
-            }
-          }
-        },
-        true
-      );
+      window.addEventListener("error", (event) => {
+        if (event.target && event.target !== window) {
+          const target = event.target;
+          const resourceUrl = target.currentSrc || target.src || target.href || "(inline resource)";
+          const tagName = target.tagName ? target.tagName.toLowerCase() : "resource";
+          appendDiagnostic(`Resource load error on <${tagName}>: ${resourceUrl}`, "error");
+        }
+      }, true);
 
       window.onerror = (message, source, lineno, colno, error) => {
         const detail = error ? formatErrorDetail(error) : String(message);
         const location = source ? ` @ ${source}:${lineno || 0}:${colno || 0}` : "";
-
-        setSignal("moduleEntry", "Runtime error surfaced", "error");
         appendDiagnostic(`window.onerror: ${detail}${location}`, "error");
         return false;
       };
 
       window.onunhandledrejection = (event) => {
-        setSignal("moduleEntry", "Unhandled rejection surfaced", "error");
         appendDiagnostic(`window.onunhandledrejection: ${formatErrorDetail(event.reason)}`, "error");
       };
 
       window.addEventListener("load", () => {
         window.setTimeout(() => {
           if (!window.__experienceModuleReached) {
-            setSignal("moduleEntry", "Main module never entered", "error");
-            appendDiagnostic(
-              "Main module never reported execution. This usually means the module graph was blocked before evaluation by a fetch, MIME, syntax, or import-map resolution failure.",
-              "error"
-            );
+            appendDiagnostic("Main module never reported execution.", "error");
             return;
           }
-
           setSummary("Main module delivery succeeded. Diagnostics remain armed.");
         }, 250);
       });
