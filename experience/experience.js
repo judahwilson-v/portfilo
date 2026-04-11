@@ -1,4 +1,10 @@
-import { gsap, reducedMotion } from "../assets/js/motion-system.js";
+/* ═══════════════════════════════════════════════════════════════
+   EXPERIENCE.JS — Controller
+   Wires scroll → Three.js camera via GSAP ScrollTrigger
+   Manages overlay, section visibility, project data hydration
+   ═══════════════════════════════════════════════════════════════ */
+
+import { gsap, ScrollTrigger, reducedMotion } from "../assets/js/motion-system.js";
 import { createPortfolioSound } from "../assets/js/site-audio.js";
 import { createSignalCursor } from "../assets/js/site-cursor.js";
 import { PROJECTS } from "./projects.js";
@@ -7,193 +13,157 @@ window.__experienceModuleReached = true;
 window.dispatchEvent(new CustomEvent("experience:module-entered"));
 
 const state = {
-  previewIndex: null,
-  selectedIndex: 0,
   scene: null,
   sound: null,
   cursor: null,
+  overlayActive: false,
+  currentFocus: -1,
 };
+
+/* ─── DOM references ─── */
+const getElements = () => ({
+  canvas: document.getElementById("exp-canvas"),
+  scrollContainer: document.getElementById("exp-scroll-container"),
+  sections: document.querySelectorAll("[data-exp-section]"),
+  projectSections: document.querySelectorAll('[data-exp-section="project"]'),
+  overlay: document.getElementById("exp-overlay"),
+  overlayClose: document.getElementById("exp-overlay-close"),
+  overlayIndex: document.getElementById("exp-overlay-index"),
+  overlayCategory: document.getElementById("exp-overlay-category"),
+  overlayTitle: document.getElementById("exp-overlay-title"),
+  overlayBlurb: document.getElementById("exp-overlay-blurb"),
+  overlayLaunch: document.getElementById("exp-overlay-launch"),
+  overlayCTA: document.getElementById("exp-overlay-cta-text"),
+  hudStatus: document.getElementById("exp-hud-status"),
+  fallback: document.getElementById("experience-fallback"),
+  fallbackLinks: document.getElementById("fallback-links"),
+  loaderUI: document.getElementById("loader-ui"),
+});
 
 let elements;
 
-const getElements = () => ({
-  prankButton: document.querySelector("#experience-prank-button"),
-  projectList: document.querySelector("#project-list"),
-  projectCategory: document.querySelector("#project-category"),
-  projectTitle: document.querySelector("#project-title"),
-  projectBlurb: document.querySelector("#project-blurb"),
-  projectIndex: document.querySelector("#project-index"),
-  projectHint: document.querySelector("#project-hint"),
-  loadingShell: document.querySelector("#loader-ui"),
-  loading: document.querySelector("#experience-loading"),
-  fallback: document.querySelector("#experience-fallback"),
-  fallbackLinks: document.querySelector("#fallback-links"),
-  renderStatus: document.querySelector("#render-status"),
-  canvas: document.querySelector(".experience-canvas"),
-});
+/* ─── Hydrate project data into HTML sections ─── */
+const hydrateProjectSections = () => {
+  elements.projectSections.forEach((section) => {
+    const idx = Number(section.dataset.projectIndex);
+    const project = PROJECTS[idx];
+    if (!project) return;
 
-const getCurrentIndex = () => state.previewIndex ?? state.selectedIndex;
-const getErrorMessage = (error) => (error instanceof Error ? error.message : String(error));
+    const info = section.querySelector(".exp-project-info");
+    if (!info) return;
 
-const updateReadout = (index) => {
-  const project = PROJECTS[index];
+    const title = info.querySelector(".exp-project-title");
+    const category = info.querySelector(".exp-project-category");
+    const blurb = info.querySelector(".exp-project-blurb");
+    const cta = info.querySelector(".exp-project-cta");
 
-  if (!project) {
-    return;
-  }
-
-  elements.projectCategory.textContent = project.category;
-  elements.projectTitle.textContent = project.title;
-  elements.projectBlurb.textContent = project.blurb;
-  elements.projectIndex.textContent = project.index;
-
-  elements.projectHint.textContent =
-    state.previewIndex === null
-      ? "Click a node or use the rail to open the selected link."
-      : "Previewing signal. Click the node to open it.";
-};
-
-const syncProjectLinkStates = () => {
-  const currentIndex = getCurrentIndex();
-
-  elements.projectList.querySelectorAll(".project-link").forEach((link) => {
-    const linkIndex = Number(link.dataset.index);
-    link.classList.toggle("is-selected", linkIndex === state.selectedIndex);
-    link.classList.toggle("is-previewed", linkIndex === currentIndex);
+    if (title) title.textContent = project.title;
+    if (category) category.textContent = project.category;
+    if (blurb) blurb.textContent = project.blurb;
+    if (cta) {
+      cta.href = project.url;
+      const ctaText = cta.querySelector(".exp-cta-text");
+      if (ctaText) ctaText.textContent = project.ctaLabel ?? "Launch live site";
+    }
   });
 };
 
-const selectProject = (index, source = "ui") => {
-  if (!PROJECTS[index]) {
-    return;
-  }
-
-  state.selectedIndex = index;
-  state.previewIndex = null;
-  updateReadout(index);
-  syncProjectLinkStates();
-
-  if (source === "ui") {
-    state.scene?.selectProject(index);
-  }
-};
-
-const previewProject = (index, source = "ui") => {
-  if (!PROJECTS[index]) {
-    return;
-  }
-
-  state.previewIndex = index;
-  updateReadout(index);
-  syncProjectLinkStates();
-
-  if (source === "ui") {
-    state.scene?.setPreview(index);
-  }
-};
-
-const clearPreview = (source = "ui") => {
-  if (state.previewIndex === null) {
-    return;
-  }
-
-  state.previewIndex = null;
-  updateReadout(state.selectedIndex);
-  syncProjectLinkStates();
-
-  if (source === "ui") {
-    state.scene?.clearPreview();
-  }
-};
-
-const openProject = (index = getCurrentIndex()) => {
+/* ─── Overlay ─── */
+const showOverlay = (index) => {
   const project = PROJECTS[index];
+  if (!project || !elements.overlay) return;
 
-  if (!project) {
-    return;
+  state.overlayActive = true;
+
+  elements.overlayIndex.textContent = project.index;
+  elements.overlayCategory.textContent = project.category;
+  elements.overlayTitle.textContent = project.title;
+  elements.overlayBlurb.textContent = project.blurb;
+  elements.overlayLaunch.href = project.url;
+  if (elements.overlayCTA) {
+    elements.overlayCTA.textContent = project.ctaLabel ?? "Launch live site";
   }
 
-  window.open(project.url, "_blank", "noopener,noreferrer");
+  elements.overlay.hidden = false;
+  // Force reflow before adding class
+  void elements.overlay.offsetHeight;
+  elements.overlay.classList.add("is-active");
+
+  state.sound?.play("uiConfirm", { cooldownMs: 200 });
 };
 
-const renderProjectList = () => {
-  elements.projectList.innerHTML = PROJECTS.map(
-    (project, index) => `
-      <a
-        class="project-link"
-        data-index="${index}"
-        href="${project.url}"
-        target="_blank"
-        rel="noreferrer"
-        style="--accent-color: ${project.accent};"
-        data-cursor-label="Open"
-        data-cursor-aside="${project.title}. This one actually works."
-        data-cursor-tone="project"
-        data-cursor-hold-label="Launch"
-        data-cursor-hold-aside="You hovered. That's commitment."
-        data-cursor-press-aside="Different tab energy."
-      >
-        <div class="project-link-preview" aria-hidden="true">
-          <span class="project-preview-index">${project.index}</span>
-          <span class="project-preview-beam"></span>
-          <span class="project-preview-core"></span>
-          <span class="project-preview-label">${project.category}</span>
-        </div>
-        <div class="project-link-body">
-          <div class="project-link-head">
-            <span class="project-card-index">${project.index}</span>
-            <span class="project-link-label">${project.category}</span>
-          </div>
-          <h3>${project.title}</h3>
-          <p>${project.blurb}</p>
-          <div class="project-link-foot">
-            <span class="project-link-label">${project.ctaLabel ?? "Launch live site"}</span>
-            <span class="project-link-arrow">-></span>
-          </div>
-        </div>
-      </a>
-    `
-  ).join("");
+const hideOverlay = () => {
+  if (!elements.overlay) return;
+  state.overlayActive = false;
+  elements.overlay.classList.remove("is-active");
+  setTimeout(() => {
+    if (!state.overlayActive) {
+      elements.overlay.hidden = true;
+    }
+  }, 420);
+};
 
-  elements.projectList.querySelectorAll(".project-link").forEach((link) => {
-    const index = Number(link.dataset.index);
+/* ─── Scroll → Camera Sync (the core link) ─── */
+const setupScrollCamera = () => {
+  const container = elements.scrollContainer;
+  if (!container) return;
 
-    link.addEventListener("mouseenter", () => {
-      state.sound?.play("nodePing", { cooldownMs: 140 });
-      previewProject(index);
+  // This ScrollTrigger watches the entire scroll container
+  // and maps scroll progress 0→1 to camera position
+  ScrollTrigger.create({
+    trigger: container,
+    start: "top top",
+    end: "bottom bottom",
+    scrub: 0.8,
+    onUpdate: (self) => {
+      if (state.scene) {
+        state.scene.setScrollProgress(self.progress);
+      }
+    },
+  });
+};
+
+/* ─── Section Content Visibility ─── */
+const setupScrollVisibility = () => {
+  elements.projectSections.forEach((section) => {
+    const content = section.querySelector(".exp-section-content");
+    if (!content) return;
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top 70%",
+      end: "bottom 30%",
+      onEnter: () => content.classList.add("is-visible"),
+      onLeave: () => content.classList.remove("is-visible"),
+      onEnterBack: () => content.classList.add("is-visible"),
+      onLeaveBack: () => content.classList.remove("is-visible"),
     });
+  });
 
-    link.addEventListener("mouseleave", () => {
-      clearPreview();
-    });
-
-    link.addEventListener("focus", () => {
-      state.sound?.play("nodePing", { cooldownMs: 140 });
-      previewProject(index);
-    });
-
-    link.addEventListener("blur", () => {
-      queueMicrotask(() => {
-        if (!elements.projectList.contains(document.activeElement)) {
-          clearPreview();
-        }
+  // Exit section
+  const exitSection = document.querySelector('[data-exp-section="exit"]');
+  if (exitSection) {
+    const exitContent = exitSection.querySelector(".exp-section-content");
+    if (exitContent) {
+      ScrollTrigger.create({
+        trigger: exitSection,
+        start: "top 70%",
+        end: "bottom 30%",
+        onEnter: () => exitContent.classList.add("is-visible"),
+        onLeave: () => exitContent.classList.remove("is-visible"),
+        onEnterBack: () => exitContent.classList.add("is-visible"),
+        onLeaveBack: () => exitContent.classList.remove("is-visible"),
       });
-    });
-
-    link.addEventListener("click", () => {
-      state.sound?.play("uiConfirm", { cooldownMs: 180 });
-      selectProject(index);
-    });
-  });
+    }
+  }
 };
 
-const animateInterface = () => {
-  if (reducedMotion) {
-    return;
-  }
+/* ─── Entrance animation ─── */
+const animateEntrance = () => {
+  if (reducedMotion) return;
 
-  gsap.from(".experience-header > *", {
-    y: 18,
+  gsap.from(".exp-header > *", {
+    y: 14,
     opacity: 0,
     duration: 0.7,
     stagger: 0.08,
@@ -201,177 +171,172 @@ const animateInterface = () => {
     clearProps: "transform,opacity",
   });
 
-  gsap.from(".experience-rail > *", {
-    y: 26,
-    opacity: 0,
-    duration: 0.82,
-    stagger: 0.1,
-    ease: "power3.out",
-    delay: 0.08,
-    clearProps: "transform,opacity",
-  });
+  const entryContent = document.querySelector('.exp-section-entry .exp-section-content');
+  if (entryContent) {
+    gsap.from(entryContent.children, {
+      y: 30,
+      opacity: 0,
+      duration: 0.9,
+      stagger: 0.1,
+      ease: "power3.out",
+      delay: 0.2,
+      clearProps: "transform,opacity",
+    });
+  }
 
-  gsap.from(".project-link", {
-    y: 24,
+  gsap.from(".exp-hud", {
     opacity: 0,
-    duration: 0.72,
-    stagger: 0.06,
-    ease: "power3.out",
-    delay: 0.16,
-    clearProps: "transform,opacity",
+    duration: 1.2,
+    delay: 0.5,
+    ease: "power2.out",
+    clearProps: "opacity",
   });
 };
 
+/* ─── Fallback ─── */
 const renderFallbackLinks = () => {
+  if (!elements.fallbackLinks) return;
   elements.fallbackLinks.innerHTML = PROJECTS.map(
-    (project) => `
-      <a
-        href="${project.url}"
-        target="_blank"
-        rel="noreferrer"
-        data-cursor-label="Open"
-        data-cursor-aside="${project.title}, minus the nebula theatrics."
-        data-cursor-tone="project"
-      >${project.title}</a>
-    `
+    (p) => `<a href="${p.url}" target="_blank" rel="noreferrer"
+      data-cursor-label="Open" data-cursor-aside="${p.title}"
+    >${p.title}</a>`
   ).join("");
 
-  const fallbackLinks = elements.fallbackLinks.querySelectorAll("a");
-  state.sound?.bindHover(fallbackLinks);
-  state.sound?.bindActivate(fallbackLinks);
-  state.cursor?.bindTargets(fallbackLinks);
+  const links = elements.fallbackLinks.querySelectorAll("a");
+  state.sound?.bindHover(links);
+  state.sound?.bindActivate(links);
+  state.cursor?.bindTargets(links);
 };
 
 const showFallback = (error) => {
-  const reason = getErrorMessage(error);
-
-  console.error("Experience scene fallback reason:", reason);
+  const reason = error instanceof Error ? error.message : String(error);
+  console.error("Experience scene fallback:", reason);
   window.__experienceDiagnostics?.push(`Scene fallback: ${reason}`, "error");
 
   document.body.classList.add("scene-failed", "is-ready");
-  elements?.loadingShell?.setAttribute("hidden", "hidden");
-  elements?.loading?.setAttribute("hidden", "hidden");
+  elements?.loaderUI?.setAttribute("hidden", "hidden");
 
-  if (elements?.fallback) {
-    elements.fallback.hidden = false;
-  }
-
-  if (elements?.renderStatus) {
-    elements.renderStatus.textContent = "Fallback links ready";
-  }
+  if (elements?.fallback) elements.fallback.hidden = false;
+  if (elements?.hudStatus) elements.hudStatus.textContent = "Fallback links ready";
 };
 
+/* ─── Boot Scene ─── */
 const bootScene = async () => {
   try {
-    window.__experienceDiagnostics?.push("Attempting dynamic import of ./scene.js.", "info");
+    window.__experienceDiagnostics?.push("Importing scene.js...", "info");
 
     const { createExperienceScene, getWebGLSupport } = await import("./scene.js");
-    const webglSupport = getWebGLSupport();
+    const webgl = getWebGLSupport();
 
-    if (!webglSupport.supported) {
-      throw new Error(webglSupport.reason);
-    }
+    if (!webgl.supported) throw new Error(webgl.reason);
 
-    window.__experienceDiagnostics?.push(
-      `WebGL support check passed with ${webglSupport.contextType}.`,
-      "ok"
-    );
+    window.__experienceDiagnostics?.push(`WebGL: ${webgl.contextType}`, "ok");
 
     state.scene = await createExperienceScene({
       canvas: elements.canvas,
       projects: PROJECTS,
-      selectedIndex: state.selectedIndex,
-      onProjectPreview: (index) => {
-        if (state.previewIndex !== index) {
-          state.sound?.play("nodePing", { cooldownMs: 140 });
-        }
+      onNodeHover: (index) => {
+        state.sound?.play("nodePing", { cooldownMs: 140 });
         state.cursor?.setOverrideMessage({
-          label: PROJECTS[index]?.title ?? "Project Signal",
-          aside: "Yes, click the shiny one. That is the entire point.",
+          label: PROJECTS[index]?.title ?? "Project",
+          aside: "Click to explore this project.",
           tone: "project",
         });
-        previewProject(index, "scene");
       },
-      onProjectLeave: () => {
+      onNodeLeave: () => {
         state.cursor?.clearOverrideMessage();
-        clearPreview("scene");
       },
-      onProjectSelect: (index) => {
-        selectProject(index, "scene");
+      onNodeClick: (index) => {
+        showOverlay(index);
       },
-      onProjectOpen: (index) => {
-        state.sound?.play("uiConfirm", { cooldownMs: 180 });
-        openProject(index);
-      },
-      onReady: (qualityLabel) => {
-        elements.renderStatus.textContent = qualityLabel;
+      onReady: (label) => {
+        if (elements.hudStatus) elements.hudStatus.textContent = label;
         document.body.classList.add("is-ready");
-        window.__experienceDiagnostics?.push("Experience scene mounted successfully.", "ok");
+        window.__experienceDiagnostics?.push("Scene mounted successfully.", "ok");
       },
       onQualityChange: (label) => {
-        elements.renderStatus.textContent = label;
+        if (elements.hudStatus) elements.hudStatus.textContent = label;
       },
     });
+
+    // Now that scene is ready, setup scroll → camera sync
+    setupScrollCamera();
+    // Refresh ScrollTrigger since sections + scene are both ready
+    ScrollTrigger.refresh();
+
   } catch (error) {
     showFallback(error);
   }
 };
 
+/* ─── Init ─── */
 const initExperience = () => {
   elements = getElements();
+
+  // Sound
   state.sound = createPortfolioSound({
     menuRoot: document.querySelector("[data-sound-menu]"),
     autoLoopCues: ["sceneAmbient"],
   });
+
+  // Cursor
   state.cursor = createSignalCursor({
-    defaultLabel: "Drag Field",
-    defaultAside: "careful, the nebula has opinions.",
+    defaultLabel: "Navigate",
+    defaultAside: "Scroll to move through the field.",
   });
 
-  if (!elements.projectList || !elements.canvas) {
-    showFallback(new Error("Experience route failed to find the required DOM mount points."));
+  if (!elements.canvas) {
+    showFallback(new Error("Canvas element not found."));
     return;
   }
 
-  window.__experienceDiagnostics?.push("Required DOM mount points located.", "ok");
+  window.__experienceDiagnostics?.push("DOM elements located.", "ok");
 
-  renderProjectList();
-  renderFallbackLinks();
-  updateReadout(state.selectedIndex);
-  syncProjectLinkStates();
+  // Hydrate project data into sections
+  hydrateProjectSections();
 
-  state.sound.bindHover(
-    document.querySelectorAll(
-      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], [data-cursor-toggle]"
-    )
-  );
-  state.sound.bindActivate(
-    document.querySelectorAll(
-      ".experience-back, .experience-link, .experience-button, .experience-sound-toggle, .experience-sound-choice, [data-sound-master-toggle], [data-cursor-toggle]"
-    )
-  );
-  state.cursor.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
-  state.cursor.bindTargets(document.querySelectorAll("[data-cursor-label], .project-link, [data-cursor-toggle]"));
-
-  elements.prankButton?.addEventListener("click", () => {
-    state.sound?.play("uiConfirm", { cooldownMs: 180 });
-    window.alert("sike it does not work");
+  // Overlay close
+  elements.overlayClose?.addEventListener("click", () => {
+    hideOverlay();
+    state.sound?.play("uiConfirm", { cooldownMs: 200 });
   });
 
+  // Close overlay on backdrop click
+  elements.overlay?.addEventListener("click", (e) => {
+    if (e.target === elements.overlay) hideOverlay();
+  });
+
+  // Close overlay with Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.overlayActive) hideOverlay();
+  });
+
+  // Setup section visibility triggers
+  setupScrollVisibility();
+
+  // Bind sound/cursor to interactive elements
+  const interactiveEls = document.querySelectorAll(
+    ".exp-back, .exp-toggle-btn, .exp-sound-choice, .exp-project-cta, .exp-exit-cta, .exp-overlay-close, .exp-overlay-launch, [data-cursor-toggle]"
+  );
+  state.sound?.bindHover(interactiveEls);
+  state.sound?.bindActivate(interactiveEls);
+  state.cursor?.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
+  state.cursor?.bindTargets(document.querySelectorAll("[data-cursor-label], [data-cursor-toggle]"));
+
+  // Fallback links
+  renderFallbackLinks();
+
+  // Entrance
   if (reducedMotion) {
-    elements.renderStatus.textContent = "Reduced motion enabled";
+    if (elements.hudStatus) elements.hudStatus.textContent = "Reduced motion enabled";
   }
+  animateEntrance();
 
-  animateInterface();
-
+  // Boot 3D (scroll sync happens after scene is ready)
   if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(() => {
-      bootScene();
-    }, { timeout: 1000 });
+    requestIdleCallback(() => bootScene(), { timeout: 1000 });
   } else {
-    window.setTimeout(() => {
-      bootScene();
-    }, 120);
+    setTimeout(bootScene, 120);
   }
 };
 

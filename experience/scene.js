@@ -1,559 +1,478 @@
 import * as THREE from "three";
 
-const PROJECT_LAYOUTS = {
-  regular: [
-    {
-      position: [0, 1.18, 0.24],
-      focusYaw: 0.04,
-    },
-    {
-      position: [-1.9, 0.48, 1.15],
-      focusYaw: 0.18,
-    },
-    {
-      position: [1.96, 0.42, 1.12],
-      focusYaw: -0.18,
-    },
-    {
-      position: [-1.18, -1.24, 1.96],
-      focusYaw: 0.08,
-    },
-    {
-      position: [1.24, -1.16, 2.18],
-      focusYaw: -0.08,
-    },
-  ],
-  compact: [
-    {
-      position: [0, 0.98, 0.34],
-      focusYaw: 0.03,
-    },
-    {
-      position: [-1.34, 0.34, 0.96],
-      focusYaw: 0.12,
-    },
-    {
-      position: [1.38, 0.28, 0.94],
-      focusYaw: -0.12,
-    },
-    {
-      position: [-0.9, -1.02, 1.52],
-      focusYaw: 0.05,
-    },
-    {
-      position: [0.94, -0.96, 1.64],
-      focusYaw: -0.05,
-    },
-  ],
-};
+/* ═══════════════════════════════════════════════════════════════
+   SCENE.JS — 3D-First Spatial Interface (v2 — VISIBLE)
+   Brighter objects, grid floor, connecting lines, red atmosphere
+   Camera-driven scroll · Red emissive interactions
+   ═══════════════════════════════════════════════════════════════ */
 
 export const getWebGLSupport = () => {
   try {
     if (!window.WebGLRenderingContext) {
-      return {
-        supported: false,
-        reason: "WebGLRenderingContext is unavailable in this browser.",
-      };
+      return { supported: false, reason: "WebGLRenderingContext is unavailable." };
     }
-
-    const testCanvas = document.createElement("canvas");
-    const webgl2Context = testCanvas.getContext("webgl2");
-
-    if (webgl2Context) {
-      return {
-        supported: true,
-        contextType: "webgl2",
-      };
-    }
-
-    const webglContext = testCanvas.getContext("webgl");
-
-    if (webglContext) {
-      return {
-        supported: true,
-        contextType: "webgl",
-      };
-    }
-
-    return {
-      supported: false,
-      reason: "Canvas could not create a WebGL2 or WebGL rendering context.",
-    };
-  } catch (error) {
-    return {
-      supported: false,
-      reason: error instanceof Error ? error.message : String(error),
-    };
+    const c = document.createElement("canvas");
+    const gl2 = c.getContext("webgl2");
+    if (gl2) return { supported: true, contextType: "webgl2" };
+    const gl = c.getContext("webgl");
+    if (gl) return { supported: true, contextType: "webgl" };
+    return { supported: false, reason: "Canvas could not create a WebGL context." };
+  } catch (e) {
+    return { supported: false, reason: e instanceof Error ? e.message : String(e) };
   }
 };
 
 export const supportsWebGL = () => getWebGLSupport().supported;
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 
-const createGlowTexture = async (THREE) => {
-  const glowCanvas = document.createElement("canvas");
-  glowCanvas.width = 256;
-  glowCanvas.height = 256;
-
-  const context = glowCanvas.getContext("2d");
-  const gradient = context.createRadialGradient(128, 128, 18, 128, 128, 128);
-
-  gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-  gradient.addColorStop(0.24, "rgba(255, 255, 255, 0.75)");
-  gradient.addColorStop(0.52, "rgba(255, 255, 255, 0.16)");
-  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, glowCanvas.width, glowCanvas.height);
-
-  const texture = new THREE.CanvasTexture(glowCanvas);
-  texture.needsUpdate = true;
-
-  return texture;
-};
-
-const createNodeGeometry = (THREE, project) => {
-  const scale = project.scale;
-
+/* ─── Node Geometry (from project data) ─── */
+const createNodeGeometry = (project) => {
+  const s = (project.scale ?? 0.5) * 1.4; // 40% bigger for visibility
   switch (project.geometry) {
-    case "octahedron":
-      return new THREE.OctahedronGeometry(0.94 * scale, 0);
-    case "sphere":
-      return new THREE.IcosahedronGeometry(0.86 * scale, 1);
-    case "torus":
-      return new THREE.TorusGeometry(0.66 * scale, 0.18 * scale, 12, 56);
-    case "icosahedron":
-      return new THREE.IcosahedronGeometry(0.92 * scale, 0);
-    case "dodecahedron":
-      return new THREE.DodecahedronGeometry(0.84 * scale, 0);
+    case "sphere":       return new THREE.IcosahedronGeometry(0.86 * s, 1);
+    case "torus":        return new THREE.TorusGeometry(0.66 * s, 0.18 * s, 12, 56);
+    case "icosahedron":  return new THREE.IcosahedronGeometry(0.92 * s, 0);
+    case "dodecahedron": return new THREE.DodecahedronGeometry(0.84 * s, 0);
     case "sense-stick":
-      if (typeof THREE.CapsuleGeometry === "function") {
-        return new THREE.CapsuleGeometry(0.14 * scale, 0.92 * scale, 6, 12);
-      }
-
-      return new THREE.CylinderGeometry(0.11 * scale, 0.15 * scale, 1.02 * scale, 16);
-    default:
-      return new THREE.BoxGeometry(0.95 * scale, 0.95 * scale, 0.95 * scale);
+      return typeof THREE.CapsuleGeometry === "function"
+        ? new THREE.CapsuleGeometry(0.14 * s, 0.92 * s, 6, 12)
+        : new THREE.CylinderGeometry(0.11 * s, 0.15 * s, 1.02 * s, 16);
+    default:             return new THREE.BoxGeometry(0.9 * s, 0.9 * s, 0.9 * s);
   }
 };
+
+/* ─── Spatial Layout ─── */
+const NODE_POSITIONS = [
+  { x:  1.4,  y:  0.3,  z:  0.0  },
+  { x: -2.0,  y: -0.1,  z: -3.5  },
+  { x:  1.8,  y:  0.4,  z: -7.0  },
+  { x: -1.4,  y: -0.3,  z: -10.5 },
+  { x:  1.6,  y:  0.2,  z: -14.0 },
+];
+
+/* ─── Camera Keyframes ─── */
+const CAMERA_KEYFRAMES = [
+  { x: 0, y: 1.2, z: 7,    lookX: 0,    lookY: 0,    lookZ: -2   },
+  { x: 0, y: 0.5, z: 2,    lookX: 1.4,  lookY: 0.3,  lookZ: 0    },
+  { x: 0, y: 0.1, z: -1.5, lookX: -2,   lookY: -0.1, lookZ: -3.5 },
+  { x: 0, y: 0.5, z: -5,   lookX: 1.8,  lookY: 0.4,  lookZ: -7   },
+  { x: 0, y: -0.1, z: -8.5, lookX: -1.4, lookY: -0.3, lookZ: -10.5 },
+  { x: 0, y: 0.3, z: -12,  lookX: 1.6,  lookY: 0.2,  lookZ: -14  },
+  { x: 0, y: 0.8, z: -16,  lookX: 0,    lookY: 0,    lookZ: -20  },
+];
 
 export const createExperienceScene = async ({
   canvas,
   projects,
-  selectedIndex = 0,
-  onProjectPreview,
-  onProjectLeave,
-  onProjectSelect,
-  onProjectOpen,
   onReady,
   onQualityChange,
+  onNodeHover,
+  onNodeLeave,
+  onNodeClick,
 }) => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const isCompactViewport = window.matchMedia("(max-width: 820px)").matches;
-  const projectLayout = isCompactViewport ? PROJECT_LAYOUTS.compact : PROJECT_LAYOUTS.regular;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const isCompact = window.matchMedia("(max-width: 820px)").matches;
 
-  const trackedGeometries = new Set();
-  const trackedMaterials = new Set();
-  const trackedTextures = new Set();
+  const trackedGeo = new Set();
+  const trackedMat = new Set();
+  const trackedTex = new Set();
+  const trackG = (g) => { trackedGeo.add(g); return g; };
+  const trackM = (m) => { trackedMat.add(m); return m; };
+  const trackT = (t) => { trackedTex.add(t); return t; };
 
-  const trackGeometry = (geometry) => {
-    trackedGeometries.add(geometry);
-    return geometry;
-  };
-
-  const trackMaterial = (material) => {
-    trackedMaterials.add(material);
-    return material;
-  };
-
-  const trackTexture = (texture) => {
-    trackedTextures.add(texture);
-    return texture;
-  };
-
+  /* ─── Renderer ─── */
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    alpha: true,
-    antialias: !isCompactViewport,
+    alpha: false,
+    antialias: !isCompact,
     powerPreference: "high-performance",
   });
-
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1.4 : 2));
-  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isCompact ? 1.5 : 2));
+  renderer.setClearColor(0x030303, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = isCompactViewport ? 1.02 : 1.08;
+  renderer.toneMappingExposure = 1.3;
 
+  /* ─── Scene ─── */
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x040811, isCompactViewport ? 0.078 : 0.062);
+  scene.fog = new THREE.FogExp2(0x030303, isCompact ? 0.025 : 0.018);
 
-  const camera = new THREE.PerspectiveCamera(isCompactViewport ? 47 : 42, 1, 0.1, 60);
-  camera.position.set(0, 0.32, isCompactViewport ? 10.2 : 9.75);
+  /* ─── Camera ─── */
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+  camera.position.set(0, 1.2, 7);
+  scene.add(camera);
 
-  const cameraRig = new THREE.Group();
-  cameraRig.add(camera);
-  scene.add(cameraRig);
+  /* ═══ LIGHTING (much brighter) ═══ */
+  const ambient = new THREE.AmbientLight(0x222222, 1.2);
 
-  const world = new THREE.Group();
-  scene.add(world);
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  keyLight.position.set(4, 6, 10);
 
-  const ambient = new THREE.AmbientLight(0x8aa2bf, 0.48);
-  const hemi = new THREE.HemisphereLight(0x88dfff, 0x02050a, 0.74);
-  const keyLight = new THREE.SpotLight(0x8cf6ff, isCompactViewport ? 46 : 56, 24, Math.PI / 7, 0.5, 1.2);
-  keyLight.position.set(5.8, 8, 7.6);
+  const rimLight = new THREE.PointLight(0xff3b30, 6, 40, 1.2);
+  rimLight.position.set(-6, 3, 2);
 
-  const rimLight = new THREE.PointLight(0xff9f8e, isCompactViewport ? 3.4 : 4.4, 16, 2);
-  rimLight.position.set(-5.6, 0.4, 4.4);
+  const fillLight = new THREE.PointLight(0xff2222, 3, 40, 1.2);
+  fillLight.position.set(4, -2, -10);
 
-  const fillLight = new THREE.PointLight(0xbcff66, isCompactViewport ? 1.9 : 2.4, 18, 2);
-  fillLight.position.set(0, -2.5, 4.2);
+  const backLight = new THREE.PointLight(0xff3b30, 4, 50, 1);
+  backLight.position.set(0, 2, -18);
 
-  scene.add(ambient, hemi, keyLight, rimLight, fillLight);
+  const followLight = new THREE.PointLight(0xff3b30, 2.5, 18, 1.5);
+  scene.add(followLight);
 
-  const glowTexture = trackTexture(await createGlowTexture(THREE));
+  scene.add(ambient, keyLight, rimLight, fillLight, backLight);
 
-  const core = new THREE.Group();
-  world.add(core);
+  /* ═══ GROUND GRID — subtle spatial reference ═══ */
+  const gridGroup = new THREE.Group();
+  const gridSize = 40;
+  const gridDivisions = 40;
+  const gridStep = gridSize / gridDivisions;
+  const gridY = -1.8;
 
-  const coreShell = new THREE.Mesh(
-    trackGeometry(new THREE.IcosahedronGeometry(0.34, 1)),
-    trackMaterial(
-      new THREE.MeshPhysicalMaterial({
-        color: 0xa4fbff,
-        emissive: 0x1c3444,
-        emissiveIntensity: 0.54,
-        roughness: 0.12,
-        metalness: 0.24,
-        transmission: 0.22,
-        transparent: true,
-        opacity: 0.82,
-        clearcoat: 1,
-        clearcoatRoughness: 0.08,
-      })
-    )
-  );
-  core.add(coreShell);
-
-  const coreWire = new THREE.LineSegments(
-    trackGeometry(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(0.48, 0))),
-    trackMaterial(
-      new THREE.LineBasicMaterial({
-        color: 0x8cf6ff,
-        transparent: true,
-        opacity: 0.18,
-      })
-    )
-  );
-  core.add(coreWire);
-
-  const coreAura = new THREE.Sprite(
-    trackMaterial(
-      new THREE.SpriteMaterial({
-        map: glowTexture,
-        color: 0x8cf6ff,
-        transparent: true,
-        opacity: 0.38,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      })
-    )
-  );
-  coreAura.scale.set(2.02, 2.02, 1);
-  core.add(coreAura);
-
-  const orbitalRing = new THREE.Mesh(
-    trackGeometry(new THREE.TorusGeometry(0.88, 0.022, 16, 88)),
-    trackMaterial(
-      new THREE.MeshBasicMaterial({
-        color: 0x8cf6ff,
-        transparent: true,
-        opacity: 0.22,
-        blending: THREE.AdditiveBlending,
-      })
-    )
-  );
-  orbitalRing.rotation.x = Math.PI / 2;
-  core.add(orbitalRing);
-
-  const outerRing = new THREE.Mesh(
-    trackGeometry(new THREE.TorusGeometry(1.38, 0.014, 12, 100)),
-    trackMaterial(
-      new THREE.MeshBasicMaterial({
-        color: 0xbcff66,
-        transparent: true,
-        opacity: 0.1,
-        blending: THREE.AdditiveBlending,
-      })
-    )
-  );
-  outerRing.rotation.set(Math.PI / 2, 0.22, 0);
-  world.add(outerRing);
-
-  const floorDisc = new THREE.Mesh(
-    trackGeometry(new THREE.RingGeometry(0.94, 2.8, 72)),
-    trackMaterial(
-      new THREE.MeshBasicMaterial({
-        color: 0x102131,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.16,
-      })
-    )
-  );
-  floorDisc.rotation.x = -Math.PI / 2;
-  floorDisc.position.y = -1.32;
-  world.add(floorDisc);
-
-  const floorHalo = new THREE.Sprite(
-    trackMaterial(
-      new THREE.SpriteMaterial({
-        map: glowTexture,
-        color: 0x8cf6ff,
-        transparent: true,
-        opacity: 0.09,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      })
-    )
-  );
-  floorHalo.position.set(0, -1.18, 0);
-  floorHalo.scale.set(4.6, 4.6, 1);
-  world.add(floorHalo);
-
-  const particleCount = reducedMotion ? 16 : isCompactViewport ? 28 : 40;
-  const particlePositions = new Float32Array(particleCount * 3);
-  const particleSizes = new Float32Array(particleCount);
-
-  for (let index = 0; index < particleCount; index += 1) {
-    const stride = index * 3;
-    const radius = 2.2 + Math.random() * 3.6;
-    const theta = Math.random() * Math.PI * 2;
-    const spread = (Math.random() - 0.5) * 3.1;
-
-    particlePositions[stride] = Math.cos(theta) * radius;
-    particlePositions[stride + 1] = spread;
-    particlePositions[stride + 2] = Math.sin(theta) * radius * 0.84;
-    particleSizes[index] = 0.01 + Math.random() * 0.016;
-  }
-
-  const particleGeometry = trackGeometry(new THREE.BufferGeometry());
-  particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
-  particleGeometry.setAttribute("size", new THREE.BufferAttribute(particleSizes, 1));
-
-  const particleMaterial = trackMaterial(
-    new THREE.PointsMaterial({
-      color: 0xe8f8ff,
-      size: isCompactViewport ? 0.024 : 0.02,
+  // Horizontal lines (along X, repeating Z)
+  for (let i = 0; i <= gridDivisions; i++) {
+    const z = -gridSize / 2 + i * gridStep;
+    const points = [
+      new THREE.Vector3(-gridSize / 2, gridY, z),
+      new THREE.Vector3(gridSize / 2, gridY, z),
+    ];
+    const geo = trackG(new THREE.BufferGeometry().setFromPoints(points));
+    const mat = trackM(new THREE.LineBasicMaterial({
+      color: 0xff3b30,
       transparent: true,
-      opacity: 0.32,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true,
-    })
-  );
+      opacity: i % 4 === 0 ? 0.08 : 0.03,
+    }));
+    gridGroup.add(new THREE.Line(geo, mat));
+  }
+  // Vertical lines (along Z, repeating X)
+  for (let i = 0; i <= gridDivisions; i++) {
+    const x = -gridSize / 2 + i * gridStep;
+    const points = [
+      new THREE.Vector3(x, gridY, -gridSize / 2),
+      new THREE.Vector3(x, gridY, gridSize / 2),
+    ];
+    const geo = trackG(new THREE.BufferGeometry().setFromPoints(points));
+    const mat = trackM(new THREE.LineBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: i % 4 === 0 ? 0.08 : 0.03,
+    }));
+    gridGroup.add(new THREE.Line(geo, mat));
+  }
+  scene.add(gridGroup);
 
-  const particleField = new THREE.Points(particleGeometry, particleMaterial);
-  scene.add(particleField);
+  /* ═══ CONNECTING LINES between nodes ═══ */
+  const connectionGroup = new THREE.Group();
+  for (let i = 0; i < NODE_POSITIONS.length - 1; i++) {
+    const a = NODE_POSITIONS[i];
+    const b = NODE_POSITIONS[i + 1];
+    const points = [
+      new THREE.Vector3(a.x, a.y, a.z),
+      new THREE.Vector3(b.x, b.y, b.z),
+    ];
+    const geo = trackG(new THREE.BufferGeometry().setFromPoints(points));
+    const mat = trackM(new THREE.LineBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.12,
+    }));
+    connectionGroup.add(new THREE.Line(geo, mat));
+  }
+  scene.add(connectionGroup);
 
-  const projectNodes = [];
-  const raycastTargets = [];
-
-  projects.forEach((project, index) => {
-    const node = new THREE.Group();
-    const layout = projectLayout[index] ?? {
-      position: [0, 0, 0],
-      focusYaw: 0,
-    };
-    const [x, y, z] = layout.position;
-    const geometry = trackGeometry(createNodeGeometry(THREE, project));
-    const accentColor = new THREE.Color(project.accent);
-    const glowColor = new THREE.Color(project.glow);
-
-    node.position.set(x, y, z);
-
-    const mesh = new THREE.Mesh(
-      geometry,
-      trackMaterial(
-        new THREE.MeshPhysicalMaterial({
-          color: accentColor,
-          emissive: glowColor,
-          emissiveIntensity: index === selectedIndex ? 0.95 : 0.28,
-          roughness: 0.22,
-          metalness: 0.82,
-          clearcoat: 1,
-          clearcoatRoughness: 0.12,
-          transparent: true,
-          opacity: 0.96,
-        })
-      )
-    );
-
-    mesh.userData.projectIndex = index;
-    node.add(mesh);
-
-    const edgeLines = new THREE.LineSegments(
-      trackGeometry(new THREE.EdgesGeometry(geometry, 16)),
-      trackMaterial(
-        new THREE.LineBasicMaterial({
-          color: glowColor,
-          transparent: true,
-          opacity: 0.22,
-        })
-      )
-    );
-    node.add(edgeLines);
-
-    const aura = new THREE.Sprite(
-      trackMaterial(
-        new THREE.SpriteMaterial({
-          map: glowTexture,
-          color: glowColor,
-          transparent: true,
-          opacity: index === selectedIndex ? 0.5 : 0.18,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        })
-      )
-    );
-    aura.scale.set(project.scale * 2.1, project.scale * 2.1, 1);
-    node.add(aura);
-
-    const orbit = new THREE.Mesh(
-      trackGeometry(new THREE.TorusGeometry(project.scale * 1.02, project.scale * 0.01, 8, 48)),
-      trackMaterial(
-        new THREE.MeshBasicMaterial({
-          color: glowColor,
-          transparent: true,
-          opacity: 0.1,
-          blending: THREE.AdditiveBlending,
-        })
-      )
-    );
-    orbit.rotation.y = Math.PI / 2;
-    node.add(orbit);
-
-    let sensorHead = null;
-    let sensorHalo = null;
-
-    if (project.geometry === "sense-stick") {
-      mesh.rotation.z = Math.PI * 0.08;
-
-      sensorHead = new THREE.Mesh(
-        trackGeometry(new THREE.SphereGeometry(project.scale * 0.18, 12, 12)),
-        trackMaterial(
-          new THREE.MeshBasicMaterial({
-            color: glowColor,
-            transparent: true,
-            opacity: 0.92,
-          })
-        )
-      );
-      sensorHead.position.y = project.scale * 0.68;
-      node.add(sensorHead);
-
-      sensorHalo = new THREE.Mesh(
-        trackGeometry(new THREE.TorusGeometry(project.scale * 0.34, project.scale * 0.02, 8, 48)),
-        trackMaterial(
-          new THREE.MeshBasicMaterial({
-            color: glowColor,
-            transparent: true,
-            opacity: 0.22,
-            blending: THREE.AdditiveBlending,
-          })
-        )
-      );
-      sensorHalo.position.y = sensorHead.position.y;
-      sensorHalo.rotation.x = Math.PI / 2;
-      node.add(sensorHalo);
-    }
-
-    const shardCluster = new THREE.Group();
-
-    if (project.shards) {
-      for (let shardIndex = 0; shardIndex < project.shards; shardIndex += 1) {
-        const shard = new THREE.Mesh(
-          trackGeometry(new THREE.TetrahedronGeometry(project.scale * 0.18, 0)),
-          trackMaterial(
-            new THREE.MeshBasicMaterial({
-              color: glowColor,
-              transparent: true,
-              opacity: 0.42,
-              blending: THREE.AdditiveBlending,
-            })
-          )
-        );
-
-        const angle = (Math.PI * 2 * shardIndex) / project.shards;
-        const radius = project.scale * (0.88 + (shardIndex % 2) * 0.22);
-        shard.position.set(
-          Math.cos(angle) * radius,
-          (shardIndex % 2 === 0 ? 1 : -1) * project.scale * 0.22,
-          Math.sin(angle) * radius
-        );
-        shard.rotation.set(angle * 0.6, angle, angle * 0.35);
-        shard.userData = {
-          baseY: shard.position.y,
-          wobbleOffset: angle,
-          spinRate: 0.6 + shardIndex * 0.08,
-        };
-        shardCluster.add(shard);
-      }
-
-      node.add(shardCluster);
-    }
-
-    node.userData = {
-      index,
-      project,
-      mesh,
-      edgeLines,
-      aura,
-      orbit,
-      sensorHead,
-      sensorHalo,
-      shardCluster,
-      baseY: y,
-      floatPhase: Math.random() * Math.PI * 2,
-      floatSpeed: 0.62 + index * 0.08,
-      spinSpeed: 0.06 + index * 0.015,
-    };
-
-    node.scale.setScalar(0);
-
-    world.add(node);
-    projectNodes.push(node);
-    raycastTargets.push(mesh);
+  /* ═══ VERTICAL PILLARS under each node ═══ */
+  NODE_POSITIONS.forEach((pos) => {
+    const points = [
+      new THREE.Vector3(pos.x, pos.y, pos.z),
+      new THREE.Vector3(pos.x, gridY, pos.z),
+    ];
+    const geo = trackG(new THREE.BufferGeometry().setFromPoints(points));
+    const mat = trackM(new THREE.LineBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.06,
+    }));
+    connectionGroup.add(new THREE.Line(geo, mat));
   });
 
-  const motion = {
+  /* ─── Glow Texture ─── */
+  const glowCanvas = document.createElement("canvas");
+  glowCanvas.width = 128;
+  glowCanvas.height = 128;
+  const gCtx = glowCanvas.getContext("2d");
+  const grad = gCtx.createRadialGradient(64, 64, 4, 64, 64, 64);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.2, "rgba(255,255,255,0.6)");
+  grad.addColorStop(0.5, "rgba(255,255,255,0.15)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  gCtx.fillStyle = grad;
+  gCtx.fillRect(0, 0, 128, 128);
+  const glowTex = trackT(new THREE.CanvasTexture(glowCanvas));
+
+  /* ═══ BACKGROUND NEBULA — distant atmospheric glow ═══ */
+  const nebulaPositions = [
+    { x: -8, y: 2, z: -25, s: 12, c: 0xff1a1a },
+    { x: 6, y: -1, z: -15, s: 10, c: 0xff3b30 },
+    { x: -4, y: 4, z: -8, s: 8, c: 0xff2222 },
+    { x: 3, y: -3, z: -22, s: 14, c: 0x661111 },
+    { x: -2, y: 1, z: 5, s: 9, c: 0xff3b30 },
+  ];
+  nebulaPositions.forEach((n) => {
+    const nebMat = trackM(new THREE.SpriteMaterial({
+      map: glowTex,
+      color: n.c,
+      transparent: true,
+      opacity: 0.06,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }));
+    const nebula = new THREE.Sprite(nebMat);
+    nebula.position.set(n.x, n.y, n.z);
+    nebula.scale.set(n.s, n.s, 1);
+    scene.add(nebula);
+  });
+
+  /* ═══ PROJECT NODES (brighter, more visible) ═══ */
+  const nodes = [];
+  const rayTargets = [];
+
+  projects.forEach((project, i) => {
+    const pos = NODE_POSITIONS[i] || { x: 0, y: 0, z: -i * 3.5 };
+    const group = new THREE.Group();
+    group.position.set(pos.x, pos.y, pos.z);
+
+    const accentCol = new THREE.Color(project.accent);
+
+    // Main mesh — BRIGHTER base, always visible
+    const geo = trackG(createNodeGeometry(project));
+    const mat = trackM(new THREE.MeshPhysicalMaterial({
+      color: 0x2a2a2a,
+      emissive: 0x1a0505,
+      emissiveIntensity: 0.3,
+      roughness: 0.2,
+      metalness: 0.82,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.08,
+      transparent: false,
+    }));
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData.projectIndex = i;
+    group.add(mesh);
+
+    // Edge wireframe — visible by default
+    const edgeGeo = trackG(new THREE.EdgesGeometry(geo, 16));
+    const edgeMat = trackM(new THREE.LineBasicMaterial({
+      color: accentCol,
+      transparent: true,
+      opacity: 0.18,
+    }));
+    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+    group.add(edges);
+
+    // Glow sprite
+    const auraMat = trackM(new THREE.SpriteMaterial({
+      map: glowTex,
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.08,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }));
+    const aura = new THREE.Sprite(auraMat);
+    const auraSize = (project.scale ?? 0.5) * 3.5;
+    aura.scale.set(auraSize, auraSize, 1);
+    group.add(aura);
+
+    // Orbital ring
+    const orbitGeo = trackG(new THREE.TorusGeometry((project.scale ?? 0.5) * 1.3, 0.009, 8, 56));
+    const orbitMat = trackM(new THREE.MeshBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.06,
+      blending: THREE.AdditiveBlending,
+    }));
+    const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+    orbit.rotation.x = Math.PI * 0.4;
+    group.add(orbit);
+
+    // Second orbit (crossed)
+    const orbit2Geo = trackG(new THREE.TorusGeometry((project.scale ?? 0.5) * 1.5, 0.006, 8, 56));
+    const orbit2Mat = trackM(new THREE.MeshBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.03,
+      blending: THREE.AdditiveBlending,
+    }));
+    const orbit2 = new THREE.Mesh(orbit2Geo, orbit2Mat);
+    orbit2.rotation.x = Math.PI * 0.7;
+    orbit2.rotation.z = Math.PI * 0.3;
+    group.add(orbit2);
+
+    // Per-node point light for local illumination
+    const nodeLight = new THREE.PointLight(0xff3b30, 0.8, 5, 2);
+    nodeLight.position.set(0, 0, 0);
+    group.add(nodeLight);
+
+    group.userData = {
+      index: i,
+      project,
+      mesh,
+      edges,
+      aura,
+      orbit,
+      orbit2,
+      orbit2Mat,
+      nodeLight,
+      mat,
+      edgeMat,
+      auraMat,
+      orbitMat,
+      baseY: pos.y,
+      floatPhase: Math.random() * Math.PI * 2,
+      floatSpeed: 0.4 + i * 0.05,
+      spinSpeed: 0.1 + i * 0.015,
+      isHovered: false,
+    };
+
+    group.scale.setScalar(0);
+    scene.add(group);
+    nodes.push(group);
+    rayTargets.push(mesh);
+  });
+
+  /* ═══ DUST PARTICLES (more, bigger, mixed colors) ═══ */
+  const pCount = reducedMotion ? 15 : isCompact ? 40 : 80;
+  const pPos = new Float32Array(pCount * 3);
+  const pColors = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    const s = i * 3;
+    const r = 1.5 + Math.random() * 8;
+    const theta = Math.random() * Math.PI * 2;
+    pPos[s] = Math.cos(theta) * r;
+    pPos[s + 1] = (Math.random() - 0.5) * 5;
+    pPos[s + 2] = 5 - Math.random() * 28;
+    // Mix red and warm white
+    if (Math.random() > 0.6) {
+      pColors[s] = 1; pColors[s + 1] = 0.23; pColors[s + 2] = 0.19; // red
+    } else {
+      const w = 0.5 + Math.random() * 0.5;
+      pColors[s] = w; pColors[s + 1] = w * 0.9; pColors[s + 2] = w * 0.85; // warm white
+    }
+  }
+  const pGeo = trackG(new THREE.BufferGeometry());
+  pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute("color", new THREE.BufferAttribute(pColors, 3));
+  const pMat = trackM(new THREE.PointsMaterial({
+    size: isCompact ? 0.025 : 0.03,
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+    vertexColors: true,
+  }));
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  /* ─── State ─── */
+  const state = {
+    scrollProgress: 0,
     hoverIndex: null,
-    previewIndex: null,
-    selectedIndex,
-    focusYaw: projectLayout[selectedIndex]?.focusYaw ?? 0,
-    yawOffset: 0.22,
-    pitchOffset: 0.06,
+    focusedIndex: -1,
     pointerX: 0,
     pointerY: 0,
-    dragging: false,
-    dragPointerId: null,
-    dragDistance: 0,
-    lastX: 0,
-    lastY: 0,
+    entranceReady: false,
   };
 
   const pointer = new THREE.Vector2(5, 5);
   const raycaster = new THREE.Raycaster();
-  const targetScale = new THREE.Vector3();
   const clock = new THREE.Clock();
-  const loaderElements = {
+  const lookTarget = new THREE.Vector3();
+  const currentLookTarget = new THREE.Vector3(0, 0, -2);
+
+  /* ─── Resize ─── */
+  const resize = () => {
+    const w = canvas.clientWidth || window.innerWidth;
+    const h = canvas.clientHeight || window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+
+  const resizeObs = new ResizeObserver(resize);
+  resizeObs.observe(canvas);
+  window.addEventListener("resize", resize);
+  resize();
+
+  /* ─── Raycasting ─── */
+  const getPointer = (e) => {
+    const r = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
+  };
+
+  const pickNode = () => {
+    raycaster.setFromCamera(pointer, camera);
+    const hit = raycaster.intersectObjects(rayTargets, false)[0];
+    return hit ? hit.object.userData.projectIndex : null;
+  };
+
+  const setHoverIndex = (idx) => {
+    if (state.hoverIndex === idx) return;
+    const prevIdx = state.hoverIndex;
+    state.hoverIndex = idx;
+    canvas.classList.toggle("is-interactive", idx !== null);
+
+    if (prevIdx !== null) {
+      const prev = nodes[prevIdx];
+      if (prev) prev.userData.isHovered = false;
+      onNodeLeave?.(prevIdx);
+    }
+    if (idx !== null) {
+      const n = nodes[idx];
+      if (n) n.userData.isHovered = true;
+      onNodeHover?.(idx);
+    }
+  };
+
+  const handlePointerMove = (e) => {
+    getPointer(e);
+    state.pointerX = pointer.x;
+    state.pointerY = pointer.y;
+    if (finePointer || e.pointerType === "mouse") {
+      setHoverIndex(pickNode());
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    getPointer(e);
+    const idx = pickNode();
+    if (idx !== null) {
+      onNodeClick?.(idx);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    state.pointerX = 0;
+    state.pointerY = 0;
+    setHoverIndex(null);
+  };
+
+  canvas.addEventListener("pointermove", handlePointerMove, { passive: true });
+  canvas.addEventListener("pointerdown", handlePointerDown);
+  canvas.addEventListener("pointerleave", handlePointerLeave);
+
+  /* ─── Loader ─── */
+  const loaderEls = {
     container: document.getElementById("loader-ui"),
     phase: document.getElementById("loader-phase"),
     percentage: document.getElementById("loader-percentage"),
     track: document.getElementById("loader-track"),
     fill: document.getElementById("loader-track-fill"),
   };
+
   const loaderPhases = [
     { threshold: 18, label: "Aligning signal lattice" },
     { threshold: 42, label: "Translating project vectors" },
@@ -561,377 +480,219 @@ export const createExperienceScene = async ({
     { threshold: 96, label: "Opening dimensional seam" },
     { threshold: 100, label: "Field stabilized" },
   ];
-  const entrance = {
-    active: false,
-  };
-  let readyDispatched = false;
+
+  let readyFired = false;
   let loaderFrameId = null;
 
   const qualityLabel = reducedMotion
-    ? "Reduced motion / minimal drift"
-    : isCompactViewport
-      ? "Adaptive render / mobile tuned"
-      : "Adaptive render / cinematic depth";
+    ? "Reduced motion / minimal"
+    : isCompact
+    ? "Adaptive / mobile"
+    : "Adaptive / cinematic";
 
   onQualityChange?.(qualityLabel);
 
   const signalReady = () => {
-    if (readyDispatched) {
-      return;
-    }
-
-    readyDispatched = true;
+    if (readyFired) return;
+    readyFired = true;
+    state.entranceReady = true;
     onReady?.(qualityLabel);
   };
 
-  const updateLoaderProgress = (value) => {
-    const progress = clamp(Math.round(value), 0, 100);
-    const phaseLabel =
-      loaderPhases.find((phase) => progress <= phase.threshold)?.label ??
-      loaderPhases[loaderPhases.length - 1].label;
-
-    if (loaderElements.phase) {
-      loaderElements.phase.textContent = phaseLabel;
-    }
-
-    if (loaderElements.percentage) {
-      loaderElements.percentage.textContent = `${progress}%`;
-    }
-
-    if (loaderElements.track) {
-      loaderElements.track.setAttribute("aria-valuenow", String(progress));
-    }
-
-    if (loaderElements.fill) {
-      loaderElements.fill.style.transform = `scaleX(${progress / 100})`;
-    }
+  const updateLoader = (val) => {
+    const p = clamp(Math.round(val), 0, 100);
+    const label = loaderPhases.find((ph) => p <= ph.threshold)?.label ?? "Field stabilized";
+    if (loaderEls.phase) loaderEls.phase.textContent = label;
+    if (loaderEls.percentage) loaderEls.percentage.textContent = `${p}%`;
+    if (loaderEls.track) loaderEls.track.setAttribute("aria-valuenow", String(p));
+    if (loaderEls.fill) loaderEls.fill.style.transform = `scaleX(${p / 100})`;
   };
 
-  const runLoaderSequence = () => {
-    if (
-      !loaderElements.container ||
-      !loaderElements.phase ||
-      !loaderElements.percentage ||
-      !loaderElements.track ||
-      !loaderElements.fill
-    ) {
-      entrance.active = true;
+  const runLoader = () => {
+    if (!loaderEls.container) {
       signalReady();
       return;
     }
-
-    const durationMs = reducedMotion ? 1500 : 1850;
-    const startTime = performance.now();
-
-    const step = (timestamp) => {
-      const elapsedMs = timestamp - startTime;
-      const rawProgress = clamp(elapsedMs / durationMs, 0, 1);
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
-
-      updateLoaderProgress(easedProgress * 100);
-
-      if (rawProgress < 1) {
-        loaderFrameId = window.requestAnimationFrame(step);
+    const dur = reducedMotion ? 1200 : 1800;
+    const start = performance.now();
+    const step = (ts) => {
+      const raw = clamp((ts - start) / dur, 0, 1);
+      const eased = 1 - Math.pow(1 - raw, 3);
+      updateLoader(eased * 100);
+      if (raw < 1) {
+        loaderFrameId = requestAnimationFrame(step);
         return;
       }
-
-      updateLoaderProgress(100);
-      loaderElements.container.classList.add("fade-out");
-      entrance.active = true;
+      updateLoader(100);
+      loaderEls.container.classList.add("fade-out");
       signalReady();
     };
-
-    updateLoaderProgress(0);
-    loaderFrameId = window.requestAnimationFrame(step);
+    updateLoader(0);
+    loaderFrameId = requestAnimationFrame(step);
   };
 
-  const getHighlightedIndex = () => motion.hoverIndex ?? motion.previewIndex ?? motion.selectedIndex;
+  /* ─── Interpolation ─── */
+  const lerpVal = (a, b, t) => a + (b - a) * t;
 
-  const setHoverIndex = (index) => {
-    if (motion.hoverIndex === index) {
-      return;
-    }
-
-    motion.hoverIndex = index;
-    canvas.classList.toggle("is-interactive", index !== null);
-
-    if (index === null) {
-      onProjectLeave?.();
-      return;
-    }
-
-    onProjectPreview?.(index);
+  const getCameraFromScroll = (progress) => {
+    const kf = CAMERA_KEYFRAMES;
+    const totalSegments = kf.length - 1;
+    const segProgress = progress * totalSegments;
+    const segIndex = Math.floor(clamp(segProgress, 0, totalSegments - 0.001));
+    const segT = clamp(segProgress - segIndex, 0, 1);
+    const smoothT = segT * segT * (3 - 2 * segT);
+    const a = kf[segIndex];
+    const b = kf[segIndex + 1] || a;
+    return {
+      x: lerpVal(a.x, b.x, smoothT),
+      y: lerpVal(a.y, b.y, smoothT),
+      z: lerpVal(a.z, b.z, smoothT),
+      lookX: lerpVal(a.lookX, b.lookX, smoothT),
+      lookY: lerpVal(a.lookY, b.lookY, smoothT),
+      lookZ: lerpVal(a.lookZ, b.lookZ, smoothT),
+    };
   };
 
-  const setSelectedIndex = (index, emit = true) => {
-    if (!projects[index]) {
-      return;
-    }
-
-    motion.selectedIndex = index;
-    motion.focusYaw = projectLayout[index]?.focusYaw ?? 0;
-
-    if (emit) {
-      onProjectSelect?.(index);
-    }
+  const getFocusedProject = (progress) => {
+    const totalSections = projects.length + 2;
+    const sectionSize = 1 / totalSections;
+    const projectStart = sectionSize;
+    if (progress < projectStart) return -1;
+    const projectProgress = (progress - projectStart) / (sectionSize * projects.length);
+    const idx = Math.floor(projectProgress * projects.length);
+    if (idx >= projects.length) return -1;
+    return idx;
   };
 
-  const resize = () => {
-    const width = canvas.clientWidth || window.innerWidth;
-    const height = canvas.clientHeight || window.innerHeight;
-
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  };
-
-  const resizeObserver = new ResizeObserver(() => {
-    resize();
-  });
-  resizeObserver.observe(canvas);
-  window.addEventListener("resize", resize);
-  resize();
-
-  const getPointerFromEvent = (event) => {
-    const rect = canvas.getBoundingClientRect();
-
-    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
-  };
-
-  const pickNode = () => {
-    raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(raycastTargets, false)[0];
-    return hit ? hit.object.userData.projectIndex : null;
-  };
-
-  const handlePointerMove = (event) => {
-    getPointerFromEvent(event);
-
-    if (motion.dragging && event.pointerId === motion.dragPointerId) {
-      const deltaX = event.clientX - motion.lastX;
-      const deltaY = event.clientY - motion.lastY;
-
-      motion.lastX = event.clientX;
-      motion.lastY = event.clientY;
-      motion.dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
-      motion.yawOffset += deltaX * 0.0048;
-      motion.pitchOffset = clamp(motion.pitchOffset + deltaY * 0.0032, -0.35, 0.35);
-      return;
-    }
-
-    motion.pointerX = pointer.x;
-    motion.pointerY = pointer.y;
-
-    if (!supportsFinePointer && event.pointerType !== "mouse") {
-      return;
-    }
-
-    setHoverIndex(pickNode());
-  };
-
-  const handlePointerDown = (event) => {
-    motion.dragging = true;
-    motion.dragPointerId = event.pointerId;
-    motion.dragDistance = 0;
-    motion.lastX = event.clientX;
-    motion.lastY = event.clientY;
-    canvas.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerUp = (event) => {
-    if (event.pointerId !== motion.dragPointerId) {
-      return;
-    }
-
-    motion.dragging = false;
-    motion.dragPointerId = null;
-
-    if (canvas.hasPointerCapture(event.pointerId)) {
-      canvas.releasePointerCapture(event.pointerId);
-    }
-
-    if (motion.dragDistance > 8) {
-      return;
-    }
-
-    getPointerFromEvent(event);
-    const hitIndex = pickNode();
-
-    if (hitIndex === null) {
-      return;
-    }
-
-    setSelectedIndex(hitIndex);
-    onProjectOpen?.(hitIndex);
-  };
-
-  const handlePointerLeave = () => {
-    motion.pointerX = 0;
-    motion.pointerY = 0;
-
-    if (!motion.dragging) {
-      setHoverIndex(null);
-    }
-  };
-
-  canvas.addEventListener("pointermove", handlePointerMove, { passive: true });
-  canvas.addEventListener("pointerdown", handlePointerDown);
-  canvas.addEventListener("pointerup", handlePointerUp);
-  canvas.addEventListener("pointercancel", handlePointerUp);
-  canvas.addEventListener("pointerleave", handlePointerLeave);
+  /* ═══ ANIMATE LOOP ═══ */
+  const targetScaleVec = new THREE.Vector3();
 
   const animate = () => {
     const delta = clock.getDelta();
     const elapsed = clock.elapsedTime;
-    const highlightedIndex = getHighlightedIndex();
-    const idleDrift = reducedMotion ? 0 : Math.sin(elapsed * 0.18) * 0.06;
-    const targetYaw = motion.focusYaw + motion.yawOffset + idleDrift;
-    const targetPitch = clamp(
-      motion.pitchOffset + (supportsFinePointer ? motion.pointerY * 0.08 : 0),
-      -0.35,
-      0.35
+
+    // Camera from scroll
+    const cam = getCameraFromScroll(state.scrollProgress);
+
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, cam.x, 0.05);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, cam.y, 0.05);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, cam.z, 0.05);
+
+    // Pointer parallax
+    if (finePointer) {
+      camera.position.x += state.pointerX * 0.12;
+      camera.position.y += state.pointerY * 0.06;
+    }
+
+    // Smooth lookAt
+    lookTarget.set(cam.lookX, cam.lookY, cam.lookZ);
+    currentLookTarget.lerp(lookTarget, 0.04);
+    camera.lookAt(currentLookTarget);
+
+    // Follow light tracks camera
+    followLight.position.set(
+      camera.position.x - 1.5,
+      camera.position.y + 1.5,
+      camera.position.z - 2
     );
 
-    world.rotation.y = THREE.MathUtils.lerp(world.rotation.y, targetYaw, 0.05);
-    world.rotation.x = THREE.MathUtils.lerp(world.rotation.x, targetPitch, 0.05);
+    // Focused project
+    const focusIdx = getFocusedProject(state.scrollProgress);
+    state.focusedIndex = focusIdx;
 
-    cameraRig.position.x = THREE.MathUtils.lerp(
-      cameraRig.position.x,
-      supportsFinePointer ? motion.pointerX * 0.45 : 0,
-      0.05
-    );
-    cameraRig.position.y = THREE.MathUtils.lerp(
-      cameraRig.position.y,
-      supportsFinePointer ? motion.pointerY * 0.28 : 0,
-      0.05
-    );
-    camera.lookAt(0, 0.05, 0);
+    // Particle drift
+    particles.rotation.y += delta * 0.005;
+    particles.position.y = Math.sin(elapsed * 0.1) * 0.15;
 
-    core.rotation.y += delta * (reducedMotion ? 0.06 : 0.18);
-    core.rotation.x = Math.sin(elapsed * 0.28) * 0.04;
-    orbitalRing.rotation.z += delta * 0.14;
-    outerRing.rotation.z -= delta * 0.06;
-    particleField.rotation.y += delta * 0.01;
+    // Grid subtle breathing
+    gridGroup.position.y = gridY + Math.sin(elapsed * 0.15) * 0.02;
 
-    projectNodes.forEach((node, index) => {
-      const emphasis = index === highlightedIndex;
-      const {
-        mesh,
-        edgeLines,
-        aura,
-        orbit,
-        sensorHead,
-        sensorHalo,
-        shardCluster,
-        baseY,
-        floatPhase,
-        floatSpeed,
-        spinSpeed,
-      } = node.userData;
+    // Nodes
+    nodes.forEach((node) => {
+      const d = node.userData;
+      const isHover = d.isHovered;
+      const isFocus = d.index === focusIdx;
+      const isAny = isHover || isFocus;
 
-      node.position.y = baseY + Math.sin(elapsed * floatSpeed + floatPhase) * (reducedMotion ? 0.02 : 0.06);
-      node.rotation.y += delta * spinSpeed;
-      node.rotation.x = Math.sin(elapsed * 0.42 + floatPhase) * 0.05;
+      // Idle rotation — NEVER static
+      node.rotation.y += delta * d.spinSpeed * (isAny ? 3.5 : 1);
+      node.rotation.x = Math.sin(elapsed * 0.25 + d.floatPhase) * 0.06;
 
-      mesh.material.emissiveIntensity = THREE.MathUtils.lerp(
-        mesh.material.emissiveIntensity,
-        emphasis ? 1.1 : 0.28,
-        0.08
-      );
+      // Floating
+      const floatAmp = reducedMotion ? 0.01 : 0.06;
+      node.position.y = d.baseY + Math.sin(elapsed * d.floatSpeed + d.floatPhase) * floatAmp;
 
-      edgeLines.material.opacity = THREE.MathUtils.lerp(edgeLines.material.opacity, emphasis ? 0.7 : 0.22, 0.08);
-      aura.material.opacity = THREE.MathUtils.lerp(aura.material.opacity, emphasis ? 0.64 : 0.18, 0.08);
-      orbit.material.opacity = THREE.MathUtils.lerp(orbit.material.opacity, emphasis ? 0.28 : 0.1, 0.08);
-      orbit.rotation.z += delta * (emphasis ? 0.55 : 0.22);
-
-      if (sensorHalo) {
-        sensorHalo.material.opacity = THREE.MathUtils.lerp(
-          sensorHalo.material.opacity,
-          emphasis ? 0.4 : 0.16,
-          0.08
-        );
-        sensorHalo.rotation.z += delta * (emphasis ? 0.9 : 0.38);
-      }
-
-      if (sensorHead) {
-        sensorHead.material.opacity = THREE.MathUtils.lerp(
-          sensorHead.material.opacity,
-          emphasis ? 1 : 0.84,
-          0.08
-        );
-      }
-
-      if (shardCluster?.children?.length) {
-        shardCluster.rotation.y += delta * (emphasis ? 0.54 : 0.24);
-        shardCluster.rotation.x = Math.sin(elapsed * 0.45 + floatPhase) * 0.12;
-
-        shardCluster.children.forEach((shard) => {
-          shard.rotation.x += delta * shard.userData.spinRate;
-          shard.rotation.y += delta * shard.userData.spinRate * 0.65;
-          shard.position.y = shard.userData.baseY + Math.sin(elapsed * 0.9 + shard.userData.wobbleOffset) * 0.05;
-        });
-      }
-
-      const revealScale = entrance.active ? 1 : 0;
-      const emphasisScale = revealScale === 1 && node.scale.x > 0.98 && emphasis ? 1.08 : 1;
-
+      // Scale: entrance + interaction feedback
+      const scaleVal = state.entranceReady ? (isHover ? 1.18 : isFocus ? 1.1 : 1) : 0;
       node.scale.lerp(
-        targetScale.setScalar(revealScale * emphasisScale),
-        entrance.active ? (emphasis ? 0.14 : 0.1) : 0.18
+        targetScaleVec.setScalar(scaleVal),
+        state.entranceReady ? 0.05 : 0.1
       );
+
+      // Emissive — always slightly visible, RED on interaction
+      const baseEmissive = 0.3;
+      const targetEmissive = isHover ? 1.2 : isFocus ? 0.8 : baseEmissive;
+      d.mat.emissiveIntensity = THREE.MathUtils.lerp(d.mat.emissiveIntensity, targetEmissive, 0.06);
+      d.mat.emissive.setHex(isAny ? 0xff3b30 : 0x1a0505);
+
+      // Edge glow
+      d.edgeMat.opacity = THREE.MathUtils.lerp(d.edgeMat.opacity, isAny ? 0.6 : 0.15, 0.06);
+      d.edgeMat.color.setHex(isAny ? 0xff3b30 : new THREE.Color(d.project.accent).getHex());
+
+      // Aura — always a subtle glow, stronger on interaction
+      d.auraMat.opacity = THREE.MathUtils.lerp(d.auraMat.opacity, isHover ? 0.6 : isFocus ? 0.35 : 0.08, 0.05);
+
+      // Orbits
+      d.orbitMat.opacity = THREE.MathUtils.lerp(d.orbitMat.opacity, isAny ? 0.25 : 0.06, 0.05);
+      d.orbit.rotation.z += delta * (isAny ? 0.8 : 0.2);
+
+      d.orbit2Mat.opacity = THREE.MathUtils.lerp(d.orbit2Mat.opacity, isAny ? 0.15 : 0.03, 0.05);
+      d.orbit2.rotation.z -= delta * (isAny ? 0.5 : 0.12);
+
+      // Per-node light intensity
+      const targetLightIntensity = isHover ? 3 : isFocus ? 1.8 : 0.8;
+      d.nodeLight.intensity = THREE.MathUtils.lerp(d.nodeLight.intensity, targetLightIntensity, 0.06);
     });
 
     renderer.render(scene, camera);
   };
 
+  /* ─── Visibility ─── */
   const handleVisibility = () => {
     if (document.hidden) {
       renderer.setAnimationLoop(null);
-      return;
+    } else {
+      clock.getDelta();
+      renderer.setAnimationLoop(animate);
     }
-
-    clock.getDelta();
-    renderer.setAnimationLoop(animate);
   };
-
   document.addEventListener("visibilitychange", handleVisibility);
 
   renderer.setAnimationLoop(animate);
-  runLoaderSequence();
+  runLoader();
 
+  /* ─── Public API ─── */
   return {
-    selectProject(index) {
-      setSelectedIndex(index, false);
-      motion.previewIndex = null;
+    setScrollProgress(p) {
+      state.scrollProgress = clamp(p, 0, 1);
     },
-    setPreview(index) {
-      motion.previewIndex = index;
+
+    getFocusedIndex() {
+      return state.focusedIndex;
     },
-    clearPreview() {
-      motion.previewIndex = null;
-    },
+
     destroy() {
       renderer.setAnimationLoop(null);
-      resizeObserver.disconnect();
-
-      if (loaderFrameId !== null) {
-        window.cancelAnimationFrame(loaderFrameId);
-      }
-
+      resizeObs.disconnect();
+      if (loaderFrameId !== null) cancelAnimationFrame(loaderFrameId);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
-
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerdown", handlePointerDown);
-      canvas.removeEventListener("pointerup", handlePointerUp);
-      canvas.removeEventListener("pointercancel", handlePointerUp);
       canvas.removeEventListener("pointerleave", handlePointerLeave);
-
-      trackedGeometries.forEach((geometry) => geometry.dispose());
-      trackedMaterials.forEach((material) => material.dispose());
-      trackedTextures.forEach((texture) => texture.dispose());
-
+      trackedGeo.forEach((g) => g.dispose());
+      trackedMat.forEach((m) => m.dispose());
+      trackedTex.forEach((t) => t.dispose());
       renderer.dispose();
     },
   };
