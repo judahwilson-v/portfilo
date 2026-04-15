@@ -43,13 +43,19 @@
 }
 
 .heading-masked-reveal[data-variable-proximity] .heading-mask-token {
-  font-variation-settings: "wght" 520;
-  font-weight: 520;
+  font-variation-settings: "wght" 420;
+  font-weight: 420;
   will-change: transform, opacity, font-variation-settings, font-weight;
 }
 
 .heading-masked-reveal.heading-variable-proximity {
   font-synthesis-weight: none;
+}
+
+.heading-masked-reveal--timeline.heading-variable-proximity .heading-mask-token {
+  transition:
+    font-variation-settings 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    font-weight 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .heading-masked-reveal.is-revealed .heading-mask-token {
