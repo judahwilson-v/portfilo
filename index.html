@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@500;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400..800&display=swap"
     rel="stylesheet"
   />
   <link
@@ -187,9 +187,9 @@
               data-cursor-mode="focus"
               data-cursor-reveal="Big type is not a gimmick here. It is the entire hierarchy."
             >
-              <span class="hero-line"><span class="hero-line-inner">Judah</span></span>
-              <span class="hero-line"><span class="hero-line-inner">Vijai</span></span>
-              <span class="hero-line"><span class="hero-line-inner">Wilson</span></span>
+              <span class="hero-line"><span class="hero-line-inner hero-line-dither" data-text="Judah">Judah</span></span>
+              <span class="hero-line"><span class="hero-line-inner hero-line-dither" data-text="Vijai">Vijai</span></span>
+              <span class="hero-line"><span class="hero-line-inner hero-line-dither" data-text="Wilson">Wilson</span></span>
             </h1>
             <p class="hero-tagline" data-hero-copy>
               I'm a selectively skilled student developer with strong focus on producing high quality & impactful digital experiences.
@@ -448,13 +448,18 @@
               <h2
                 class="contact-title"
                 data-masked-heading
-                data-masked-heading-unit="word"
+                data-masked-heading-unit="char"
                 data-masked-heading-behavior="scroll"
+                data-variable-proximity
+                data-variable-proximity-radius="132"
+                data-variable-proximity-falloff="linear"
+                data-variable-proximity-from="'wght' 520"
+                data-variable-proximity-to="'wght' 800"
               >I make websites feel alive without making them confusing.</h2>
               <p class="contact-subtitle">
                 Mostly portfolio sites, experiments, and product UI where motion actually helps instead of just showing off.
               </p>
-              <p class="contact-hint">Same idea as the about section: hover the text and the second version reveals through it.</p>
+              <p class="contact-hint">Move across the headline and the letters pull weight toward your cursor.</p>
             </div>
 
             <div class="contact-socials">
