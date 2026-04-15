@@ -1,11 +1,17 @@
-import gsap from "https://esm.sh/gsap@3.13.0";
-import { ScrollTrigger } from "https://esm.sh/gsap@3.13.0/ScrollTrigger";
-import Lenis from "https://esm.sh/lenis@1.3.4";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-export const coarsePointer = window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches;
+const canUseDOM = typeof window !== "undefined";
+
+export const reducedMotion = canUseDOM
+  ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  : false;
+export const coarsePointer = canUseDOM
+  ? window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches
+  : false;
 
 export const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 export const withScroller = (scroller, config = {}) => ({ ...config, scroller });
@@ -46,8 +52,33 @@ export const createSmoothScroller = ({
   const lenis = new Lenis(lenisOptions);
 
   let frameId = 0;
+  let running = false;
+
+  const stopRaf = () => {
+    if (!running) {
+      return;
+    }
+
+    running = false;
+    window.cancelAnimationFrame(frameId);
+    frameId = 0;
+  };
+
   const raf = (time) => {
+    if (!running) {
+      return;
+    }
+
     lenis.raf(time);
+    frameId = window.requestAnimationFrame(raf);
+  };
+
+  const startRaf = () => {
+    if (running) {
+      return;
+    }
+
+    running = true;
     frameId = window.requestAnimationFrame(raf);
   };
 
@@ -78,12 +109,23 @@ export const createSmoothScroller = ({
     lenis.on("scroll", onScroll);
   }
 
-  frameId = window.requestAnimationFrame(raf);
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      stopRaf();
+      return;
+    }
+
+    startRaf();
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  startRaf();
 
   return {
     lenis,
     destroy() {
-      window.cancelAnimationFrame(frameId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stopRaf();
       lenis.destroy();
     },
   };

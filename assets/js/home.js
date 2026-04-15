@@ -13,8 +13,12 @@ import { bindCursorMaskReveal } from "./cursor-mask-reveal.js";
 import { createPortfolioSound } from "./site-audio.js";
 import { createSignalCursor } from "./site-cursor.js";
 
-const root = document.documentElement;
-const desktopGatewayQuery = window.matchMedia("(min-width: 980px)");
+const root = typeof document !== "undefined" ? document.documentElement : null;
+const desktopGatewayQuery =
+  typeof window !== "undefined"
+    ? window.matchMedia("(min-width: 980px)")
+    : { matches: false };
+let activeHomeCleanup = null;
 
 /* ─── Utilities ─── */
 
@@ -119,8 +123,15 @@ const createDynamicFavicon = () => {
   };
 
   const setRunning = (v) => { if (v === running) return; running = v; if (running) { lastTime = 0; frameId = requestAnimationFrame(render); } else cancelAnimationFrame(frameId); };
-  document.addEventListener("visibilitychange", () => setRunning(!document.hidden));
+  const handleVisibilityChange = () => setRunning(!document.hidden);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
   frameId = requestAnimationFrame(render);
+
+  return () => {
+    cancelAnimationFrame(frameId);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    canvas.remove();
+  };
 };
 
 /* ─── Scene focus system ─── */
@@ -560,8 +571,10 @@ const setupInfiniteHomepage = () => {
 
 /* ─── Boot ─── */
 
-const bootHomepage = () => {
-  createDynamicFavicon();
+export const initHomePage = () => {
+  activeHomeCleanup?.();
+
+  const destroyFavicon = createDynamicFavicon();
 
   const sound = createPortfolioSound({
     menuRoot: document.querySelector("[data-sound-menu]"),
@@ -579,11 +592,17 @@ const bootHomepage = () => {
 
   const homepage = setupInfiniteHomepage();
 
-  window.addEventListener("pagehide", () => {
+  const destroy = () => {
     homepage?.destroy();
     cursor?.destroy();
     sound?.destroy();
-  }, { once: true });
-};
+    destroyFavicon?.();
 
-bootHomepage();
+    if (activeHomeCleanup === destroy) {
+      activeHomeCleanup = null;
+    }
+  };
+
+  activeHomeCleanup = destroy;
+  return destroy;
+};

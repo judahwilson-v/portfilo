@@ -9,16 +9,16 @@ import { createPortfolioSound } from "../assets/js/site-audio.js";
 import { createSignalCursor } from "../assets/js/site-cursor.js";
 import { PROJECTS } from "./projects.js";
 
-window.__experienceModuleReached = true;
-window.dispatchEvent(new CustomEvent("experience:module-entered"));
-
 const state = {
   scene: null,
   sound: null,
   cursor: null,
   overlayActive: false,
   currentFocus: -1,
+  overlayHideTimeout: 0,
 };
+
+let activeExperienceCleanup = null;
 
 /* ─── DOM references ─── */
 const getElements = () => ({
@@ -42,6 +42,103 @@ const getElements = () => ({
 
 let elements;
 
+const initExperienceDiagnostics = () => {
+  const diagnosticsPanel = document.getElementById("experience-diagnostics");
+  const diagnosticsOutput = document.getElementById("experience-diagnostic-output");
+  const diagnosticsSummary = document.getElementById("experience-diagnostics-summary");
+
+  const setSummary = (message) => {
+    if (diagnosticsSummary) diagnosticsSummary.textContent = message;
+  };
+
+  const showDiagnostics = () => {
+    if (diagnosticsPanel) diagnosticsPanel.hidden = false;
+  };
+
+  const appendDiagnostic = (message, level = "info") => {
+    if (!diagnosticsOutput) return;
+    if (diagnosticsOutput.dataset.empty === "true") {
+      diagnosticsOutput.textContent = "";
+      diagnosticsOutput.dataset.empty = "false";
+    }
+    const line = document.createElement("div");
+    line.className = `diagnostic-line diagnostic-line-${level}`;
+    line.textContent = message;
+    diagnosticsOutput.append(line);
+    if (level === "error" || level === "warn") showDiagnostics();
+  };
+
+  const formatErrorDetail = (value) => {
+    if (value instanceof Error) return value.stack || value.message;
+    if (typeof value === "string") return value;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  };
+
+  setSummary("Watching module delivery and runtime failures.");
+  appendDiagnostic("1. HTML Parsed successfully.", "ok");
+  appendDiagnostic(
+    `ES module support detected: ${"noModule" in document.createElement("script")}.`,
+    "info"
+  );
+  appendDiagnostic("Bundled module delivery active.", "info");
+  appendDiagnostic(
+    `window.WebGLRenderingContext present: ${Boolean(window.WebGLRenderingContext)}.`,
+    window.WebGLRenderingContext ? "info" : "error"
+  );
+
+  window.__experienceDiagnostics = {
+    push(message, level = "info") {
+      appendDiagnostic(message, level);
+    },
+  };
+
+  window.__experienceModuleReached = true;
+  appendDiagnostic("experience.js executed and reached module entry.", "ok");
+
+  const previousOnError = window.onerror;
+  const previousOnUnhandledRejection = window.onunhandledrejection;
+
+  const handleWindowError = (event) => {
+    if (event.target && event.target !== window) {
+      const target = event.target;
+      const resourceUrl = target.currentSrc || target.src || target.href || "(inline resource)";
+      const tagName = target.tagName ? target.tagName.toLowerCase() : "resource";
+      appendDiagnostic(`Resource load error on <${tagName}>: ${resourceUrl}`, "error");
+    }
+  };
+
+  const handleOnError = (message, source, lineno, colno, error) => {
+    const detail = error ? formatErrorDetail(error) : String(message);
+    const location = source ? ` @ ${source}:${lineno || 0}:${colno || 0}` : "";
+    appendDiagnostic(`window.onerror: ${detail}${location}`, "error");
+    return false;
+  };
+
+  const handleUnhandledRejection = (event) => {
+    appendDiagnostic(`window.onunhandledrejection: ${formatErrorDetail(event.reason)}`, "error");
+  };
+
+  window.addEventListener("error", handleWindowError, true);
+  window.onerror = handleOnError;
+  window.onunhandledrejection = handleUnhandledRejection;
+
+  return () => {
+    delete window.__experienceDiagnostics;
+    delete window.__experienceModuleReached;
+    window.removeEventListener("error", handleWindowError, true);
+    if (window.onerror === handleOnError) {
+      window.onerror = previousOnError;
+    }
+    if (window.onunhandledrejection === handleUnhandledRejection) {
+      window.onunhandledrejection = previousOnUnhandledRejection;
+    }
+  };
+};
+
 /* ─── Hydrate project data into HTML sections ─── */
 const hydrateProjectSections = () => {
   elements.projectSections.forEach((section) => {
@@ -58,14 +155,19 @@ const hydrateProjectSections = () => {
     const blurb = info.querySelector(".exp-project-blurb");
     const cta = info.querySelector(".exp-project-cta");
 
-    if (index) index.textContent = project.index;
-    if (title) title.textContent = project.title;
-    if (category) category.textContent = project.category;
-    if (blurb) blurb.textContent = project.blurb;
+    if (index && index.textContent !== project.index) index.textContent = project.index;
+    if (title && title.textContent !== project.title) title.textContent = project.title;
+    if (category && category.textContent !== project.category) category.textContent = project.category;
+    if (blurb && blurb.textContent !== project.blurb) blurb.textContent = project.blurb;
     if (cta) {
-      cta.href = project.url;
+      if (cta.href !== project.url) {
+        cta.href = project.url;
+      }
       const ctaText = cta.querySelector(".exp-cta-text");
-      if (ctaText) ctaText.textContent = project.ctaLabel ?? "Launch live site";
+      const nextLabel = project.ctaLabel ?? "Launch live site";
+      if (ctaText && ctaText.textContent !== nextLabel) {
+        ctaText.textContent = nextLabel;
+      }
     }
   });
 };
@@ -74,6 +176,11 @@ const hydrateProjectSections = () => {
 const showOverlay = (index) => {
   const project = PROJECTS[index];
   if (!project || !elements.overlay) return;
+
+  if (state.overlayHideTimeout) {
+    clearTimeout(state.overlayHideTimeout);
+    state.overlayHideTimeout = 0;
+  }
 
   state.overlayActive = true;
 
@@ -98,21 +205,25 @@ const hideOverlay = () => {
   if (!elements.overlay) return;
   state.overlayActive = false;
   elements.overlay.classList.remove("is-active");
-  setTimeout(() => {
+  if (state.overlayHideTimeout) {
+    clearTimeout(state.overlayHideTimeout);
+  }
+  state.overlayHideTimeout = window.setTimeout(() => {
     if (!state.overlayActive) {
       elements.overlay.hidden = true;
     }
+    state.overlayHideTimeout = 0;
   }, 420);
 };
 
 /* ─── Scroll → Camera Sync (the core link) ─── */
 const setupScrollCamera = () => {
   const container = elements.scrollContainer;
-  if (!container) return;
+  if (!container) return () => {};
 
   // This ScrollTrigger watches the entire scroll container
   // and maps scroll progress 0→1 to camera position
-  ScrollTrigger.create({
+  const trigger = ScrollTrigger.create({
     trigger: container,
     start: "top top",
     end: "bottom bottom",
@@ -123,15 +234,19 @@ const setupScrollCamera = () => {
       }
     },
   });
+
+  return () => trigger.kill();
 };
 
 /* ─── Section Content Visibility ─── */
 const setupScrollVisibility = () => {
+  const cleanups = [];
+
   elements.projectSections.forEach((section) => {
     const content = section.querySelector(".exp-section-content");
     if (!content) return;
 
-    ScrollTrigger.create({
+    const trigger = ScrollTrigger.create({
       trigger: section,
       start: "top 70%",
       end: "bottom 30%",
@@ -140,6 +255,7 @@ const setupScrollVisibility = () => {
       onEnterBack: () => content.classList.add("is-visible"),
       onLeaveBack: () => content.classList.remove("is-visible"),
     });
+    cleanups.push(() => trigger.kill());
   });
 
   // Exit section
@@ -147,7 +263,7 @@ const setupScrollVisibility = () => {
   if (exitSection) {
     const exitContent = exitSection.querySelector(".exp-section-content");
     if (exitContent) {
-      ScrollTrigger.create({
+      const trigger = ScrollTrigger.create({
         trigger: exitSection,
         start: "top 70%",
         end: "bottom 30%",
@@ -156,8 +272,11 @@ const setupScrollVisibility = () => {
         onEnterBack: () => exitContent.classList.add("is-visible"),
         onLeaveBack: () => exitContent.classList.remove("is-visible"),
       });
+      cleanups.push(() => trigger.kill());
     }
   }
+
+  return () => cleanups.forEach((cleanup) => cleanup());
 };
 
 /* ─── Entrance animation ─── */
@@ -262,18 +381,27 @@ const bootScene = async () => {
     });
 
     // Now that scene is ready, setup scroll → camera sync
-    setupScrollCamera();
+    const destroyScrollCamera = setupScrollCamera();
     // Refresh ScrollTrigger since sections + scene are both ready
     ScrollTrigger.refresh();
 
+    return destroyScrollCamera;
+
   } catch (error) {
     showFallback(error);
+    return () => {};
   }
 };
 
 /* ─── Init ─── */
-const initExperience = () => {
+export const initExperiencePage = () => {
+  activeExperienceCleanup?.();
+
+  const destroyDiagnostics = initExperienceDiagnostics();
   elements = getElements();
+  let destroyed = false;
+  let bootSceneCleanup = () => {};
+  let cancelBootSchedule = () => {};
 
   // Sound
   state.sound = createPortfolioSound({
@@ -298,23 +426,27 @@ const initExperience = () => {
   hydrateProjectSections();
 
   // Overlay close
-  elements.overlayClose?.addEventListener("click", () => {
+  const handleOverlayClose = () => {
     hideOverlay();
     state.sound?.play("uiConfirm", { cooldownMs: 200 });
-  });
+  };
 
   // Close overlay on backdrop click
-  elements.overlay?.addEventListener("click", (e) => {
+  const handleOverlayBackdropClick = (e) => {
     if (e.target === elements.overlay) hideOverlay();
-  });
+  };
 
   // Close overlay with Escape
-  document.addEventListener("keydown", (e) => {
+  const handleKeydown = (e) => {
     if (e.key === "Escape" && state.overlayActive) hideOverlay();
-  });
+  };
+
+  elements.overlayClose?.addEventListener("click", handleOverlayClose);
+  elements.overlay?.addEventListener("click", handleOverlayBackdropClick);
+  document.addEventListener("keydown", handleKeydown);
 
   // Setup section visibility triggers
-  setupScrollVisibility();
+  const destroyScrollVisibility = setupScrollVisibility();
 
   // Bind sound/cursor to interactive elements
   const interactiveEls = document.querySelectorAll(
@@ -335,21 +467,56 @@ const initExperience = () => {
   animateEntrance();
 
   // Boot 3D (scroll sync happens after scene is ready)
+  const startBoot = async () => {
+    if (destroyed) {
+      return;
+    }
+
+    const destroyScrollCamera = await bootScene();
+
+    if (destroyed) {
+      destroyScrollCamera?.();
+      return;
+    }
+
+    bootSceneCleanup = destroyScrollCamera ?? (() => {});
+  };
+
   if ("requestIdleCallback" in window) {
-    requestIdleCallback(() => bootScene(), { timeout: 1000 });
+    const idleId = requestIdleCallback(() => {
+      startBoot();
+    }, { timeout: 1000 });
+    cancelBootSchedule = () => cancelIdleCallback(idleId);
   } else {
-    setTimeout(bootScene, 120);
+    const timeoutId = window.setTimeout(startBoot, 120);
+    cancelBootSchedule = () => window.clearTimeout(timeoutId);
   }
+
+  const destroy = () => {
+    destroyed = true;
+    cancelBootSchedule();
+    elements.overlayClose?.removeEventListener("click", handleOverlayClose);
+    elements.overlay?.removeEventListener("click", handleOverlayBackdropClick);
+    document.removeEventListener("keydown", handleKeydown);
+    destroyScrollVisibility();
+    bootSceneCleanup();
+    if (state.overlayHideTimeout) {
+      clearTimeout(state.overlayHideTimeout);
+      state.overlayHideTimeout = 0;
+    }
+    state.scene?.destroy();
+    state.scene = null;
+    state.sound?.destroy();
+    state.sound = null;
+    state.cursor?.destroy();
+    state.cursor = null;
+    destroyDiagnostics?.();
+
+    if (activeExperienceCleanup === destroy) {
+      activeExperienceCleanup = null;
+    }
+  };
+
+  activeExperienceCleanup = destroy;
+  return destroy;
 };
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initExperience, { once: true });
-} else {
-  initExperience();
-}
-
-window.addEventListener("pagehide", () => {
-  state.scene?.destroy();
-  state.sound?.destroy();
-  state.cursor?.destroy();
-});

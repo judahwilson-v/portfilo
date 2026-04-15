@@ -1,7 +1,12 @@
 import { gsap, ScrollTrigger, withScroller } from "./motion-system.js";
 
-const defaultReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const defaultFinePointer = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
+const canUseDOM = typeof window !== "undefined";
+const defaultReducedMotion = canUseDOM
+  ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  : false;
+const defaultFinePointer = canUseDOM
+  ? window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches
+  : false;
 
 const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
 const resolveHeadingUnit = (heading) => heading?.dataset.maskedHeadingUnit === "word" ? "word" : "char";
@@ -66,39 +71,10 @@ const createVariableProximityHeading = (heading, items, { reducedMotion }) => {
   let rafId = 0;
   let frameQueued = false;
   let hasActiveState = false;
-  const headingLabel = heading.getAttribute("aria-label") ?? normalizeText(heading.textContent ?? "");
   const fontVariationSupported = window.CSS?.supports?.("font-variation-settings", "'wght' 500") ?? false;
-  const syneLoaded = Array.from(document.fonts ?? []).some(
-    (fontFace) => fontFace.family?.replace(/["']/g, "") === "Syne" && fontFace.status === "loaded"
-  );
 
   heading.classList.add("heading-variable-proximity");
   items.forEach((item) => applyVariationSettings(item, baseSettings, baseWeight));
-
-  console.info("[variable-proximity] init", {
-    heading: headingLabel,
-    tokens: items.length,
-    radius,
-    falloff,
-    from: baseSettings,
-    to: buildVariationSettings(axes, "toValue"),
-    fontVariationSupported,
-    syneLoaded,
-  });
-
-  document.fonts?.ready?.then(() => {
-    const syneReady = Array.from(document.fonts ?? []).some(
-      (fontFace) => fontFace.family?.replace(/["']/g, "") === "Syne" && fontFace.status === "loaded"
-    );
-
-    if (!fontVariationSupported || !syneReady) {
-      console.warn("[variable-proximity] limited support", {
-        heading: headingLabel,
-        fontVariationSupported,
-        syneLoaded: syneReady,
-      });
-    }
-  });
 
   const calculateFalloff = (distance) => {
     const normalized = Math.min(Math.max(1 - distance / radius, 0), 1);
