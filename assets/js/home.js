@@ -247,7 +247,7 @@ const setupAboutScene = ({ shell }) => {
     });
 
     // Cursor mask reveal for the about paragraph
-    if (surface) {
+    if (surface && !coarsePointer) {
       const ctrl = bindCursorMaskReveal(surface, { coarsePointer, allowTapLock: true });
       if (ctrl) cleanup.push(() => ctrl.destroy());
     }
@@ -340,7 +340,9 @@ const setupGatewayScene = ({ shell }) => {
 
       if (coarsePointer) return;
 
-      const handleEnter = () => { words.forEach((w) => w.classList.toggle("is-dimmed", w !== word)); };
+      const handleEnter = () => {
+        words.forEach((w) => w.classList.toggle("is-dimmed", w !== word));
+      };
       const handleMove = (e) => {
         const rect = word.getBoundingClientRect();
         const mx = (e.clientX - (rect.left + rect.width / 2)) * 0.05;
