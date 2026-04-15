@@ -64,10 +64,12 @@ class SignalCursor {
     this.interactionOverrideMessage = null;
     this.currentTarget = null;
     this.boundToggles = new Map();
+    this.boundTargets = new Map();
     this.magneticElements = new Set();
     this.magneticStates = new Map();
     this.hoverVisits = new WeakMap();
     this.holdTimer = 0;
+    this.frameId = 0;
     this.pointer = {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -85,6 +87,7 @@ class SignalCursor {
     this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerUp = this.handlePointerUp.bind(this);
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
+    this.requestRender = this.requestRender.bind(this);
     this.updateCopyPlacement = this.updateCopyPlacement.bind(this);
 
     this.element = document.createElement("div");
@@ -112,6 +115,12 @@ class SignalCursor {
     window.addEventListener("pointerdown", this.handlePointerDown, { passive: true });
     window.addEventListener("pointerup", this.handlePointerUp, { passive: true });
     window.addEventListener("pointerleave", this.handlePointerLeave);
+  }
+
+  requestRender() {
+    if (!this.supported || !this.enabled || this.frameId) {
+      return;
+    }
 
     this.frameId = window.requestAnimationFrame(this.render);
   }
@@ -124,7 +133,10 @@ class SignalCursor {
     this.pointer.visible = true;
     this.pointer.targetX = event.clientX;
     this.pointer.targetY = event.clientY;
+    this.pointer.x = event.clientX;
+    this.pointer.y = event.clientY;
     this.updateCopyPlacement(event.clientX, event.clientY);
+    this.element.style.transform = `translate3d(${this.pointer.x}px, ${this.pointer.y}px, 0)`;
     this.element.classList.add("is-visible");
   }
 
@@ -179,11 +191,14 @@ class SignalCursor {
       return;
     }
 
+    this.frameId = 0;
     this.pointer.x = this.pointer.targetX;
     this.pointer.y = this.pointer.targetY;
     this.element.style.transform = `translate3d(${this.pointer.x}px, ${this.pointer.y}px, 0)`;
-    this.updateMagneticElements();
-    this.frameId = window.requestAnimationFrame(this.render);
+
+    if (this.updateMagneticElements()) {
+      this.requestRender();
+    }
   }
 
   ensureMagneticState(element) {
@@ -226,6 +241,7 @@ class SignalCursor {
     state.targetX = clamp(x, -state.maxTravel, state.maxTravel);
     state.targetY = clamp(y, -state.maxTravel, state.maxTravel);
     state.active = true;
+    this.requestRender();
   }
 
   releaseMagnetic(element, immediate = false) {
@@ -240,6 +256,7 @@ class SignalCursor {
     state.active = false;
 
     if (!immediate) {
+      this.requestRender();
       return;
     }
 
@@ -251,6 +268,8 @@ class SignalCursor {
   }
 
   updateMagneticElements() {
+    let hasActiveMotion = false;
+
     this.magneticStates.forEach((state, element) => {
       const dx = state.targetX - state.x;
       const dy = state.targetY - state.y;
@@ -276,8 +295,11 @@ class SignalCursor {
         return;
       }
 
+      hasActiveMotion = true;
       element.style.translate = `${state.x.toFixed(2)}px ${state.y.toFixed(2)}px`;
     });
+
+    return hasActiveMotion;
   }
 
   getMessageFromTarget(target) {
@@ -477,6 +499,8 @@ class SignalCursor {
     if (!this.enabled) {
       this.pointer.visible = false;
       this.element.classList.remove("is-visible", "is-pressed");
+      window.cancelAnimationFrame(this.frameId);
+      this.frameId = 0;
       this.clearHoldTimer();
       this.clearTarget();
       this.clearInteractionOverride();
@@ -527,6 +551,10 @@ class SignalCursor {
 
   bindTargets(target) {
     toElements(target).forEach((element) => {
+      if (this.boundTargets.has(element)) {
+        return;
+      }
+
       const isMagnetic = element.hasAttribute("data-magnetic");
 
       if (isMagnetic) {
@@ -572,11 +600,18 @@ class SignalCursor {
       element.addEventListener("pointerleave", handleDeactivate);
       element.addEventListener("blur", handleDeactivate);
 
+      const handlers = {
+        handleActivate,
+        handleDeactivate,
+        handlePointerMove: null,
+      };
+
       if (!isMagnetic) {
+        this.boundTargets.set(element, handlers);
         return;
       }
 
-      element.addEventListener("pointermove", (event) => {
+      handlers.handlePointerMove = (event) => {
         if (!this.enabled) {
           return;
         }
@@ -589,7 +624,10 @@ class SignalCursor {
         const y = clamp(offsetY * 0.18, -maxTravel, maxTravel);
 
         this.setMagneticTarget(element, x, y);
-      });
+      };
+
+      element.addEventListener("pointermove", handlers.handlePointerMove);
+      this.boundTargets.set(element, handlers);
     });
   }
 
@@ -608,6 +646,18 @@ class SignalCursor {
       node.removeEventListener("click", handler);
     });
     this.boundToggles.clear();
+
+    this.boundTargets.forEach((handlers, element) => {
+      element.removeEventListener("pointerenter", handlers.handleActivate);
+      element.removeEventListener("focus", handlers.handleActivate);
+      element.removeEventListener("pointerleave", handlers.handleDeactivate);
+      element.removeEventListener("blur", handlers.handleDeactivate);
+
+      if (handlers.handlePointerMove) {
+        element.removeEventListener("pointermove", handlers.handlePointerMove);
+      }
+    });
+    this.boundTargets.clear();
 
     this.clearHoldTimer();
     this.resetMagneticElements();

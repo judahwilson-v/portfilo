@@ -10,7 +10,8 @@ import {
 } from "./motion-system.js";
 import { createSignalCursor } from "./site-cursor.js";
 
-const root = document.documentElement;
+const root = typeof document !== "undefined" ? document.documentElement : null;
+let activeSecondaryCleanup = null;
 
 const cursorAttributeNames = [
   "data-cursor-label",
@@ -199,6 +200,7 @@ const initLoopShell = (shell) => {
   const { lenis } = scroller;
   let segmentHeight = 0;
   let isResetting = false;
+  let active = true;
 
   const applyMotion = (velocity = 0) => {
     const skew = reducedMotion ? 0 : clamp(velocity * -0.0018, -0.45, 0.45);
@@ -276,6 +278,10 @@ const initLoopShell = (shell) => {
 
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => {
+      if (!active) {
+        return;
+      }
+
       measure();
       ScrollTrigger.refresh();
     }).catch(() => {});
@@ -286,6 +292,7 @@ const initLoopShell = (shell) => {
 
   return {
     destroy() {
+      active = false;
       window.removeEventListener("resize", handleResize);
       ScrollTrigger.removeEventListener("refresh", measure);
       scroller.destroy();
@@ -307,7 +314,9 @@ const initLoopShell = (shell) => {
   };
 };
 
-const initSecondaryPage = () => {
+export const initSecondaryPage = () => {
+  activeSecondaryCleanup?.();
+
   const loops = Array.from(document.querySelectorAll("[data-loop-shell]"))
     .map((shell) => initLoopShell(shell))
     .filter(Boolean);
@@ -323,18 +332,15 @@ const initSecondaryPage = () => {
   cursor.attachToggle(document.querySelectorAll("[data-cursor-toggle]"));
   cursor.bindTargets(document.querySelectorAll("[data-cursor-label]"));
 
-  window.addEventListener(
-    "pagehide",
-    () => {
-      loops.forEach((loop) => loop?.destroy());
-      cursor?.destroy();
-    },
-    { once: true }
-  );
-};
+  const destroy = () => {
+    loops.forEach((loop) => loop?.destroy());
+    cursor?.destroy();
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSecondaryPage, { once: true });
-} else {
-  initSecondaryPage();
-}
+    if (activeSecondaryCleanup === destroy) {
+      activeSecondaryCleanup = null;
+    }
+  };
+
+  activeSecondaryCleanup = destroy;
+  return destroy;
+};

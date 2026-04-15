@@ -13,9 +13,12 @@ import { bindCursorMaskReveal } from "./cursor-mask-reveal.js";
 import { createPortfolioSound } from "./site-audio.js";
 import { createSignalCursor } from "./site-cursor.js";
 
-const root = document.documentElement;
-const loaderSessionKey = "lake-entry-seen";
-const desktopGatewayQuery = window.matchMedia("(min-width: 980px)");
+const root = typeof document !== "undefined" ? document.documentElement : null;
+const desktopGatewayQuery =
+  typeof window !== "undefined"
+    ? window.matchMedia("(min-width: 980px)")
+    : { matches: false };
+let activeHomeCleanup = null;
 
 /* ─── Utilities ─── */
 
@@ -120,34 +123,15 @@ const createDynamicFavicon = () => {
   };
 
   const setRunning = (v) => { if (v === running) return; running = v; if (running) { lastTime = 0; frameId = requestAnimationFrame(render); } else cancelAnimationFrame(frameId); };
-  document.addEventListener("visibilitychange", () => setRunning(!document.hidden));
+  const handleVisibilityChange = () => setRunning(!document.hidden);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
   frameId = requestAnimationFrame(render);
-};
 
-/* ─── Entry gate (loader) ─── */
-
-const setupEntryGate = async () => {
-  const loader = document.querySelector("#site-loader");
-  const phase = document.querySelector("[data-loader-phase]");
-  if (!loader || !phase) return;
-
-  const seen = window.sessionStorage.getItem(loaderSessionKey) === "1";
-  const phases = seen
-    ? ["Re-entering", "Resetting timing", "Opening"]
-    : ["Loading portfolio", "Setting up motion", "Entering site"];
-  const holdTime = seen ? 520 : 1600;
-  const phaseDelay = seen ? 180 : 380;
-
-  loader.hidden = false; phase.textContent = phases[0];
-  let idx = 0;
-  const timer = setInterval(() => { idx = (idx + 1) % phases.length; phase.textContent = phases[idx]; }, phaseDelay);
-
-  await new Promise((r) => setTimeout(r, holdTime));
-  clearInterval(timer);
-  sessionStorage.setItem(loaderSessionKey, "1");
-  loader.classList.add("is-fading");
-  await new Promise((r) => setTimeout(r, reducedMotion ? 120 : 620));
-  loader.hidden = true;
+  return () => {
+    cancelAnimationFrame(frameId);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    canvas.remove();
+  };
 };
 
 /* ─── Scene focus system ─── */
@@ -505,8 +489,6 @@ const setupInfiniteHomepage = () => {
 
   const loopScenes = Array.from(track.querySelectorAll("[data-scene]"));
 
-  const maskedHeadings = initMaskedHeadings({ root: source, scroller: shell, reducedMotion });
-
   const scroller = createSmoothScroller({
     wrapper: shell, content: track,
     duration: reducedMotion ? 0 : 0.92,
@@ -514,6 +496,8 @@ const setupInfiniteHomepage = () => {
   });
 
   if (!scroller) return null;
+
+  const maskedHeadings = initMaskedHeadings({ root: track, scroller: shell, reducedMotion });
 
   const { lenis } = scroller;
   let segmentHeight = 0, isResetting = false;
@@ -587,8 +571,10 @@ const setupInfiniteHomepage = () => {
 
 /* ─── Boot ─── */
 
-const bootHomepage = async () => {
-  createDynamicFavicon();
+export const initHomePage = () => {
+  activeHomeCleanup?.();
+
+  const destroyFavicon = createDynamicFavicon();
 
   const sound = createPortfolioSound({
     menuRoot: document.querySelector("[data-sound-menu]"),
@@ -604,15 +590,19 @@ const bootHomepage = async () => {
   bindHomepageSoundTargets(sound);
   bindHomepageCursorTargets(cursor);
 
-  await setupEntryGate();
-
   const homepage = setupInfiniteHomepage();
 
-  window.addEventListener("pagehide", () => {
+  const destroy = () => {
     homepage?.destroy();
     cursor?.destroy();
     sound?.destroy();
-  }, { once: true });
-};
+    destroyFavicon?.();
 
-bootHomepage();
+    if (activeHomeCleanup === destroy) {
+      activeHomeCleanup = null;
+    }
+  };
+
+  activeHomeCleanup = destroy;
+  return destroy;
+};

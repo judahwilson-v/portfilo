@@ -784,37 +784,23 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 /* ═══════════════════════════════════
    CURSOR OVERRIDES (home)
    ═══════════════════════════════════ */
-body.home-page .signal-cursor[data-mode="launch"] .signal-cursor-ring,
-body.home-page .signal-cursor[data-mode="launch"] .signal-cursor-core,
-body.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-ring,
-body.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-core,
-body.home-page .signal-cursor[data-tone="contact"] .signal-cursor-ring,
-body.home-page .signal-cursor[data-tone="contact"] .signal-cursor-core,
-body.home-page .signal-cursor[data-tone="about"] .signal-cursor-ring,
-body.home-page .signal-cursor[data-tone="about"] .signal-cursor-core,
-html[data-route="home"] .signal-cursor[data-mode="launch"] .signal-cursor-ring,
-html[data-route="home"] .signal-cursor[data-mode="launch"] .signal-cursor-core,
-html[data-route="home"] .signal-cursor[data-tone="gateway"] .signal-cursor-ring,
-html[data-route="home"] .signal-cursor[data-tone="gateway"] .signal-cursor-core,
-html[data-route="home"] .signal-cursor[data-tone="contact"] .signal-cursor-ring,
-html[data-route="home"] .signal-cursor[data-tone="contact"] .signal-cursor-core,
-html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-ring,
-html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-core {
+.home-page .signal-cursor[data-mode="launch"] .signal-cursor-ring,
+.home-page .signal-cursor[data-mode="launch"] .signal-cursor-core,
+.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-ring,
+.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-core,
+.home-page .signal-cursor[data-tone="contact"] .signal-cursor-ring,
+.home-page .signal-cursor[data-tone="contact"] .signal-cursor-core,
+.home-page .signal-cursor[data-tone="about"] .signal-cursor-ring,
+.home-page .signal-cursor[data-tone="about"] .signal-cursor-core {
   filter: none;
 }
 
-body.home-page .signal-cursor[data-mode="focus"] .signal-cursor-copy,
-body.home-page .signal-cursor[data-mode="launch"] .signal-cursor-copy,
-body.home-page .signal-cursor[data-mode="reveal"] .signal-cursor-copy,
-body.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-copy,
-body.home-page .signal-cursor[data-tone="contact"] .signal-cursor-copy,
-body.home-page .signal-cursor[data-tone="about"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-mode="focus"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-mode="launch"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-mode="reveal"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-tone="gateway"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-tone="contact"] .signal-cursor-copy,
-html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
+.home-page .signal-cursor[data-mode="focus"] .signal-cursor-copy,
+.home-page .signal-cursor[data-mode="launch"] .signal-cursor-copy,
+.home-page .signal-cursor[data-mode="reveal"] .signal-cursor-copy,
+.home-page .signal-cursor[data-tone="gateway"] .signal-cursor-copy,
+.home-page .signal-cursor[data-tone="contact"] .signal-cursor-copy,
+.home-page .signal-cursor[data-tone="about"] .signal-cursor-copy {
   border-color: color-mix(in srgb, var(--accent) 30%, white 10%);
 }
 

@@ -1,5 +1,5 @@
 const STORAGE_KEY = "jvw-portfolio-sound-settings-v5";
-const AUDIO_BASE_URL = new URL("../audio/", import.meta.url);
+const AUDIO_BASE_PATH = "/assets/audio/";
 const DEFAULT_SETTINGS = Object.freeze({
   effects: false,
   ambience: false,
@@ -118,6 +118,13 @@ class PortfolioSoundController {
     this.masterToggleButtons = Array.from(document.querySelectorAll("[data-sound-master-toggle]"));
     this.masterStatusNodes = Array.from(document.querySelectorAll("[data-sound-master-status]"));
     this.hasSyncedUi = false;
+    this.boundMasterToggleHandlers = new Map();
+    this.boundSettingChoiceHandlers = new Map();
+    this.boundHoverHandlers = new Map();
+    this.boundActivateHandlers = new Map();
+    this.loopErrorHandlers = new Map();
+    this.summaryClickHandler = null;
+    this.toggleAllClickHandler = null;
 
     this.handleFirstGesture = this.handleFirstGesture.bind(this);
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
@@ -131,11 +138,18 @@ class PortfolioSoundController {
 
   bindMenu() {
     this.masterToggleButtons.forEach((button) => {
-      button.addEventListener("click", (event) => {
+      if (this.boundMasterToggleHandlers.has(button)) {
+        return;
+      }
+
+      const handleClick = (event) => {
         event.preventDefault();
         this.unlock();
         this.setAllEnabled(!hasAnySoundEnabled(this.settings));
-      });
+      };
+
+      button.addEventListener("click", handleClick);
+      this.boundMasterToggleHandlers.set(button, handleClick);
     });
 
     if (!this.menuRoot) {
@@ -155,25 +169,38 @@ class PortfolioSoundController {
       groupButtons.push(button);
       this.settingChoices.set(group, groupButtons);
 
-      button.addEventListener("click", (event) => {
+      if (this.boundSettingChoiceHandlers.has(button)) {
+        return;
+      }
+
+      const handleClick = (event) => {
         event.preventDefault();
         event.stopPropagation();
         this.unlock();
         this.setGroupEnabled(group, value);
-      });
+      };
+
+      button.addEventListener("click", handleClick);
+      this.boundSettingChoiceHandlers.set(button, handleClick);
     });
 
-    this.summary?.addEventListener("click", () => {
-      this.unlock();
-    });
+    if (this.summary && !this.summaryClickHandler) {
+      this.summaryClickHandler = () => {
+        this.unlock();
+      };
+      this.summary.addEventListener("click", this.summaryClickHandler);
+    }
 
-    this.toggleAllButton?.addEventListener("click", (event) => {
-      event.preventDefault();
-      this.unlock();
+    if (this.toggleAllButton && !this.toggleAllClickHandler) {
+      this.toggleAllClickHandler = (event) => {
+        event.preventDefault();
+        this.unlock();
 
-      const hasAnyEnabled = this.settings.effects || this.settings.ambience;
-      this.setAllEnabled(!hasAnyEnabled);
-    });
+        const hasAnyEnabled = this.settings.effects || this.settings.ambience;
+        this.setAllEnabled(!hasAnyEnabled);
+      };
+      this.toggleAllButton.addEventListener("click", this.toggleAllClickHandler);
+    }
 
     document.addEventListener("pointerdown", this.handleDocumentPointerDown);
     document.addEventListener("keydown", this.handleDocumentKeydown);
@@ -337,15 +364,19 @@ class PortfolioSoundController {
       return null;
     }
 
-    const audio = new Audio(new URL(cue.file, AUDIO_BASE_URL).href);
+    const audio = new Audio(`${AUDIO_BASE_PATH}${cue.file}`);
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = cue.volume;
     audio.playsInline = true;
-    audio.addEventListener("error", () => {
+    const handleError = () => {
       this.loopElements.delete(name);
-    });
+      this.loopErrorHandlers.delete(name);
+    };
+
+    audio.addEventListener("error", handleError);
     this.loopElements.set(name, audio);
+    this.loopErrorHandlers.set(name, handleError);
     return audio;
   }
 
@@ -398,7 +429,7 @@ class PortfolioSoundController {
 
     this.cooldowns.set(name, now + cooldownMs);
 
-    const audio = new Audio(new URL(cue.file, AUDIO_BASE_URL).href);
+    const audio = new Audio(`${AUDIO_BASE_PATH}${cue.file}`);
     audio.preload = "auto";
     audio.volume = cue.volume;
     audio.playsInline = true;
@@ -409,21 +440,36 @@ class PortfolioSoundController {
 
   bindHover(target, cueName = "uiHover", cooldownMs = 120) {
     toElements(target).forEach((element) => {
-      element.addEventListener("pointerenter", () => {
+      if (this.boundHoverHandlers.has(element)) {
+        return;
+      }
+
+      const handlePointerEnter = () => {
         this.play(cueName, { cooldownMs });
-      });
-      element.addEventListener("focus", () => {
+      };
+      const handleFocus = () => {
         this.play(cueName, { cooldownMs });
-      });
+      };
+
+      element.addEventListener("pointerenter", handlePointerEnter);
+      element.addEventListener("focus", handleFocus);
+      this.boundHoverHandlers.set(element, { handlePointerEnter, handleFocus });
     });
   }
 
   bindActivate(target, cueName = "uiConfirm", cooldownMs = 180) {
     toElements(target).forEach((element) => {
-      element.addEventListener("click", () => {
+      if (this.boundActivateHandlers.has(element)) {
+        return;
+      }
+
+      const handleClick = () => {
         this.unlock();
         this.play(cueName, { cooldownMs });
-      });
+      };
+
+      element.addEventListener("click", handleClick);
+      this.boundActivateHandlers.set(element, handleClick);
     });
   }
 
@@ -432,6 +478,49 @@ class PortfolioSoundController {
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     document.removeEventListener("pointerdown", this.handleDocumentPointerDown);
     document.removeEventListener("keydown", this.handleDocumentKeydown);
+
+    this.masterToggleButtons.forEach((button) => {
+      const handler = this.boundMasterToggleHandlers.get(button);
+      if (handler) {
+        button.removeEventListener("click", handler);
+      }
+    });
+    this.boundMasterToggleHandlers.clear();
+
+    this.boundSettingChoiceHandlers.forEach((handler, button) => {
+      button.removeEventListener("click", handler);
+    });
+    this.boundSettingChoiceHandlers.clear();
+
+    if (this.summary && this.summaryClickHandler) {
+      this.summary.removeEventListener("click", this.summaryClickHandler);
+    }
+    this.summaryClickHandler = null;
+
+    if (this.toggleAllButton && this.toggleAllClickHandler) {
+      this.toggleAllButton.removeEventListener("click", this.toggleAllClickHandler);
+    }
+    this.toggleAllClickHandler = null;
+
+    this.boundHoverHandlers.forEach((handlers, element) => {
+      element.removeEventListener("pointerenter", handlers.handlePointerEnter);
+      element.removeEventListener("focus", handlers.handleFocus);
+    });
+    this.boundHoverHandlers.clear();
+
+    this.boundActivateHandlers.forEach((handler, element) => {
+      element.removeEventListener("click", handler);
+    });
+    this.boundActivateHandlers.clear();
+
+    this.loopElements.forEach((audio, name) => {
+      const errorHandler = this.loopErrorHandlers.get(name);
+      if (errorHandler) {
+        audio.removeEventListener("error", errorHandler);
+      }
+    });
+    this.loopErrorHandlers.clear();
+
     this.pauseLoops();
     this.loopElements.clear();
   }
