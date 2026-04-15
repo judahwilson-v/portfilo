@@ -1,5 +1,5 @@
 :root {
-  --signal-cursor-accent: var(--accent, var(--xp-accent, #ff3b30));
+  --signal-cursor-accent: var(--accent, var(--xp-accent, #ff1f1f));
   --signal-cursor-accent-cool: var(--accent-cool, var(--xp-accent-alt, #ff6b5e));
   --signal-cursor-accent-warm: var(--accent-warm, #ff8f66);
   --signal-cursor-ink: var(--ink, var(--xp-text, #f4f1eb));
@@ -26,20 +26,24 @@
   line-height: inherit;
 }
 
-.heading-masked-reveal .heading-mask-char {
-  display: inline-block;
+.heading-masked-reveal .heading-mask-token {
+  display: inline-flex;
   transform: translate3d(0, 110%, 0);
   opacity: 0.02;
   transition:
     transform var(--heading-reveal-duration) var(--heading-reveal-ease),
     opacity 620ms ease;
-  transition-delay: calc(var(--char-index) * var(--heading-reveal-stagger));
+  transition-delay: calc(var(--item-index) * var(--heading-reveal-stagger));
   will-change: transform, opacity;
 }
 
-.heading-masked-reveal.is-revealed .heading-mask-char {
+.heading-masked-reveal.is-revealed .heading-mask-token {
   transform: translate3d(0, 0, 0);
   opacity: 1;
+}
+
+.heading-masked-reveal--timeline .heading-mask-token {
+  transition: none;
 }
 
 .heading-masked-reveal--reduced {

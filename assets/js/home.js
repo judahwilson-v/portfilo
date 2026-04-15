@@ -74,6 +74,8 @@ const createDynamicFavicon = () => {
   canvas.hidden = true; canvas.setAttribute("aria-hidden", "true");
   document.body.append(canvas);
 
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ff1f1f";
+
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -106,7 +108,7 @@ const createDynamicFavicon = () => {
     ctx.rotate(sq.angle);
     ctx.fillStyle = "#f4f1eb";
     ctx.fillRect(-sq.size / 2, -sq.size / 2, sq.size, sq.size);
-    ctx.strokeStyle = "#ff3b30";
+    ctx.strokeStyle = accent;
     ctx.strokeRect(-sq.size / 2, -sq.size / 2, sq.size, sq.size);
     ctx.restore();
 

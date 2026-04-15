@@ -52,11 +52,13 @@ const hydrateProjectSections = () => {
     const info = section.querySelector(".exp-project-info");
     if (!info) return;
 
+    const index = info.querySelector(".exp-project-index");
     const title = info.querySelector(".exp-project-title");
     const category = info.querySelector(".exp-project-category");
     const blurb = info.querySelector(".exp-project-blurb");
     const cta = info.querySelector(".exp-project-cta");
 
+    if (index) index.textContent = project.index;
     if (title) title.textContent = project.title;
     if (category) category.textContent = project.category;
     if (blurb) blurb.textContent = project.blurb;

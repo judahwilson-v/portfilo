@@ -1,8 +1,8 @@
-const STORAGE_KEY = "jvw-portfolio-sound-settings-v4";
+const STORAGE_KEY = "jvw-portfolio-sound-settings-v5";
 const AUDIO_BASE_URL = new URL("../audio/", import.meta.url);
 const DEFAULT_SETTINGS = Object.freeze({
   effects: false,
-  ambience: true,
+  ambience: false,
 });
 
 const AUDIO_CUES = Object.freeze({

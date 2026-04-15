@@ -3,12 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Judah Vijai Wilson" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <meta
     name="description"
-    content="Portfolio of Judah Vijai Wilson — student developer from Kochi building digital experiences that stay clean, smooth, and genuinely usable."
+    content="Judah Vijai Wilson is a developer and designer from Kochi building client websites, React interfaces, and clean digital experiences."
   />
   <meta name="theme-color" content="#000000" />
-  <title>Judah Vijai Wilson — Developer & Designer</title>
+  <title>Judah Vijai Wilson | Developer & Designer</title>
+  <link rel="canonical" href="https://portfilo-lake.vercel.app/" />
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Judah Vijai Wilson" />
+  <meta property="og:title" content="Judah Vijai Wilson | Developer & Designer" />
+  <meta property="og:description" content="Judah Vijai Wilson is a developer and designer from Kochi building client websites, React interfaces, and clean digital experiences." />
+  <meta property="og:url" content="https://portfilo-lake.vercel.app/" />
+  <meta property="og:image" content="https://portfilo-lake.vercel.app/assets/hero-portrait.jpeg" />
+  <meta property="og:image:alt" content="Portrait of Judah Vijai Wilson" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Judah Vijai Wilson | Developer & Designer" />
+  <meta name="twitter:description" content="Judah Vijai Wilson is a developer and designer from Kochi building client websites, React interfaces, and clean digital experiences." />
+  <meta name="twitter:image" content="https://portfilo-lake.vercel.app/assets/hero-portrait.jpeg" />
+  <meta name="twitter:image:alt" content="Portrait of Judah Vijai Wilson" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -21,6 +37,49 @@
   />
   <link rel="stylesheet" href="./assets/shared-effects.css" />
   <link rel="stylesheet" href="./home.css" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://portfilo-lake.vercel.app/#person",
+          "name": "Judah Vijai Wilson",
+          "url": "https://portfilo-lake.vercel.app/",
+          "image": "https://portfilo-lake.vercel.app/assets/hero-portrait.jpeg",
+          "jobTitle": "Web Developer and Designer",
+          "description": "Developer and designer from Kochi building client websites, React interfaces, and clean digital experiences.",
+          "email": "mailto:judahvijai@gmail.com",
+          "telephone": "+91 8848717711",
+          "sameAs": [
+            "https://github.com/judahwilson-v",
+            "https://www.linkedin.com/in/judahv/",
+            "https://www.instagram.com/judah.wils0n/"
+          ],
+          "knowsAbout": [
+            "HTML",
+            "CSS",
+            "JavaScript",
+            "React",
+            "Frontend Development",
+            "Web Design",
+            "UI Design"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://portfilo-lake.vercel.app/#website",
+          "url": "https://portfilo-lake.vercel.app/",
+          "name": "Judah Vijai Wilson",
+          "description": "Portfolio of Judah Vijai Wilson, developer and designer.",
+          "publisher": {
+            "@id": "https://portfilo-lake.vercel.app/#person"
+          },
+          "inLanguage": "en-IN"
+        }
+      ]
+    }
+  </script>
   <script>
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
@@ -41,11 +100,11 @@
       <span class="site-loader-ring site-loader-ring-inner"></span>
       <span class="site-loader-dot"></span>
     </div>
-    <h1 class="site-loader-phase" data-loader-phase>Loading portfolio</h1>
+    <p class="site-loader-phase" data-loader-phase>Loading portfolio</p>
     <p class="site-loader-copy">
       Minimal surface up front. Deeper routes waiting underneath.
     </p>
-    <p class="site-loader-note">Sound is ready when you interact. Cursor stays opinionated.</p>
+    <p class="site-loader-note">Sound stays off until you turn it on. Cursor stays opinionated.</p>
   </div>
 
   <!-- Header -->
@@ -94,15 +153,15 @@
           data-sound-summary
           data-sound-toggle-all
           data-magnetic="3"
-          aria-pressed="true"
-          aria-label="Sound on"
-          data-cursor-label="Sound On"
+          aria-pressed="false"
+          aria-label="Sound off"
+          data-cursor-label="Sound Toggle"
           data-cursor-aside="ambient theme and interface effects share one clean toggle."
           data-cursor-mode="focus"
         >
           <span class="sound-toggle-track" aria-hidden="true">
             <span class="sound-toggle-label">Sound</span>
-            <span class="sound-toggle-status" data-sound-status>On</span>
+            <span class="sound-toggle-status" data-sound-status>Off</span>
           </span>
         </button>
       </div>
@@ -240,36 +299,36 @@
 
             <div class="timeline">
               <div class="timeline-item" data-timeline-item
-                data-cursor-label="Current"
-                data-cursor-aside="the one building this portfolio"
-                data-cursor-mode="focus"
-              >
-                <span class="timeline-role">AI-Native Developer</span>
-                <span class="timeline-org">Freelance</span>
-              </div>
-              <div class="timeline-item" data-timeline-item
-                data-cursor-label="Web Work"
-                data-cursor-aside="real clients, real deadlines"
+                data-cursor-label="Freelance"
+                data-cursor-aside="independent client work since 2024"
                 data-cursor-mode="focus"
               >
                 <span class="timeline-role">Freelance Web Developer</span>
-                <span class="timeline-org">Independent</span>
+                <span class="timeline-org">Independent · 2024–present · Built client sites and tools using HTML, CSS, JS, and React.</span>
               </div>
               <div class="timeline-item" data-timeline-item
-                data-cursor-label="Student"
-                data-cursor-aside="class 12, science stream"
+                data-cursor-label="Pupil Leader"
+                data-cursor-aside="student body leadership and school assemblies"
                 data-cursor-mode="focus"
               >
-                <span class="timeline-role">Student Developer</span>
-                <span class="timeline-org">Kochi, Kerala</span>
+                <span class="timeline-role">School Pupil Leader</span>
+                <span class="timeline-org">The Charter School · Jun 2025–present · Elected to lead the student body, coordinate prefects, and front school assemblies.</span>
               </div>
               <div class="timeline-item" data-timeline-item
-                data-cursor-label="Origin"
-                data-cursor-aside="where it all started"
+                data-cursor-label="Cybersecurity"
+                data-cursor-aside="digital safety awareness at school"
                 data-cursor-mode="focus"
               >
-                <span class="timeline-role">Self-Taught Builder</span>
-                <span class="timeline-org">The Internet</span>
+                <span class="timeline-role">Cybersecurity Head</span>
+                <span class="timeline-org">The Charter School · Jun 2024–May 2025 · Led digital safety awareness including password hygiene and device protection.</span>
+              </div>
+              <div class="timeline-item" data-timeline-item
+                data-cursor-label="Started"
+                data-cursor-aside="learned by building since 2022"
+                data-cursor-mode="focus"
+              >
+                <span class="timeline-role">Self-Taught Developer</span>
+                <span class="timeline-org">Started 2022 · Learned through building — HTML to CSS to JS to React, driven by real projects.</span>
               </div>
             </div>
           </div>
@@ -386,7 +445,12 @@
         <section class="scene scene-contact" data-scene data-scene-id="contact" id="contact">
           <div class="scene-stage contact-stage">
             <div class="contact-panel">
-              <h2 class="contact-title" data-masked-heading>I make websites feel alive without making them confusing.</h2>
+              <h2
+                class="contact-title"
+                data-masked-heading
+                data-masked-heading-unit="word"
+                data-masked-heading-behavior="scroll"
+              >I make websites feel alive without making them confusing.</h2>
               <p class="contact-subtitle">
                 Mostly portfolio sites, experiments, and product UI where motion actually helps instead of just showing off.
               </p>

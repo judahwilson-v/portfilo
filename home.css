@@ -9,8 +9,9 @@
   --muted: rgba(244, 241, 235, 0.68);
   --soft: rgba(244, 241, 235, 0.38);
   --line: rgba(244, 241, 235, 0.10);
-  --accent: #ff3b30;
-  --accent-glow: rgba(255, 59, 48, 0.18);
+  --accent-rgb: 255, 31, 31;
+  --accent: rgb(var(--accent-rgb));
+  --accent-glow: rgba(var(--accent-rgb), 0.26);
   --space-x: clamp(1.25rem, 5vw, 5.5rem);
   --chrome-h: 4.2rem;
   --section-gap: clamp(2.5rem, 6vw, 5rem);
@@ -95,7 +96,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .site-loader-ring-outer {
   width: 100%;
   border-top-color: var(--accent);
-  border-right-color: rgba(255,59,48,0.5);
+  border-right-color: rgba(var(--accent-rgb), 0.5);
   animation: loader-spin 2.4s linear infinite;
 }
 
@@ -107,7 +108,13 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .site-loader-ring-inner {
   width: 48%;
-  background: conic-gradient(from 180deg, rgba(255,59,48,0.6), rgba(255,59,48,0.15), transparent 68%, rgba(255,59,48,0.6));
+  background: conic-gradient(
+    from 180deg,
+    rgba(var(--accent-rgb), 0.6),
+    rgba(var(--accent-rgb), 0.15),
+    transparent 68%,
+    rgba(var(--accent-rgb), 0.6)
+  );
   -webkit-mask: radial-gradient(circle, transparent 52%, black 56%);
   mask: radial-gradient(circle, transparent 52%, black 56%);
   animation: loader-spin 3.2s linear infinite;
@@ -115,7 +122,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .site-loader-dot {
   width: 0.7rem; aspect-ratio: 1;
-  background: radial-gradient(circle, var(--ink), rgba(255,59,48,0.3) 64%, transparent 72%);
+  background: radial-gradient(circle, var(--ink), rgba(var(--accent-rgb), 0.3) 64%, transparent 72%);
   box-shadow: 0 0 18px var(--accent-glow);
 }
 
@@ -258,7 +265,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   content: ""; position: absolute;
   left: var(--space-x); right: var(--space-x); bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255,59,48,0.24), transparent 72%);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.24), transparent 72%);
   opacity: calc(0.35 + (var(--scene-focus) * 0.65));
   z-index: 2;
 }
@@ -280,8 +287,10 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .section-header { display: grid; gap: 0.5rem; }
 
 .section-label {
-  color: var(--accent); font-size: 0.68rem;
-  text-shadow: 0 0 0.8rem var(--accent-glow);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-shadow: 0 0 1rem var(--accent-glow);
 }
 
 .section-title {
@@ -354,11 +363,11 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .skill-item:last-child { border-bottom: 1px solid var(--line); }
 
 .skill-item:hover {
-  border-color: rgba(255,59,48,0.2);
+  border-color: rgba(var(--accent-rgb), 0.2);
 }
 
 .skill-item:hover + .skill-item {
-  border-top-color: rgba(255,59,48,0.2);
+  border-top-color: rgba(var(--accent-rgb), 0.2);
 }
 
 .skill-item-title {
@@ -440,7 +449,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .about-surface.is-armed,
 .about-surface:hover,
 .about-surface:focus-visible {
-  filter: drop-shadow(0 1rem 2rem rgba(255,59,48,0.06));
+  filter: drop-shadow(0 1rem 2rem rgba(var(--accent-rgb), 0.06));
 }
 
 .about-hint {
@@ -456,7 +465,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .timeline { display: grid; gap: 0; }
 
 .timeline-item {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; justify-content: space-between; align-items: flex-start;
   gap: 1.5rem;
   padding: clamp(1.2rem, 2.5vw, 1.8rem) 0;
   border-top: 1px solid var(--line);
@@ -464,13 +473,14 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 }
 
 .timeline-item:last-child { border-bottom: 1px solid var(--line); }
-.timeline-item:hover { border-color: rgba(255,59,48,0.2); }
-.timeline-item:hover + .timeline-item { border-top-color: rgba(255,59,48,0.2); }
+.timeline-item:hover { border-color: rgba(var(--accent-rgb), 0.2); }
+.timeline-item:hover + .timeline-item { border-top-color: rgba(var(--accent-rgb), 0.2); }
 
 .timeline-role {
   font-family: "Syne", sans-serif;
   font-size: clamp(1.4rem, 3vw, 2.6rem);
   font-weight: 700; line-height: 1; letter-spacing: -0.04em;
+  flex: 0 1 16ch;
   transition: color 260ms var(--motion-glide);
 }
 
@@ -478,13 +488,35 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .timeline-org {
   color: var(--soft);
-  font-size: clamp(0.68rem, 0.85vw, 0.82rem);
-  letter-spacing: 0.16em; text-transform: uppercase;
-  white-space: nowrap;
+  flex: 1 1 36ch;
+  max-width: min(60ch, 52vw);
+  font-size: clamp(0.84rem, 1vw, 1rem);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: normal;
+  text-align: right;
   transition: color 260ms var(--motion-glide);
 }
 
 .timeline-item:hover .timeline-org { color: var(--muted); }
+
+@media (max-width: 760px) {
+  .timeline-item {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .timeline-role,
+  .timeline-org {
+    flex: initial;
+    max-width: none;
+  }
+
+  .timeline-org {
+    text-align: left;
+  }
+}
 
 /* ═══════════════════════════════════
    GATEWAY — Big words with hover humor
@@ -499,7 +531,11 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .gateway-note {
   max-width: 42rem;
-  color: var(--soft); font-size: 0.82rem; line-height: 1.5;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-shadow: 0 0 1rem var(--accent-glow);
   text-transform: none; letter-spacing: 0.02em;
 }
 
@@ -534,7 +570,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   opacity: calc(0.5 + (var(--gateway-word-focus) * 0.5));
   text-shadow:
     0 0 calc(12px + (var(--gateway-word-focus) * 30px)) rgba(244,241,235, calc(0.08 + (var(--gateway-word-focus) * 0.1))),
-    0 0 calc(20px + (var(--gateway-word-focus) * 40px)) rgba(255,59,48, calc(0.1 + (var(--gateway-word-focus) * 0.18)));
+    0 0 calc(20px + (var(--gateway-word-focus) * 40px)) rgba(var(--accent-rgb), calc(0.1 + (var(--gateway-word-focus) * 0.18)));
   transform: translate3d(
       calc(var(--gateway-word-move-x) + var(--gateway-word-nudge-x)),
       calc(var(--gateway-word-shift) + var(--gateway-word-move-y)),
@@ -557,7 +593,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   color: var(--ink); opacity: 1;
   --gateway-word-nudge-x: 0.18rem;
   --gateway-word-scale: 1.01;
-  text-shadow: 0 0 36px rgba(244,241,235,0.2), 0 0 60px rgba(255,59,48,0.28);
+  text-shadow: 0 0 36px rgba(244,241,235,0.2), 0 0 60px rgba(var(--accent-rgb), 0.28);
 }
 
 .gateway-word:focus-visible { outline: none; }
@@ -597,7 +633,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .gateway-word-hover::after {
   content: ""; flex: 1 1 auto;
   min-width: clamp(4rem, 12vw, 14rem); height: 1px;
-  background: linear-gradient(90deg, rgba(255,59,48,0.7), rgba(255,59,48,0.3) 52%, transparent);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.7), rgba(var(--accent-rgb), 0.3) 52%, transparent);
 }
 
 .gateway-word-hover-copy { display: block; max-width: 16ch; flex: 0 0 auto; }
@@ -699,7 +735,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .social-link:hover,
 .social-link:focus-visible {
   transform: translate3d(0.1rem, 0, 0);
-  border-color: rgba(255,59,48,0.28);
+  border-color: rgba(var(--accent-rgb), 0.28);
 }
 
 .social-label {
