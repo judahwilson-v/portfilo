@@ -37,6 +37,21 @@
   will-change: transform, opacity;
 }
 
+.heading-masked-reveal[data-variable-proximity] .heading-mask-word {
+  padding-inline: 0.06em;
+  margin-inline: -0.06em;
+}
+
+.heading-masked-reveal[data-variable-proximity] .heading-mask-token {
+  font-variation-settings: "wght" 520;
+  font-weight: 520;
+  will-change: transform, opacity, font-variation-settings, font-weight;
+}
+
+.heading-masked-reveal.heading-variable-proximity {
+  font-synthesis-weight: none;
+}
+
 .heading-masked-reveal.is-revealed .heading-mask-token {
   transform: translate3d(0, 0, 0);
   opacity: 1;

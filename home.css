@@ -12,6 +12,12 @@
   --accent-rgb: 255, 31, 31;
   --accent: rgb(var(--accent-rgb));
   --accent-glow: rgba(var(--accent-rgb), 0.26);
+  --hero-red-soft: #ffe2e2;
+  --hero-red-tint: #ff9b9b;
+  --hero-red-mid: #ff4d4d;
+  --hero-red-deep: #b00606;
+  --hero-red-shadow: #260000;
+  --hero-dither-cell: clamp(5px, 0.45vw, 9px);
   --space-x: clamp(1.25rem, 5vw, 5.5rem);
   --chrome-h: 4.2rem;
   --section-gap: clamp(2.5rem, 6vw, 5rem);
@@ -327,10 +333,88 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   line-height: 0.86;
   letter-spacing: -0.06em;
   text-transform: uppercase;
+  isolation: isolate;
+  filter: drop-shadow(0 0 1px rgba(255, 240, 240, 0.12))
+    drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.16));
 }
 
-.hero-line { display: inline-flex; overflow: clip; white-space: nowrap; }
-.hero-line-inner { display: inline-block; will-change: transform; }
+.hero-line {
+  position: relative;
+  display: inline-flex;
+  overflow: clip;
+  white-space: nowrap;
+}
+
+.hero-line-inner {
+  position: relative;
+  display: inline-block;
+  will-change: transform;
+}
+
+.hero-line-dither {
+  color: var(--hero-red-tint);
+  text-shadow:
+    0 0 0.03em rgba(255, 242, 242, 0.65),
+    0 0 0.22em rgba(var(--accent-rgb), 0.28);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero-line-dither {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+  }
+
+  .hero-line-dither::before,
+  .hero-line-dither::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .hero-line-dither::before {
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(255, 244, 244, 0.98) 0 10%, transparent 35%),
+      linear-gradient(
+        180deg,
+        var(--hero-red-soft) 0%,
+        #ffb0b0 16%,
+        var(--hero-red-mid) 42%,
+        var(--hero-red-deep) 74%,
+        var(--hero-red-shadow) 100%
+      );
+    opacity: 0.98;
+  }
+
+  .hero-line-dither::after {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255, 248, 248, 0.92) 0 1.1px, transparent 1.25px),
+      radial-gradient(circle at 65% 70%, rgba(255, 155, 155, 0.72) 0 1.25px, transparent 1.4px),
+      linear-gradient(
+        180deg,
+        rgba(255, 250, 250, 0.92) 0%,
+        rgba(255, 124, 124, 0.85) 28%,
+        rgba(255, 58, 58, 0.86) 52%,
+        rgba(138, 0, 0, 0.92) 100%
+      );
+    background-size:
+      var(--hero-dither-cell) var(--hero-dither-cell),
+      calc(var(--hero-dither-cell) * 1.2) calc(var(--hero-dither-cell) * 1.2),
+      100% 100%;
+    background-position:
+      0 0,
+      calc(var(--hero-dither-cell) * 0.48) calc(var(--hero-dither-cell) * 0.58),
+      0 0;
+    background-blend-mode: screen, screen, normal;
+    opacity: 0.82;
+    mix-blend-mode: screen;
+  }
+}
 
 .hero-tagline {
   max-width: 36rem;

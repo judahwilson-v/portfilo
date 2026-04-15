@@ -1,10 +1,189 @@
 import { gsap, ScrollTrigger, withScroller } from "./motion-system.js";
 
 const defaultReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const defaultFinePointer = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
 
 const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
 const resolveHeadingUnit = (heading) => heading?.dataset.maskedHeadingUnit === "word" ? "word" : "char";
 const resolveHeadingBehavior = (heading) => heading?.dataset.maskedHeadingBehavior === "scroll" ? "scroll" : "once";
+const resolveHeadingProximity = (heading) => heading?.hasAttribute("data-variable-proximity") === true;
+
+const parseVariationSettings = (settingsStr = "") => {
+  return new Map(
+    settingsStr
+      .split(",")
+      .map((setting) => setting.trim())
+      .filter(Boolean)
+      .map((setting) => {
+        const match = setting.match(/['"]?([A-Za-z0-9]{4})['"]?\s*(-?\d*\.?\d+)/);
+        return match ? [match[1], Number.parseFloat(match[2])] : null;
+      })
+      .filter(Boolean)
+  );
+};
+
+const buildVariationSettings = (axes, key) => {
+  return axes.map(({ axis, [key]: value }) => `'${axis}' ${Number(value.toFixed(2))}`).join(", ");
+};
+
+const applyVariationSettings = (node, settings, weightValue = null) => {
+  if (!node) {
+    return;
+  }
+
+  node.style.fontVariationSettings = settings;
+
+  if (weightValue !== null) {
+    node.style.fontWeight = String(weightValue);
+  }
+};
+
+const calculateDistance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+
+const createVariableProximityHeading = (heading, items, { reducedMotion }) => {
+  if (!heading || !items.length || reducedMotion || !defaultFinePointer || !resolveHeadingProximity(heading)) {
+    return () => {};
+  }
+
+  const radius = Number.parseFloat(heading.dataset.variableProximityRadius ?? "120") || 120;
+  const falloff = heading.dataset.variableProximityFalloff ?? "linear";
+  const fromSettings = parseVariationSettings(heading.dataset.variableProximityFrom ?? "'wght' 520");
+  const toSettings = parseVariationSettings(heading.dataset.variableProximityTo ?? "'wght' 800");
+  const axisNames = new Set([...fromSettings.keys(), ...toSettings.keys()]);
+  const axes = Array.from(axisNames).map((axis) => ({
+    axis,
+    fromValue: fromSettings.get(axis) ?? toSettings.get(axis) ?? 0,
+    toValue: toSettings.get(axis) ?? fromSettings.get(axis) ?? 0,
+  }));
+
+  if (!axes.length) {
+    return () => {};
+  }
+
+  const baseSettings = buildVariationSettings(axes, "fromValue");
+  const baseWeight = axes.find(({ axis }) => axis === "wght")?.fromValue ?? null;
+  const pointer = { x: -1e4, y: -1e4 };
+  let rafId = 0;
+  let frameQueued = false;
+  let hasActiveState = false;
+
+  heading.classList.add("heading-variable-proximity");
+  items.forEach((item) => applyVariationSettings(item, baseSettings, baseWeight));
+
+  const calculateFalloff = (distance) => {
+    const normalized = Math.min(Math.max(1 - distance / radius, 0), 1);
+
+    switch (falloff) {
+      case "exponential":
+        return normalized ** 2;
+      case "gaussian":
+        return Math.exp(-((distance / (radius / 2)) ** 2) / 2);
+      case "linear":
+      default:
+        return normalized;
+    }
+  };
+
+  const resetItems = () => {
+    if (!hasActiveState) {
+      return;
+    }
+
+    items.forEach((item) => applyVariationSettings(item, baseSettings, baseWeight));
+    hasActiveState = false;
+  };
+
+  const updateItems = () => {
+    frameQueued = false;
+
+    const headingRect = heading.getBoundingClientRect();
+    const isNearHeading =
+      pointer.x >= headingRect.left - radius &&
+      pointer.x <= headingRect.right + radius &&
+      pointer.y >= headingRect.top - radius &&
+      pointer.y <= headingRect.bottom + radius;
+
+    if (!isNearHeading) {
+      resetItems();
+      return;
+    }
+
+    hasActiveState = true;
+
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const distance = calculateDistance(
+        pointer.x,
+        pointer.y,
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
+
+      if (distance >= radius) {
+        applyVariationSettings(item, baseSettings, baseWeight);
+        return;
+      }
+
+      const proximity = calculateFalloff(distance);
+      const values = axes.map(({ axis, fromValue, toValue }) => ({
+        axis,
+        value: fromValue + (toValue - fromValue) * proximity,
+      }));
+      const settings = values.map(({ axis, value }) => `'${axis}' ${Number(value.toFixed(2))}`).join(", ");
+      const weight = values.find(({ axis }) => axis === "wght")?.value ?? null;
+
+      applyVariationSettings(item, settings, weight);
+    });
+  };
+
+  const queueUpdate = () => {
+    if (frameQueued) {
+      return;
+    }
+
+    frameQueued = true;
+    rafId = window.requestAnimationFrame(updateItems);
+  };
+
+  const handlePointerMove = (event) => {
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+    queueUpdate();
+  };
+
+  const handlePointerLeave = () => {
+    pointer.x = -1e4;
+    pointer.y = -1e4;
+    queueUpdate();
+  };
+
+  const handleTouchMove = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) {
+      return;
+    }
+
+    pointer.x = touch.clientX;
+    pointer.y = touch.clientY;
+    queueUpdate();
+  };
+
+  window.addEventListener("pointermove", handlePointerMove, { passive: true });
+  window.addEventListener("touchmove", handleTouchMove, { passive: true });
+  window.addEventListener("pointerleave", handlePointerLeave);
+  window.addEventListener("resize", queueUpdate);
+  window.addEventListener("scroll", queueUpdate, { passive: true });
+
+  return () => {
+    window.cancelAnimationFrame(rafId);
+    window.removeEventListener("pointermove", handlePointerMove);
+    window.removeEventListener("touchmove", handleTouchMove);
+    window.removeEventListener("pointerleave", handlePointerLeave);
+    window.removeEventListener("resize", queueUpdate);
+    window.removeEventListener("scroll", queueUpdate);
+    resetItems();
+  };
+};
 
 const isHeadingVisible = (heading, scroller, insetRatio = 0.12) => {
   const shellRect = scroller?.getBoundingClientRect() ?? {
@@ -214,11 +393,21 @@ export const initMaskedHeadings = ({
       return () => {};
     }
 
+    const proximityCleanup = createVariableProximityHeading(heading, items, { reducedMotion });
+
     if (behavior === "scroll") {
-      return animateScrollHeading(heading, items, { scroller, unit });
+      const animationCleanup = animateScrollHeading(heading, items, { scroller, unit });
+      return () => {
+        animationCleanup();
+        proximityCleanup();
+      };
     }
 
-    return observeHeading(heading, { scroller, threshold, rootMargin });
+    const observerCleanup = observeHeading(heading, { scroller, threshold, rootMargin });
+    return () => {
+      observerCleanup();
+      proximityCleanup();
+    };
   });
 
   return {
