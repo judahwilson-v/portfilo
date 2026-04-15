@@ -1,7 +1,16 @@
 const STORAGE_KEY = "lake-cursor-enabled";
 
-const supportsSignalCursor = () =>
+const supportsFineHoverPointer = () =>
   window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
+
+const prefersMobileViewport = () =>
+  window.matchMedia("(max-width: 980px)").matches;
+
+const usesCoarsePointer = () =>
+  window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches;
+
+const supportsSignalCursor = () =>
+  supportsFineHoverPointer() && !prefersMobileViewport() && !usesCoarsePointer();
 
 const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
