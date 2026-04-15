@@ -48,7 +48,7 @@ export const PROJECTS = [
     category: "Experimental Interface",
     blurb:
       "A sharper concept build added as a fourth signal in the field, with a colder tone and a more fractured shape language.",
-    url: "https://kl-40-git-main-judahvijai-8414s-projects.vercel.app/",
+    url: "https://kl-40.vercel.app/",
     accent: "#93d8ff",
     glow: "#dff4ff",
     geometry: "dodecahedron",
