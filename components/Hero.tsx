@@ -58,22 +58,14 @@ export function Hero() {
           text-shadow:
             0 0 18px rgba(244, 241, 235, 0.05),
             0 0 42px rgba(244, 241, 235, 0.035);
-          filter: brightness(1);
           transform-origin: left center;
-          transition:
-            transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-            filter 320ms cubic-bezier(0.22, 1, 0.36, 1),
-            text-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1);
-          will-change: transform, filter;
+          transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+          will-change: transform;
         }
 
         .premium-hero-shell:hover .premium-hero-title,
         .premium-hero-shell:focus-within .premium-hero-title {
           transform: scale(1.04);
-          filter: brightness(1.04);
-          text-shadow:
-            0 0 22px rgba(244, 241, 235, 0.08),
-            0 0 48px rgba(244, 241, 235, 0.045);
         }
 
         .premium-hero-title :global(.heading-mask-word) {
@@ -89,15 +81,7 @@ export function Hero() {
             transform var(--heading-reveal-duration) cubic-bezier(0.22, 1, 0.36, 1),
             opacity 620ms ease,
             font-variation-settings 150ms cubic-bezier(0.22, 1, 0.36, 1),
-            font-weight 150ms cubic-bezier(0.22, 1, 0.36, 1),
-            text-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .premium-hero-shell:hover .premium-hero-title :global(.heading-mask-token),
-        .premium-hero-shell:focus-within .premium-hero-title :global(.heading-mask-token) {
-          text-shadow:
-            0 0 16px rgba(244, 241, 235, 0.055),
-            0 0 40px rgba(244, 241, 235, 0.04);
+            font-weight 150ms cubic-bezier(0.22, 1, 0.36, 1);
         }
       `}</style>
     </div>

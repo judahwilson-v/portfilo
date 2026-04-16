@@ -553,7 +553,8 @@ h1, h2, p { margin: 0; }
 }
 
 .exp-hud-hint {
-  animation: hud-pulse 3s ease-in-out infinite;
+  animation: none;
+  opacity: 1;
 }
 
 /* ─── Loader ─── */

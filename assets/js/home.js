@@ -208,7 +208,7 @@ const setupHeroScene = ({ shell }) => {
   if (center) {
     gsap.timeline({
       scrollTrigger: withScroller(shell, { trigger: scene, start: "top top", end: "bottom top", scrub: 0.5 }),
-    }).to([center, tagline].filter(Boolean), { yPercent: -6, opacity: 0.3 }, 0);
+    }).to([center, tagline].filter(Boolean), { yPercent: -6 }, 0);
   }
 
   return null;

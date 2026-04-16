@@ -179,11 +179,11 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .scene {
   position: relative; isolation: isolate; overflow: clip;
   --scene-focus: 0;
-  opacity: calc(0.28 + (var(--scene-focus) * 0.72));
+  opacity: 1;
   transform: scale(calc(0.988 + (var(--scene-focus) * 0.012)));
   transform-origin: center;
-  transition: opacity 320ms linear, transform 380ms var(--motion-spring);
-  will-change: opacity, transform;
+  transition: transform 380ms var(--motion-spring);
+  will-change: transform;
 }
 
 .scene::after {
@@ -409,7 +409,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .about-surface:focus-visible { outline: none; }
 
-.about-copy-stack { display: grid; }
+.about-copy-stack { display: grid; position: relative; }
 
 .about-copy {
   grid-area: 1 / 1;
@@ -429,6 +429,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .about-copy-hover {
   z-index: 2;
+  background: #000;
   color: var(--accent);
   text-shadow: 0 0 1.6rem var(--accent-glow);
   clip-path: circle(0 at var(--text-reveal-x) var(--text-reveal-y));
@@ -445,8 +446,8 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .about-surface.is-armed .about-copy-base,
 .about-surface:focus-visible .about-copy-base {
-  color: rgba(244,241,235,0.14);
-  opacity: 0.38;
+  color: rgba(244,241,235,0.88);
+  opacity: 1;
 }
 
 .about-surface.is-armed,
@@ -569,22 +570,19 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   --text-reveal-size: clamp(12rem, 42vw, 48rem);
   position: relative; display: grid;
   width: max-content; max-width: 100%;
-  color: rgba(244,241,235, calc(0.44 + (var(--gateway-word-focus) * 0.56)));
-  opacity: calc(0.5 + (var(--gateway-word-focus) * 0.5));
+  color: var(--ink);
+  opacity: 1;
   text-shadow:
-    0 0 calc(12px + (var(--gateway-word-focus) * 30px)) rgba(244,241,235, calc(0.08 + (var(--gateway-word-focus) * 0.1))),
-    0 0 calc(20px + (var(--gateway-word-focus) * 40px)) rgba(var(--accent-rgb), calc(0.1 + (var(--gateway-word-focus) * 0.18)));
+    0 0 36px rgba(244,241,235,0.2),
+    0 0 60px rgba(var(--accent-rgb), 0.28);
   transform: translate3d(
       calc(var(--gateway-word-move-x) + var(--gateway-word-nudge-x)),
       calc(var(--gateway-word-shift) + var(--gateway-word-move-y)),
       0
     ) scale(var(--gateway-word-scale));
-  will-change: transform, opacity;
+  will-change: transform;
   transition:
-    transform 280ms var(--motion-spring),
-    color 220ms var(--motion-glide),
-    opacity 220ms linear,
-    text-shadow 320ms var(--motion-glide);
+    transform 280ms var(--motion-spring);
 }
 
 .gateway-word:nth-child(2) { margin-left: clamp(4rem, 10vw, 9rem); }
@@ -593,14 +591,12 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .gateway-word:hover,
 .gateway-word:focus-visible,
 .gateway-word.is-active {
-  color: var(--ink); opacity: 1;
   --gateway-word-nudge-x: 0.18rem;
   --gateway-word-scale: 1.01;
-  text-shadow: 0 0 36px rgba(244,241,235,0.2), 0 0 60px rgba(var(--accent-rgb), 0.28);
 }
 
 .gateway-word:focus-visible { outline: none; }
-.gateway-word.is-dimmed { opacity: 0.28; }
+.gateway-word.is-dimmed { opacity: 1; }
 
 .gateway-word-text {
   grid-area: 1 / 1; display: block;
@@ -616,10 +612,12 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 }
 
 .gateway-word-hover {
-  align-self: center; justify-self: stretch;
+  align-self: center; justify-self: start;
   display: flex; align-items: center;
   gap: clamp(0.8rem, 1.6vw, 1.4rem);
   width: min(100%, clamp(26rem, 56vw, 56rem));
+  padding-inline: 0.2rem;
+  background: #000;
   font-family: "Syne", sans-serif;
   font-size: clamp(1.1rem, 2vw, 1.65rem);
   font-weight: 700; line-height: 0.95;
@@ -651,7 +649,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .gateway-word.is-armed .gateway-word-base,
 .gateway-word:focus-visible .gateway-word-base,
 .gateway-word:hover .gateway-word-base {
-  color: rgba(244,241,235,0.14); opacity: 0.36;
+  color: var(--ink); opacity: 1;
 }
 
 /* ═══════════════════════════════════
@@ -745,7 +743,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   color: var(--soft); font-size: 0.62rem;
 }
 
-.social-value-stack { display: grid; align-items: end; }
+.social-value-stack { display: grid; align-items: end; justify-items: start; }
 
 .social-value {
   grid-area: 1 / 1;
@@ -760,7 +758,9 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 }
 
 .social-value-hover {
+  display: inline-block;
   max-width: 20ch;
+  background: #000;
   color: var(--accent);
   text-shadow: 0 0 1.2rem var(--accent-glow);
   clip-path: circle(0 at var(--text-reveal-x) var(--text-reveal-y));
@@ -778,7 +778,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .social-link.is-armed .social-value-base,
 .social-link:focus-visible .social-value-base {
-  color: rgba(244,241,235,0.14); opacity: 0.36;
+  color: var(--ink); opacity: 1;
 }
 
 /* ═══════════════════════════════════
