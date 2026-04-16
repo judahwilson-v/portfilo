@@ -4,20 +4,115 @@ import type { Metadata } from "next";
 import { HomePageClient } from "@/components/home-page-client";
 import { getBodyHtml, getCssText } from "@/lib/static-html";
 
-const contactPanelPattern =
-  /<div class="contact-panel">[\s\S]*?<\/div>\s*(?=<div class="contact-socials">)/;
+const contactHeadingFallbackScript = String.raw`
+(() => {
+  const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
 
-const getHomePageHtml = () => {
-  const legacyHomeHtml = getBodyHtml("home");
+  const revealHeading = (heading) => {
+    if (!heading || heading.dataset.maskedHeadingPlayed === "true") {
+      return;
+    }
 
-  if (!contactPanelPattern.test(legacyHomeHtml)) {
-    throw new Error("Unable to locate the homepage contact panel for Hero injection.");
+    heading.dataset.maskedHeadingPlayed = "true";
+    requestAnimationFrame(() => {
+      heading.classList.add("is-revealed");
+    });
+  };
+
+  const splitHeading = (heading) => {
+    if (!heading || heading.dataset.maskedHeadingReady === "true") {
+      return;
+    }
+
+    const text = normalizeText(heading.textContent || "");
+
+    if (!text) {
+      return;
+    }
+
+    heading.dataset.maskedHeadingReady = "true";
+    heading.classList.add("heading-masked-reveal");
+    heading.setAttribute("aria-label", text);
+
+    const fragment = document.createDocumentFragment();
+    let itemIndex = 0;
+
+    text.split(" ").forEach((word, wordIndex, words) => {
+      const mask = document.createElement("span");
+      mask.className = "heading-mask-word";
+      mask.setAttribute("aria-hidden", "true");
+
+      const inner = document.createElement("span");
+      inner.className = "heading-mask-word-inner";
+
+      Array.from(word).forEach((character) => {
+        const char = document.createElement("span");
+        char.className = "heading-mask-char heading-mask-token";
+        char.textContent = character;
+        char.style.setProperty("--item-index", String(itemIndex));
+        inner.append(char);
+        itemIndex += 1;
+      });
+
+      mask.append(inner);
+      fragment.append(mask);
+
+      if (wordIndex < words.length - 1) {
+        fragment.append(document.createTextNode(" "));
+      }
+    });
+
+    heading.textContent = "";
+    heading.append(fragment);
+  };
+
+  const boot = () => {
+    const heading = document.querySelector(".scene-contact [data-masked-heading]");
+
+    if (!heading) {
+      return;
+    }
+
+    splitHeading(heading);
+
+    if (!("IntersectionObserver" in window)) {
+      revealHeading(heading);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        revealHeading(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+
+    observer.observe(heading);
+
+    const rect = heading.getBoundingClientRect();
+    const visible = rect.bottom > window.innerHeight * 0.12 && rect.top < window.innerHeight * 0.88;
+
+    if (visible) {
+      revealHeading(heading);
+      observer.unobserve(heading);
+    }
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+    return;
   }
 
-  return legacyHomeHtml.replace(
-    contactPanelPattern,
-    '<div data-home-hero-slot style="display: contents;"></div>',
-  );
+  boot();
+})();
+`;
+
+const getHomePageHtml = () => {
+  return getBodyHtml("home");
 };
 
 export const metadata: Metadata = {
@@ -68,7 +163,8 @@ export default function HomePage() {
       />
       <style dangerouslySetInnerHTML={{ __html: getCssText("home") }} />
       <HomePageClient />
-      <div dangerouslySetInnerHTML={{ __html: homeHtml }} />
+      <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: homeHtml }} />
+      <script dangerouslySetInnerHTML={{ __html: contactHeadingFallbackScript }} />
     </>
   );
 }

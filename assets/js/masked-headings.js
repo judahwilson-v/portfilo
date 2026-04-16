@@ -291,6 +291,30 @@ const revealHeading = (heading) => {
 };
 
 const observeHeading = (heading, { scroller, threshold, rootMargin }) => {
+  if (scroller) {
+    let trigger = null;
+
+    const revealFromScroll = () => {
+      revealHeading(heading);
+      trigger?.kill();
+    };
+
+    trigger = ScrollTrigger.create(
+      withScroller(scroller, {
+        trigger: heading,
+        start: "top 82%",
+        onEnter: revealFromScroll,
+        onEnterBack: revealFromScroll,
+      })
+    );
+
+    if (isHeadingVisible(heading, scroller)) {
+      revealFromScroll();
+    }
+
+    return () => trigger?.kill();
+  }
+
   if (!("IntersectionObserver" in window)) {
     revealHeading(heading);
     return () => {};

@@ -639,6 +639,22 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .gateway-word-hover-copy { display: block; max-width: 16ch; flex: 0 0 auto; }
 
+.gateway-word-hover--clone {
+  align-self: start; justify-self: start;
+  display: block;
+  width: max-content; max-width: none;
+  padding: 0.04em 0.14em;
+  background: #000;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(5.5rem, 14vw, 12rem);
+  font-weight: 700; line-height: 0.82;
+  letter-spacing: -0.08em; text-transform: uppercase;
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
+.gateway-word-hover--clone::after { content: none; }
+
 .gateway-word.is-armed .gateway-word-hover,
 .gateway-word:focus-visible .gateway-word-hover,
 .gateway-word:hover .gateway-word-hover {
@@ -695,13 +711,46 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   align-content: center;
 }
 
-.contact-panel { display: grid; gap: 1rem; max-width: 38rem; }
+.contact-panel { display: grid; gap: 1rem; max-width: 46rem; }
 
 .contact-title {
   max-width: 14ch;
+  color: var(--ink);
   font-family: "Syne", sans-serif;
   font-size: clamp(2.6rem, 6.5vw, 5.5rem);
   font-weight: 800; line-height: 0.9; letter-spacing: -0.06em;
+}
+
+.contact-title[data-react-variable-proximity] {
+  position: relative;
+  display: block;
+  max-width: none;
+  font-family: "Roboto Flex", "Syne", sans-serif;
+  font-synthesis-weight: none;
+}
+
+.contact-title[data-react-variable-proximity] .contact-title-lines {
+  display: grid;
+  gap: 0.06em;
+}
+
+.contact-title[data-react-variable-proximity] .contact-title-line {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+}
+
+.contact-title[data-react-variable-proximity] .variable-proximity {
+  display: inline-block;
+  color: inherit;
+  font: inherit;
+  letter-spacing: -0.02em;
+  line-height: inherit;
+}
+
+.contact-title .heading-mask-token {
+  color: var(--ink);
+  -webkit-text-fill-color: currentColor;
 }
 
 .contact-subtitle {
@@ -886,6 +935,12 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
     font-size: clamp(0.92rem, 4.5vw, 1.12rem);
   }
 
+  .gateway-word-hover--clone {
+    width: max-content;
+    max-width: none;
+    font-size: clamp(5.5rem, 14vw, 12rem);
+  }
+
   .gateway-word-hover-copy { max-width: 14ch; }
 
   .motto-quote { font-size: clamp(2.4rem, 13vw, 4rem); }
@@ -894,12 +949,6 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
 
   .social-value-hover {
     max-width: 16ch; font-size: clamp(0.95rem, 4.5vw, 1.2rem);
-  }
-
-  /* On mobile: hide hover text for Education and Trajectory (hover doesn't work well) */
-  .gateway-word[href="./education/"] .gateway-word-hover,
-  .gateway-word[href="./trajectory/"] .gateway-word-hover {
-    display: none;
   }
 
   /* Tighter gateway gaps on mobile */

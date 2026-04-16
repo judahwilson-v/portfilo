@@ -46,18 +46,11 @@ export function Hero() {
           position: relative;
           display: inline-block;
           max-width: 14ch;
-          color: transparent;
-          background-image: linear-gradient(
-            180deg,
-            rgba(244, 241, 235, 0.98) 0%,
-            rgba(244, 241, 235, 0.9) 46%,
-            rgba(244, 241, 235, 0.72) 100%
-          );
-          -webkit-background-clip: text;
-          background-clip: text;
+          color: rgba(244, 241, 235, 0.96);
+          -webkit-text-fill-color: currentColor;
           text-shadow:
-            0 0 18px rgba(244, 241, 235, 0.05),
-            0 0 42px rgba(244, 241, 235, 0.035);
+            0 0 18px rgba(244, 241, 235, 0.08),
+            0 0 42px rgba(244, 241, 235, 0.05);
           transform-origin: left center;
           transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
           will-change: transform;
@@ -74,9 +67,11 @@ export function Hero() {
         }
 
         .premium-hero-title :global(.heading-mask-token) {
+          color: rgba(244, 241, 235, 0.96);
+          -webkit-text-fill-color: currentColor;
           text-shadow:
-            0 0 12px rgba(244, 241, 235, 0.035),
-            0 0 32px rgba(244, 241, 235, 0.03);
+            0 0 12px rgba(244, 241, 235, 0.08),
+            0 0 32px rgba(244, 241, 235, 0.05);
           transition:
             transform var(--heading-reveal-duration) cubic-bezier(0.22, 1, 0.36, 1),
             opacity 620ms ease,

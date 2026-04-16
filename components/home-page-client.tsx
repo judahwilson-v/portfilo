@@ -1,25 +1,15 @@
 // FIX
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useLayoutEffect } from "react";
 
-import { Hero } from "@/components/Hero";
+import { mountContactVariableHeading } from "@/components/contact-variable-heading";
 
 export function HomePageClient() {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-
   useLayoutEffect(() => {
-    setSlot(document.querySelector<HTMLElement>("[data-home-hero-slot]"));
-  }, []);
-
-  useEffect(() => {
-    if (!slot) {
-      return;
-    }
-
     let cancelled = false;
     let cleanup: undefined | (() => void);
+    let contactHeadingCleanup = () => {};
 
     const boot = async () => {
       const { initHomePage } = await import("@/assets/js/home.js");
@@ -29,6 +19,13 @@ export function HomePageClient() {
       }
 
       cleanup = initHomePage();
+
+      if (cancelled) {
+        cleanup?.();
+        return;
+      }
+
+      contactHeadingCleanup = mountContactVariableHeading();
     };
 
     boot();
@@ -36,12 +33,9 @@ export function HomePageClient() {
     return () => {
       cancelled = true;
       cleanup?.();
+      contactHeadingCleanup();
     };
-  }, [slot]);
+  }, []);
 
-  if (!slot) {
-    return null;
-  }
-
-  return createPortal(<Hero />, slot);
+  return <span data-home-client-ready hidden aria-hidden="true" />;
 }
