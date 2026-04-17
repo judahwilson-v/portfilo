@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { HomePageClient } from "@/components/home-page-client";
 import { LoadingScreen } from "@/components/loading-screen";
 import { getBodyHtml, getCssText } from "@/lib/static-html";
+import TextPressure from "@/components/TextPressure";
 
 const contactHeadingFallbackScript = String.raw`
 (() => {
@@ -167,6 +168,22 @@ export default function HomePage() {
       <HomePageClient />
       <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: homeHtml }} />
       <script dangerouslySetInnerHTML={{ __html: contactHeadingFallbackScript }} />
+      
+      {/* ITS LOOP section */}
+      <section id="its-loop-section" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', overflow: 'hidden' }}>
+        <TextPressure
+          text="ITS LOOP"
+          flex={true}
+          alpha={false}
+          stroke={false}
+          width={true}
+          weight={true}
+          italic={true}
+          textColor="#ff0000"
+          strokeColor="#ff2727"
+          minFontSize={36}
+        />
+      </section>
     </>
   );
 }
