@@ -708,8 +708,9 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .gateway-word.is-armed .gateway-word-base,
 .gateway-word:focus-visible .gateway-word-base,
-.gateway-word:hover .gateway-word-base {
-  color: var(--ink); opacity: 1;
+.gateway-word:hover .gateway-word-base,
+.gateway-word:active .gateway-word-base {
+  color: var(--ink); opacity: 0;
 }
 
 /* ═══════════════════════════════════
@@ -942,14 +943,14 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
   }
 
   .hero-dither-mount {
-    width: min(126vw, 44rem);
-    height: clamp(16rem, 76vw, 30rem);
+    width: 200vw;
+    height: clamp(20rem, 120vw, 40rem);
   }
 
   .hero-name {
     width: 100%;
     max-width: 100%;
-    font-size: clamp(2.55rem, 13vw, 4.15rem);
+    font-size: clamp(3.0rem, 16vw, 4.8rem);
     letter-spacing: -0.045em;
   }
 
@@ -973,12 +974,12 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
     --text-reveal-size: clamp(5rem, 20vw, 6.5rem);
   }
 
-  .scene-gateway { min-height: 320svh; }
+  .scene-gateway { min-height: auto; }
 
-  .gateway-word-stack { gap: clamp(3.5rem, 8vh, 5.5rem); }
+  .gateway-word-stack { gap: clamp(1.5rem, 4vh, 2.5rem); padding-block: 4rem; }
 
-  .gateway-word:nth-child(2) { margin-left: clamp(1.5rem, 6vw, 3rem); }
-  .gateway-word:nth-child(3) { margin-left: clamp(3rem, 11vw, 5.5rem); }
+  .gateway-word:nth-child(2) { margin-left: 0; }
+  .gateway-word:nth-child(3) { margin-left: 0; }
 
   .gateway-word-base {
     font-size: clamp(3.5rem, 15vw, 5.5rem); line-height: 0.84;
@@ -1006,18 +1007,18 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
   }
 
   /* Tighter gateway gaps on mobile */
-  .gateway-field { min-height: clamp(28rem, 75svh, 44rem); }
+  .gateway-field { min-height: auto; margin-bottom: 2rem; }
 }
 
 @media (max-width: 540px) {
   .hero-dither-mount {
-    width: min(138vw, 36rem);
-    height: clamp(15rem, 84vw, 24rem);
+    width: 250vw;
+    height: clamp(20rem, 150vw, 50rem);
   }
 
   .hero-name {
-    font-size: clamp(2.15rem, 12.4vw, 3.45rem);
-    line-height: 0.9;
+    font-size: clamp(2.8rem, 15vw, 4.5rem);
+    line-height: 0.85;
     letter-spacing: -0.035em;
   }
 
@@ -1070,6 +1071,7 @@ html[data-route="home"] .signal-cursor[data-tone="about"] .signal-cursor-copy {
   .about-surface:focus-visible .about-copy-hover,
   .gateway-word.is-armed .gateway-word-hover,
   .gateway-word:focus-visible .gateway-word-hover,
+  .gateway-word:active .gateway-word-hover,
   .social-link.is-armed .social-value-hover,
   .social-link:focus-visible .social-value-hover {
     transform: translate3d(0, 0, 0);
