@@ -210,13 +210,13 @@ const TextPressure = ({
       {styleElement}
       <h1
         ref={titleRef}
-        className={\`text-pressure-title \${dynamicClassName}\`}
+        className={`text-pressure-title ${dynamicClassName}`}
         style={{
           fontFamily,
           textTransform: 'uppercase',
           fontSize: fontSize,
           lineHeight,
-          transform: \`scale(1, \${scaleY})\`,
+          transform: `scale(1, ${scaleY})`,
           transformOrigin: 'center top',
           margin: 0,
           textAlign: 'center',

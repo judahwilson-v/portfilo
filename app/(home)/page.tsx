@@ -170,7 +170,7 @@ export default function HomePage() {
       <script dangerouslySetInnerHTML={{ __html: contactHeadingFallbackScript }} />
       
       {/* ITS LOOP section */}
-      <section style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', overflow: 'hidden' }}>
+      <section id="its-loop-section" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', overflow: 'hidden' }}>
         <TextPressure
           text="ITS LOOP"
           flex={true}

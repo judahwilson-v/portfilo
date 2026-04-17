@@ -13,6 +13,12 @@ export function HomePageClient() {
     let heroDitherCleanup = () => {};
 
     const boot = async () => {
+      const itsLoopSection = document.getElementById("its-loop-section");
+      const loopSegment = document.querySelector(".loop-segment");
+      if (itsLoopSection && loopSegment) {
+        loopSegment.appendChild(itsLoopSection);
+      }
+
       const { initHomePage } = await import("@/assets/js/home.js");
 
       if (cancelled) {
