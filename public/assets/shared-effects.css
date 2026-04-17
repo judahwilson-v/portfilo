@@ -311,4 +311,18 @@
   .signal-cursor[data-edge-y="top"] {
     --cursor-copy-base-y: calc(-100% - 1.6rem);
   }
+
+  /* Hide ring + core + copy when no active target (empty label = default state) */
+  .signal-cursor[data-mode="default"] .signal-cursor-ring,
+  .signal-cursor[data-mode="default"] .signal-cursor-core {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+
+  .signal-cursor[data-mode="default"] .signal-cursor-copy {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
 }

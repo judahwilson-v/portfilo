@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 
 import { HomePageClient } from "@/components/home-page-client";
+import { LoadingScreen } from "@/components/loading-screen";
 import { getBodyHtml, getCssText } from "@/lib/static-html";
 
 const contactHeadingFallbackScript = String.raw`
@@ -156,6 +157,7 @@ export default function HomePage() {
 
   return (
     <>
+      <LoadingScreen />
       <script
         dangerouslySetInnerHTML={{
           __html: "document.documentElement.dataset.route='home';",

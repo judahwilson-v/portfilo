@@ -10,6 +10,7 @@ export function HomePageClient() {
     let cancelled = false;
     let cleanup: undefined | (() => void);
     let contactHeadingCleanup = () => {};
+    let heroDitherCleanup = () => {};
 
     const boot = async () => {
       const { initHomePage } = await import("@/assets/js/home.js");
@@ -25,6 +26,15 @@ export function HomePageClient() {
         return;
       }
 
+      const { mountHeroDither } = await import("@/components/hero-dither-dom");
+      heroDitherCleanup = await mountHeroDither();
+
+      if (cancelled) {
+        heroDitherCleanup();
+        cleanup?.();
+        return;
+      }
+
       contactHeadingCleanup = mountContactVariableHeading();
     };
 
@@ -33,6 +43,7 @@ export function HomePageClient() {
     return () => {
       cancelled = true;
       cleanup?.();
+      heroDitherCleanup();
       contactHeadingCleanup();
     };
   }, []);
