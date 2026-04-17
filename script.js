@@ -656,8 +656,8 @@ const bootHomepage = async () => {
   });
 
   const cursor = createSignalCursor({
-    defaultLabel: "Drift Gently",
-    defaultAside: "the lake is calm. your tabs are not.",
+    defaultLabel: "",
+    defaultAside: "",
     defaultMode: "default",
   });
 
