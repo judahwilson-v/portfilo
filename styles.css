@@ -15,7 +15,7 @@
   --scene-pad-bottom: clamp(3rem, 8vh, 6rem);
   --scene-length: 108svh;
   --hero-length: 100svh;
-  --story-length: 228svh;
+  --story-length: 100svh;
   --title: clamp(3rem, 9vw, 8rem);
   --mega: clamp(3.4rem, 10vw, 10rem);
   --body: clamp(1rem, 1.15vw, 1.15rem);
@@ -1246,7 +1246,7 @@ figure {
 @media (max-width: 960px) {
   :root {
     --scene-length: 100svh;
-    --story-length: 190svh;
+    --story-length: 100svh;
   }
 
   .site-chrome {
@@ -1293,7 +1293,7 @@ figure {
     --title: clamp(2.35rem, 10vw, 4.2rem);
     --space-x: 1rem;
     --chrome-h: 6.75rem;
-    --story-length: auto;
+  --story-length: 100svh;
   }
 
   body::before {

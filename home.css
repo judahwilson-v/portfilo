@@ -85,7 +85,6 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   display: flex; justify-content: space-between; align-items: center;
   padding: 1rem var(--space-x);
   background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0));
-  backdrop-filter: blur(10px);
 }
 
 .brand-lockup {
@@ -273,8 +272,8 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(108vw, 98rem);
-  height: clamp(22rem, 54vw, 48rem);
+  width: 150vw;
+  height: 150vh;
   transform: translate(-50%, -50%);
   overflow: hidden;
   opacity: 1;
@@ -569,7 +568,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 /* ═══════════════════════════════════
    GATEWAY — Big words with hover humor
    ═══════════════════════════════════ */
-.scene-gateway { min-height: 440svh; }
+.scene-gateway { min-height: 100svh; }
 
 .gateway-stage {
   grid-template-columns: 1fr;
@@ -589,7 +588,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .gateway-field {
   position: relative;
-  min-height: clamp(44rem, 100svh, 68rem);
+  min-height: auto;
   overflow: clip; isolation: isolate;
   display: grid; align-content: center;
 }
@@ -597,7 +596,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .gateway-word-stack {
   position: relative; z-index: 1;
   display: grid;
-  gap: clamp(6rem, 13vh, 10rem);
+  gap: clamp(2rem, 4vh, 4rem);
   align-content: center;
   padding-block: clamp(3rem, 8vh, 6rem);
 }
