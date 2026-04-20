@@ -329,7 +329,6 @@ figure {
   align-items: start;
   padding: 1rem var(--space-x);
   background: linear-gradient(180deg, rgba(5, 7, 11, 0.92), rgba(5, 7, 11, 0));
-  backdrop-filter: blur(18px);
 }
 
 .brand-lockup {
@@ -555,7 +554,6 @@ figure {
 .scene {
   position: relative;
   min-height: var(--scene-length);
-  overflow: clip;
   opacity: 0.48;
   transform: scale(0.985);
   transition: opacity 420ms ease, transform 420ms ease;

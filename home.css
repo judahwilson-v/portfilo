@@ -176,7 +176,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 /* ─── Scene (shared) ─── */
 .scene {
-  position: relative; isolation: isolate; overflow: clip;
+  position: relative; isolation: isolate;
   --scene-focus: 0;
   opacity: 1;
   transform: scale(calc(0.988 + (var(--scene-focus) * 0.012)));
@@ -303,7 +303,6 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 .hero-line {
   position: relative;
   display: inline-flex;
-  overflow: clip;
   white-space: nowrap;
 }
 
@@ -698,18 +697,20 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
 
 .gateway-word-hover--clone::after { content: none; }
 
-.gateway-word.is-armed .gateway-word-hover,
-.gateway-word:focus-visible .gateway-word-hover,
-.gateway-word:hover .gateway-word-hover {
-  clip-path: circle(var(--text-reveal-size) at var(--text-reveal-x) var(--text-reveal-y));
-  opacity: 1;
-}
+@media (hover: hover) and (pointer: fine) {
+  .gateway-word.is-armed .gateway-word-hover,
+  .gateway-word:focus-visible .gateway-word-hover,
+  .gateway-word:hover .gateway-word-hover {
+    clip-path: circle(var(--text-reveal-size) at var(--text-reveal-x) var(--text-reveal-y));
+    opacity: 1;
+  }
 
-.gateway-word.is-armed .gateway-word-base,
-.gateway-word:focus-visible .gateway-word-base,
-.gateway-word:hover .gateway-word-base,
-.gateway-word:active .gateway-word-base {
-  color: var(--ink); opacity: 0;
+  .gateway-word.is-armed .gateway-word-base,
+  .gateway-word:focus-visible .gateway-word-base,
+  .gateway-word:hover .gateway-word-base,
+  .gateway-word:active .gateway-word-base {
+    color: var(--ink); opacity: 0;
+  }
 }
 
 /* ═══════════════════════════════════
@@ -761,7 +762,7 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   max-width: 14ch;
   color: var(--ink);
   font-family: "Syne", sans-serif;
-  font-size: clamp(2.6rem, 6.5vw, 5.5rem);
+  font-size: clamp(2.0rem, 7vw, 5.5rem);
   font-weight: 800; line-height: 0.9; letter-spacing: -0.06em;
 }
 
