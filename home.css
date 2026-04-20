@@ -272,8 +272,8 @@ h1, h2, h3, p, blockquote, figure, cite { margin: 0; }
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 150vw;
-  height: 150vh;
+  width: min(108vw, 98rem);
+  height: clamp(22rem, 54vw, 48rem);
   transform: translate(-50%, -50%);
   overflow: hidden;
   opacity: 1;
