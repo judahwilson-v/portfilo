@@ -3,6 +3,24 @@ const STORAGE_KEY = "lake-cursor-enabled";
 const supportsFineHoverPointer = () =>
   window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
 
+const isWindowsPlatform = () => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  const userAgentDataPlatform = navigator.userAgentData?.platform;
+
+  if (typeof userAgentDataPlatform === "string") {
+    return /win/i.test(userAgentDataPlatform);
+  }
+
+  if (typeof navigator.platform === "string" && /win/i.test(navigator.platform)) {
+    return true;
+  }
+
+  return /windows/i.test(navigator.userAgent);
+};
+
 const prefersMobileViewport = () =>
   window.matchMedia("(max-width: 980px)").matches;
 
@@ -10,7 +28,10 @@ const usesCoarsePointer = () =>
   window.matchMedia("(any-hover: none), (any-pointer: coarse)").matches;
 
 const supportsSignalCursor = () =>
-  supportsFineHoverPointer() && !prefersMobileViewport() && !usesCoarsePointer();
+  !isWindowsPlatform() &&
+  supportsFineHoverPointer() &&
+  !prefersMobileViewport() &&
+  !usesCoarsePointer();
 
 const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
